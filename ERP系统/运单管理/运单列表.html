@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>运单列表 · 万邦速达</title>
+  <link rel="stylesheet" href="../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --purple: #7d5bc9;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .query-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 12px;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 6px 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover {
+      background: #f4f7ff;
+      border-color: #c8cfe0;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      max-width: 220px;
+      min-width: 120px;
+      vertical-align: top;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "运单",
+      sidebarActiveL1: "运单管理",
+      sidebarActiveL2: "运单列表",
+      sidebarFromProductRoot: "../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="query-section">
+        <div class="query-grid">
+          <div class="query-row">
+            <div class="q-field">
+              <input type="text" placeholder="运单号" aria-label="运单号" />
+            </div>
+            <div class="q-field">
+              <div class="range-input" role="group" aria-label="创建时间">
+                <select aria-label="时间字段">
+                  <option>创建时间</option>
+                </select>
+                <input type="text" placeholder="请选择时间范围" aria-label="创建时间范围" />
+              </div>
+            </div>
+            <div class="q-field">
+              <input type="text" placeholder="起始节点" aria-label="起始节点" />
+            </div>
+            <div class="q-field">
+              <input type="text" placeholder="目标节点" aria-label="目标节点" />
+            </div>
+          </div>
+          <div class="query-row">
+            <div class="q-field">
+              <select aria-label="类型">
+                <option value="">类型</option>
+                <option>空运</option>
+                <option>陆运</option>
+                <option>多式</option>
+              </select>
+            </div>
+            <div class="q-field">
+              <input type="text" placeholder="报价协议" aria-label="报价协议" />
+            </div>
+            <div class="q-field">
+              <input type="text" placeholder="供应商" aria-label="供应商" />
+            </div>
+            <div class="q-field">
+              <input type="text" placeholder="跟单员" aria-label="跟单员" />
+            </div>
+          </div>
+          <div class="query-row">
+            <div class="q-field">
+              <select aria-label="清关方式">
+                <option value="">清关方式</option>
+                <option>一般贸易</option>
+                <option>9610</option>
+                <option>9710</option>
+              </select>
+            </div>
+            <div class="q-field">
+              <select aria-label="状态">
+                <option value="">状态</option>
+                <option>在途</option>
+                <option>已到达</option>
+                <option>异常</option>
+              </select>
+            </div>
+            <div class="q-field">
+              <select aria-label="客户类型">
+                <option value="">客户类型</option>
+                <option>直客</option>
+                <option>同行</option>
+              </select>
+            </div>
+            <div class="q-field">
+              <select aria-label="异常运单筛选">
+                <option value="">异常运单筛选</option>
+                <option>仅异常</option>
+                <option>排除异常</option>
+                <option>全部</option>
+              </select>
+            </div>
+          </div>
+          <div class="query-row">
+            <div class="q-field">
+              <select aria-label="是否已发送尾程邮件">
+                <option value="">是否已发送尾程邮件</option>
+                <option>是</option>
+                <option>否</option>
+              </select>
+            </div>
+            <div class="q-field"></div>
+            <div class="q-field"></div>
+            <div class="query-action-cell">
+              <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作">
+        <button type="button" class="ops-action" data-action="update-tracker">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </span>
+          更新跟单员
+        </button>
+        <button type="button" class="ops-action" data-action="lastmile-mail">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </span>
+          尾程邮件预报
+        </button>
+        <button type="button" class="ops-action" data-action="import-waybill">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+          </span>
+          导入运单信息
+        </button>
+      </div>
+
+      <div class="list-section">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" aria-label="全选" /></th>
+                <th>序号</th>
+                <th>主运单号</th>
+                <th>起始节点</th>
+                <th>目标节点</th>
+                <th>类别</th>
+                <th>状态</th>
+                <th>提单号</th>
+                <th>箱数</th>
+                <th>总重量</th>
+                <th>体积重</th>
+                <th>计费重</th>
+                <th>基重</th>
+                <th>箱内件数量</th>
+                <th>箱内件净重</th>
+                <th>箱内件计费重</th>
+                <th>供应商ID</th>
+                <th>供应商名称</th>
+                <th>报价协议</th>
+                <th>客户类型</th>
+                <th>跟单员</th>
+                <th>配载负责人</th>
+                <th>创建时间</th>
+                <th>发运时间</th>
+                <th>到达时间</th>
+                <th>全部到大时间</th>
+                <th>预计发运时间(首次)</th>
+                <th>预计到达时间(首次)</th>
+                <th>打板操作方</th>
+                <th>打板仓</th>
+                <th>板型</th>
+                <th>清关方式</th>
+                <th>备注</th>
+                <th>供应商反馈计费重变更原因</th>
+                <th>发送尾程邮件</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>1</td>
+                <td>MAWB-20260331001</td>
+                <td>HKG-仓</td>
+                <td>CDG-仓</td>
+                <td>空运</td>
+                <td>在途</td>
+                <td>999-12345678</td>
+                <td>3</td>
+                <td>2850 KG</td>
+                <td>3100 KG</td>
+                <td>3100 KG</td>
+                <td>1000</td>
+                <td>1200</td>
+                <td>2600 KG</td>
+                <td>3000 KG</td>
+                <td>SUP-88001</td>
+                <td>华南航空服务A</td>
+                <td>协议价-2026Q1</td>
+                <td>直客</td>
+                <td>陈跟单</td>
+                <td>周配载</td>
+                <td>2026-03-28 10:00</td>
+                <td>2026-03-29 02:00</td>
+                <td>—</td>
+                <td>—</td>
+                <td>2026-03-28 08:00</td>
+                <td>2026-03-30 18:00</td>
+                <td>自营</td>
+                <td>HKG-B1</td>
+                <td>PMC</td>
+                <td>一般贸易</td>
+                <td class="col-wrap">优先航班</td>
+                <td class="col-wrap">—</td>
+                <td>已发送</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>2</td>
+                <td>MAWB-20260331002</td>
+                <td>PVG-仓</td>
+                <td>LAX-仓</td>
+                <td>空运</td>
+                <td>异常</td>
+                <td>176-99887766</td>
+                <td>2</td>
+                <td>1800 KG</td>
+                <td>1950 KG</td>
+                <td>1950 KG</td>
+                <td>800</td>
+                <td>800</td>
+                <td>1750 KG</td>
+                <td>1900 KG</td>
+                <td>SUP-77002</td>
+                <td>华东供应商B</td>
+                <td>招标价-临时</td>
+                <td>同行</td>
+                <td>林跟单</td>
+                <td>吴配载</td>
+                <td>2026-03-27 16:30</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>2026-03-30 10:00</td>
+                <td>2026-04-02 12:00</td>
+                <td>外包</td>
+                <td>PVG-C2</td>
+                <td>AKE</td>
+                <td>9610</td>
+                <td class="col-wrap">待确认计费重</td>
+                <td class="col-wrap">航班拉货导致体积重上调</td>
+                <td>未发送</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input type="file" id="import-waybill-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,.csv,text/csv" hidden aria-hidden="true" />
+
+  <script src="../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var ops = document.querySelector(".ops-section");
+      if (!ops) return;
+      ops.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ops-action[data-action]");
+        if (!btn) return;
+        var act = btn.getAttribute("data-action");
+        if (act === "import-waybill") {
+          var inp = document.getElementById("import-waybill-input");
+          if (inp) inp.click();
+          return;
+        }
+        if (act === "update-tracker") {
+          var n = document.querySelectorAll(".data-table tbody input[type='checkbox']:checked").length;
+          if (!n) {
+            window.alert("请先勾选要更新跟单员的运单。");
+            return;
+          }
+          window.alert("原型：更新跟单员（已选 " + n + " 条）");
+          return;
+        }
+        if (act === "lastmile-mail") {
+          var m = document.querySelectorAll(".data-table tbody input[type='checkbox']:checked").length;
+          if (!m) {
+            window.alert("请先勾选需要做尾程邮件预报的运单。");
+            return;
+          }
+          window.alert("原型：尾程邮件预报（已选 " + m + " 条）");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

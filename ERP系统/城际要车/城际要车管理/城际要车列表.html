@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>城际要车列表 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --purple: #7d5bc9;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quote-query {
+      display: grid;
+      grid-template-columns: minmax(96px, 0.22fr) minmax(260px, 1.35fr);
+      gap: 12px 16px;
+      align-items: stretch;
+    }
+
+    .quote-query-bulk {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+    }
+
+    .bulk-field {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 104px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .bulk-field .bulk-select {
+      width: 100%;
+      height: 36px;
+      margin: 0;
+      padding: 0 28px 0 10px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .bulk-field textarea {
+      flex: 0 1 auto;
+      width: 100%;
+      min-height: 60px;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .bulk-field textarea::placeholder {
+      color: #9aa1ad;
+    }
+
+    .quote-query-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .quote-query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field .q-ctl {
+      width: 100%;
+      position: relative;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .filterable-input {
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 20;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+      min-height: 35px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      background: #fff;
+      border: none;
+      box-shadow: none;
+      outline: none;
+    }
+
+    a.ops-action {
+      text-decoration: none;
+      color: var(--purple);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 4px 10px 4px 8px;
+      border: none;
+      border-radius: 4px;
+      border-left: 3px solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover:not(.is-selected) {
+      background: #f0f1f4;
+    }
+
+    .ops-action:active:not(.is-selected) {
+      background: #e6e7eb;
+    }
+
+    .ops-action.is-selected {
+      background: #ede8f7;
+      border-left-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action.is-selected:hover {
+      background: #e4dbf5;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      flex-shrink: 0;
+      color: inherit;
+      opacity: 0.95;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      height: 100%;
+      overflow: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      max-width: 200px;
+      min-width: 100px;
+      vertical-align: top;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "要车",
+      sidebarActiveL1: "城际运输管理",
+      sidebarActiveL2: "城际要车列表",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="query-section">
+        <div class="quote-query">
+          <div class="quote-query-bulk">
+            <div class="bulk-field">
+              <select class="bulk-select" aria-label="要车编码">
+                <option value="requestCode">要车编码</option>
+              </select>
+              <textarea placeholder="每行一个要车编码" rows="3" spellcheck="false" aria-label="要车编码批量输入"></textarea>
+            </div>
+          </div>
+          <div class="quote-query-fields">
+            <div class="quote-query-row">
+              <div class="q-field">
+                <div class="range-input" role="group" aria-label="用车时间或创建时间">
+                  <select aria-label="时间类型">
+                    <option>用车时间</option>
+                    <option>创建时间</option>
+                  </select>
+                  <input type="text" placeholder="请选择时间范围" aria-label="时间范围" />
+                </div>
+              </div>
+              <div class="q-field">
+                <div class="q-ctl">
+                  <input
+                    type="text"
+                    class="filterable-input"
+                    placeholder="请输入或选择承运商"
+                    aria-label="承运商"
+                    aria-autocomplete="list"
+                    aria-controls="filterable-carrier-menu"
+                    data-filterable="carrier"
+                    autocomplete="off"
+                  />
+                  <div id="filterable-carrier-menu" class="filterable-menu" role="listbox" hidden></div>
+                </div>
+              </div>
+              <div class="q-field">
+                <select aria-label="运输类型">
+                  <option value="">运输类型</option>
+                  <option>港车运输</option>
+                  <option>国内专车</option>
+                  <option>国内拼车</option>
+                  <option>国内空运</option>
+                </select>
+              </div>
+              <div class="q-field">
+                <select aria-label="线路类型">
+                  <option value="">线路类型</option>
+                  <option>点对点</option>
+                  <option>多点</option>
+                </select>
+              </div>
+            </div>
+            <div class="quote-query-row">
+              <div class="q-field">
+                <select aria-label="任务状态">
+                  <option value="">任务状态</option>
+                  <option>进行中</option>
+                  <option>已完成</option>
+                  <option>已取消</option>
+                </select>
+              </div>
+              <div class="q-field">
+                <input type="text" placeholder="创建人" aria-label="创建人" />
+              </div>
+              <div class="q-field">
+                <input type="text" placeholder="货拉拉订单号" aria-label="货拉拉订单号" />
+              </div>
+              <div class="query-action-cell">
+                <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作" data-ops-group>
+        <button type="button" class="ops-action is-selected" data-action="cancel-task">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+          </span>
+          取消城际要车
+        </button>
+        <button type="button" class="ops-action" data-action="mark-done">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </span>
+          标记完成
+        </button>
+        <button type="button" class="ops-action" data-action="export">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+          </span>
+          城际要车导出
+        </button>
+      </div>
+
+      <div class="list-section">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" aria-label="全选" /></th>
+                <th>序号</th>
+                <th>操作</th>
+                <th>要车编码</th>
+                <th>用车时间</th>
+                <th>运输类型</th>
+                <th>承运方</th>
+                <th>承运商</th>
+                <th>线路类型</th>
+                <th>需求车型</th>
+                <th>车牌号</th>
+                <th>国内司机</th>
+                <th>香港司机</th>
+                <th>用车客户</th>
+                <th>装货次数</th>
+                <th>装货点</th>
+                <th>卸货次数</th>
+                <th>卸货点</th>
+                <th>场站</th>
+                <th>票数</th>
+                <th>计划方数</th>
+                <th>实际方数</th>
+                <th>重量(KG)</th>
+                <th>箱数</th>
+                <th>靠台时长(H)</th>
+                <th>运输时长(H)</th>
+                <th>多点卸货时长</th>
+                <th>是否遭遇查验</th>
+                <th>查验处理是否及时</th>
+                <th>补打卡数</th>
+                <th>海关查扣包裹数</th>
+                <th>提货方数差异</th>
+                <th>要车费用</th>
+                <th>用车备注</th>
+                <th>任务状态</th>
+                <th>货拉拉订单号</th>
+                <th>货拉拉订单状态</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>取消原因</th>
+                <th>修改人</th>
+                <th>修改时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>1</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331001" class="op-link" data-request-code="YC-20260331001">YC-20260331001</a></td>
+                <td>2026-03-29 08:00</td>
+                <td>港车运输</td>
+                <td>合作承运商</td>
+                <td>G0001：承运商01</td>
+                <td>固定线路</td>
+                <td>中港吨车</td>
+                <td>粤B·D12345</td>
+                <td>王师傅</td>
+                <td>陈师傅</td>
+                <td>客户A</td>
+                <td>1</td>
+                <td class="col-wrap">东莞常平</td>
+                <td>1</td>
+                <td class="col-wrap">香港青衣</td>
+                <td>HKG-B1</td>
+                <td>12</td>
+                <td>18.5</td>
+                <td>18.2</td>
+                <td>2850</td>
+                <td>3</td>
+                <td>1.5</td>
+                <td>6.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 9200</td>
+                <td class="col-wrap">准时到仓</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-03-28 09:00</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-03-29 15:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>2</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331002" class="op-link" data-request-code="YC-20260331002">YC-20260331002</a></td>
+                <td>2026-03-30 14:00</td>
+                <td>国内专车</td>
+                <td>合作承运商</td>
+                <td>G0002：承运商02</td>
+                <td>固定线路</td>
+                <td>9.6</td>
+                <td>粤A·K99887</td>
+                <td>李师傅</td>
+                <td>—</td>
+                <td>客户B</td>
+                <td>2</td>
+                <td class="col-wrap">花都/白云</td>
+                <td>3</td>
+                <td class="col-wrap">南沙×2、番禺</td>
+                <td>CAN-C3</td>
+                <td>8</td>
+                <td>45</td>
+                <td>44.1</td>
+                <td>6200</td>
+                <td>6</td>
+                <td>2.0</td>
+                <td>11.0</td>
+                <td>2.5</td>
+                <td>是</td>
+                <td>是</td>
+                <td>1</td>
+                <td>2</td>
+                <td class="col-wrap">客户自提改派送</td>
+                <td>CNY 15800</td>
+                <td class="col-wrap">多点卸货延误</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>李四</td>
+                <td>2026-03-27 11:20</td>
+                <td>—</td>
+                <td>王五</td>
+                <td>2026-03-30 09:30</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>3</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331003" class="op-link" data-request-code="YC-20260331003">YC-20260331003</a></td>
+                <td>2026-03-31 09:30</td>
+                <td>国内拼车</td>
+                <td>合作承运商</td>
+                <td>G0003：承运商03</td>
+                <td>固定线路</td>
+                <td></td>
+                <td>粤B·P22311</td>
+                <td>周师傅</td>
+                <td>—</td>
+                <td>客户C</td>
+                <td>1</td>
+                <td class="col-wrap">深圳坂田</td>
+                <td>1</td>
+                <td class="col-wrap">广州白云</td>
+                <td>SZX-A2</td>
+                <td>4</td>
+                <td>12</td>
+                <td>11.8</td>
+                <td>1680</td>
+                <td>2</td>
+                <td>0.8</td>
+                <td>4.0</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 3600</td>
+                <td class="col-wrap">拼车当日发运</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-03-30 16:20</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-03-30 16:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>4</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331004" class="op-link" data-request-code="YC-20260331004">YC-20260331004</a></td>
+                <td>2026-03-31 18:00</td>
+                <td>国内空运</td>
+                <td>合作承运商</td>
+                <td>G0004：承运商04</td>
+                <td>固定线路</td>
+                <td>早班机</td>
+                <td>—</td>
+                <td>黄师傅</td>
+                <td>—</td>
+                <td>客户D</td>
+                <td>1</td>
+                <td class="col-wrap">东莞寮步</td>
+                <td>1</td>
+                <td class="col-wrap">上海浦东</td>
+                <td>PVG-T1</td>
+                <td>3</td>
+                <td>6.5</td>
+                <td>6.4</td>
+                <td>920</td>
+                <td>1</td>
+                <td>0.5</td>
+                <td>3.0</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2800</td>
+                <td class="col-wrap">航班预配完成</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-03-31 10:00</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-03-31 10:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>5</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331005" class="op-link" data-request-code="YC-20260331005">YC-20260331005</a></td>
+                <td>2026-04-01 07:30</td>
+                <td>港车运输</td>
+                <td>合作承运商</td>
+                <td>G0005：承运商05</td>
+                <td>固定线路</td>
+                <td>中港柜车</td>
+                <td>粤Z·H55678</td>
+                <td>林师傅</td>
+                <td>郭师傅</td>
+                <td>客户E</td>
+                <td>2</td>
+                <td class="col-wrap">凤岗/长安</td>
+                <td>2</td>
+                <td class="col-wrap">荃湾/葵涌</td>
+                <td>HKG-C2</td>
+                <td>16</td>
+                <td>28</td>
+                <td>27.6</td>
+                <td>3980</td>
+                <td>4</td>
+                <td>1.8</td>
+                <td>7.5</td>
+                <td>1.0</td>
+                <td>是</td>
+                <td>是</td>
+                <td>1</td>
+                <td>0</td>
+                <td>提货点临时变更</td>
+                <td>CNY 11800</td>
+                <td class="col-wrap">需优先过港</td>
+                <td>已取消</td>
+                <td>—</td>
+                <td>—</td>
+                <td>陈八</td>
+                <td>2026-03-31 18:10</td>
+                <td>客户临时取消</td>
+                <td>陈八</td>
+                <td>2026-04-01 07:10</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>6</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331006" class="op-link" data-request-code="YC-20260331006">YC-20260331006</a></td>
+                <td>2026-04-01 13:00</td>
+                <td>国内专车</td>
+                <td>合作承运商</td>
+                <td>G0006：承运商06</td>
+                <td>固定线路</td>
+                <td>12.5</td>
+                <td>粤S·M88712</td>
+                <td>冯师傅</td>
+                <td>—</td>
+                <td>客户F</td>
+                <td>1</td>
+                <td class="col-wrap">佛山南海</td>
+                <td>1</td>
+                <td class="col-wrap">惠州仲恺</td>
+                <td>HZ-01</td>
+                <td>6</td>
+                <td>20</td>
+                <td>19.6</td>
+                <td>3100</td>
+                <td>3</td>
+                <td>1.0</td>
+                <td>5.0</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 6800</td>
+                <td class="col-wrap">整车直送</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>吴九</td>
+                <td>2026-03-31 20:40</td>
+                <td>—</td>
+                <td>吴九</td>
+                <td>2026-03-31 20:40</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>7</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331007" class="op-link" data-request-code="YC-20260331007">YC-20260331007</a></td>
+                <td>2026-04-02 10:30</td>
+                <td>国内拼车</td>
+                <td>临时承运商</td>
+                <td>G0007：承运商07</td>
+                <td>临时线路</td>
+                <td></td>
+                <td>粤B·Q11028</td>
+                <td>何师傅</td>
+                <td>—</td>
+                <td>客户G</td>
+                <td>2</td>
+                <td class="col-wrap">东莞厚街/虎门</td>
+                <td>2</td>
+                <td class="col-wrap">中山西区/沙溪</td>
+                <td>ZS-02</td>
+                <td>5</td>
+                <td>15</td>
+                <td>14.6</td>
+                <td>2040</td>
+                <td>2</td>
+                <td>1.2</td>
+                <td>5.5</td>
+                <td>1.2</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>客户改约到货</td>
+                <td>CNY 4200</td>
+                <td class="col-wrap">需电话预约卸货</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-01 08:35</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-02 09:10</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>8</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260331008" class="op-link" data-request-code="YC-20260331008">YC-20260331008</a></td>
+                <td>2026-04-02 16:20</td>
+                <td>国内空运</td>
+                <td>临时承运商</td>
+                <td>G0008：承运商08</td>
+                <td>临时线路</td>
+                <td>中班机</td>
+                <td>—</td>
+                <td>彭师傅</td>
+                <td>—</td>
+                <td>客户H</td>
+                <td>1</td>
+                <td class="col-wrap">深圳宝安</td>
+                <td>1</td>
+                <td class="col-wrap">北京顺义</td>
+                <td>PEK-D5</td>
+                <td>2</td>
+                <td>4.2</td>
+                <td>4.1</td>
+                <td>680</td>
+                <td>1</td>
+                <td>0.4</td>
+                <td>2.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2300</td>
+                <td class="col-wrap">优先走当天航班</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-01 12:00</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 18:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>9</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402009" class="op-link" data-request-code="YC-20260402009">YC-20260402009</a></td>
+                <td>2026-04-03 09:00</td>
+                <td>港车运输</td>
+                <td>合作承运商</td>
+                <td>G0009：承运商09</td>
+                <td>固定线路</td>
+                <td>中港吨车</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户I</td>
+                <td>1</td>
+                <td class="col-wrap">东莞常平</td>
+                <td>1</td>
+                <td class="col-wrap">香港青衣</td>
+                <td>HKG-B1</td>
+                <td>10</td>
+                <td>15</td>
+                <td>—</td>
+                <td>2400</td>
+                <td>2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 8800</td>
+                <td class="col-wrap">待指派车辆</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-04-02 09:30</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-04-02 09:30</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>10</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402010" class="op-link" data-request-code="YC-20260402010">YC-20260402010</a></td>
+                <td>2026-04-03 13:30</td>
+                <td>港车运输</td>
+                <td>临时承运商</td>
+                <td>G0010：承运商10</td>
+                <td>临时线路</td>
+                <td>中港柜车</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户J</td>
+                <td>1</td>
+                <td class="col-wrap">深圳坂田</td>
+                <td>1</td>
+                <td class="col-wrap">香港青衣</td>
+                <td>HKG-T2</td>
+                <td>6</td>
+                <td>10</td>
+                <td>—</td>
+                <td>1550</td>
+                <td>2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 7600</td>
+                <td class="col-wrap">临时加急过港</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>李四</td>
+                <td>2026-04-02 10:20</td>
+                <td>—</td>
+                <td>李四</td>
+                <td>2026-04-02 10:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>11</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402011" class="op-link" data-request-code="YC-20260402011">YC-20260402011</a></td>
+                <td>2026-04-03 18:00</td>
+                <td>港车运输</td>
+                <td>临时承运商</td>
+                <td>G0011：承运商11</td>
+                <td>临时线路</td>
+                <td>中港吨车</td>
+                <td>粤Z·T66789</td>
+                <td>林师傅</td>
+                <td>郭师傅</td>
+                <td>客户K</td>
+                <td>2</td>
+                <td class="col-wrap">凤岗/长安</td>
+                <td>2</td>
+                <td class="col-wrap">荃湾/葵涌</td>
+                <td>HKG-T3</td>
+                <td>10</td>
+                <td>16</td>
+                <td>—</td>
+                <td>2400</td>
+                <td>3</td>
+                <td>1.0</td>
+                <td>6.0</td>
+                <td>—</td>
+                <td>是</td>
+                <td>是</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 9800</td>
+                <td class="col-wrap">临时线路调度中</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-02 11:00</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-03 17:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>12</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402012" class="op-link" data-request-code="YC-20260402012">YC-20260402012</a></td>
+                <td>2026-04-04 07:30</td>
+                <td>港车运输</td>
+                <td>临时承运商</td>
+                <td>G0012：承运商12</td>
+                <td>临时线路</td>
+                <td>中港柜车</td>
+                <td>粤Z·H55678</td>
+                <td>王师傅</td>
+                <td>陈师傅</td>
+                <td>客户L</td>
+                <td>1</td>
+                <td class="col-wrap">东莞常平</td>
+                <td>1</td>
+                <td class="col-wrap">香港青衣</td>
+                <td>HKG-T2</td>
+                <td>12</td>
+                <td>18.5</td>
+                <td>18.2</td>
+                <td>2850</td>
+                <td>3</td>
+                <td>1.5</td>
+                <td>6.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 9200</td>
+                <td class="col-wrap">临时线路已交付</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-04-02 12:00</td>
+                <td>—</td>
+                <td>张三</td>
+                <td>2026-04-04 13:00</td>
+              </tr>
+
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>13</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402013" class="op-link" data-request-code="YC-20260402013">YC-20260402013</a></td>
+                <td>2026-04-03 10:00</td>
+                <td>国内专车</td>
+                <td>合作承运商</td>
+                <td>G0013：承运商13</td>
+                <td>固定线路</td>
+                <td>9.6</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户M</td>
+                <td>1</td>
+                <td class="col-wrap">花都</td>
+                <td>1</td>
+                <td class="col-wrap">南沙</td>
+                <td>CAN-C3</td>
+                <td>8</td>
+                <td>45</td>
+                <td>—</td>
+                <td>6200</td>
+                <td>6</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 15600</td>
+                <td class="col-wrap">待司机接单</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>王五</td>
+                <td>2026-04-02 10:30</td>
+                <td>—</td>
+                <td>王五</td>
+                <td>2026-04-02 10:30</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>14</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402014" class="op-link" data-request-code="YC-20260402014">YC-20260402014</a></td>
+                <td>2026-04-03 12:00</td>
+                <td>国内专车</td>
+                <td>临时承运商</td>
+                <td>G0014：承运商14</td>
+                <td>临时线路</td>
+                <td>4.2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户N</td>
+                <td>1</td>
+                <td class="col-wrap">东莞厚街</td>
+                <td>1</td>
+                <td class="col-wrap">中山西区</td>
+                <td>DG-ZS</td>
+                <td>3</td>
+                <td>8</td>
+                <td>—</td>
+                <td>980</td>
+                <td>1</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2600</td>
+                <td class="col-wrap">临时加单</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-02 11:00</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-02 11:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>15</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402015" class="op-link" data-request-code="YC-20260402015">YC-20260402015</a></td>
+                <td>2026-04-03 19:00</td>
+                <td>国内专车</td>
+                <td>临时承运商</td>
+                <td>G0015：承运商15</td>
+                <td>临时线路</td>
+                <td>7.6</td>
+                <td>粤B·Q11028</td>
+                <td>何师傅</td>
+                <td>—</td>
+                <td>客户O</td>
+                <td>2</td>
+                <td class="col-wrap">东莞厚街/虎门</td>
+                <td>2</td>
+                <td class="col-wrap">中山西区/沙溪</td>
+                <td>ZS-02</td>
+                <td>5</td>
+                <td>15</td>
+                <td>—</td>
+                <td>2040</td>
+                <td>2</td>
+                <td>1.2</td>
+                <td>5.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>客户改约到货</td>
+                <td>CNY 4200</td>
+                <td class="col-wrap">需预约卸货</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 11:30</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-04 20:10</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>16</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402016" class="op-link" data-request-code="YC-20260402016">YC-20260402016</a></td>
+                <td>2026-04-04 16:00</td>
+                <td>国内专车</td>
+                <td>临时承运商</td>
+                <td>G0016：承运商16</td>
+                <td>临时线路</td>
+                <td>9.6</td>
+                <td>粤A·K99887</td>
+                <td>李师傅</td>
+                <td>—</td>
+                <td>客户P</td>
+                <td>1</td>
+                <td class="col-wrap">花都</td>
+                <td>1</td>
+                <td class="col-wrap">南沙</td>
+                <td>CAN-T1</td>
+                <td>8</td>
+                <td>45</td>
+                <td>44.1</td>
+                <td>6200</td>
+                <td>6</td>
+                <td>2.0</td>
+                <td>11.0</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 15200</td>
+                <td class="col-wrap">临时线路已签收</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-04-02 12:00</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-04-04 20:10</td>
+              </tr>
+
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>17</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402017" class="op-link" data-request-code="YC-20260402017">YC-20260402017</a></td>
+                <td>2026-04-03 08:30</td>
+                <td>国内拼车</td>
+                <td>合作承运商</td>
+                <td>G0017：承运商17</td>
+                <td>固定线路</td>
+                <td></td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户Q</td>
+                <td>1</td>
+                <td class="col-wrap">深圳坂田</td>
+                <td>1</td>
+                <td class="col-wrap">广州白云</td>
+                <td>SZX-A2</td>
+                <td>4</td>
+                <td>12</td>
+                <td>—</td>
+                <td>1680</td>
+                <td>2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 3600</td>
+                <td class="col-wrap">待集货</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-02 09:10</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-02 09:10</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>18</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402018" class="op-link" data-request-code="YC-20260402018">YC-20260402018</a></td>
+                <td>2026-04-04 09:30</td>
+                <td>国内拼车</td>
+                <td>合作承运商</td>
+                <td>G0018：承运商18</td>
+                <td>固定线路</td>
+                <td></td>
+                <td>粤B·P22311</td>
+                <td>周师傅</td>
+                <td>—</td>
+                <td>客户R</td>
+                <td>1</td>
+                <td class="col-wrap">深圳坂田</td>
+                <td>1</td>
+                <td class="col-wrap">广州白云</td>
+                <td>SZX-A2</td>
+                <td>4</td>
+                <td>12</td>
+                <td>11.8</td>
+                <td>1680</td>
+                <td>2</td>
+                <td>0.8</td>
+                <td>4.0</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 3600</td>
+                <td class="col-wrap">签收完成</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-02 10:30</td>
+                <td>—</td>
+                <td>赵六</td>
+                <td>2026-04-04 16:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>19</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402019" class="op-link" data-request-code="YC-20260402019">YC-20260402019</a></td>
+                <td>2026-04-03 11:10</td>
+                <td>国内拼车</td>
+                <td>临时承运商</td>
+                <td>G0019：承运商19</td>
+                <td>临时线路</td>
+                <td></td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>客户S</td>
+                <td>2</td>
+                <td class="col-wrap">东莞厚街/虎门</td>
+                <td>2</td>
+                <td class="col-wrap">中山西区/沙溪</td>
+                <td>ZS-02</td>
+                <td>5</td>
+                <td>15</td>
+                <td>—</td>
+                <td>2040</td>
+                <td>2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 4200</td>
+                <td class="col-wrap">临时拼车待发</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-02 11:35</td>
+                <td>—</td>
+                <td>郑十</td>
+                <td>2026-04-02 11:35</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>20</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402020" class="op-link" data-request-code="YC-20260402020">YC-20260402020</a></td>
+                <td>2026-04-04 18:40</td>
+                <td>国内拼车</td>
+                <td>临时承运商</td>
+                <td>G0020：承运商20</td>
+                <td>临时线路</td>
+                <td></td>
+                <td>粤B·Q11028</td>
+                <td>何师傅</td>
+                <td>—</td>
+                <td>客户T</td>
+                <td>2</td>
+                <td class="col-wrap">东莞厚街/虎门</td>
+                <td>2</td>
+                <td class="col-wrap">中山西区/沙溪</td>
+                <td>ZS-02</td>
+                <td>5</td>
+                <td>15</td>
+                <td>14.6</td>
+                <td>2040</td>
+                <td>2</td>
+                <td>1.2</td>
+                <td>5.5</td>
+                <td>1.2</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 4200</td>
+                <td class="col-wrap">临时拼车已签收</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 12:20</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-04 20:00</td>
+              </tr>
+
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>21</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402021" class="op-link" data-request-code="YC-20260402021">YC-20260402021</a></td>
+                <td>2026-04-03 07:40</td>
+                <td>国内空运</td>
+                <td>合作承运商</td>
+                <td>G0021：承运商21</td>
+                <td>固定线路</td>
+                <td>早班机</td>
+                <td>—</td>
+                <td>黄师傅</td>
+                <td>—</td>
+                <td>客户U</td>
+                <td>1</td>
+                <td class="col-wrap">东莞寮步</td>
+                <td>1</td>
+                <td class="col-wrap">上海浦东</td>
+                <td>PVG-T1</td>
+                <td>3</td>
+                <td>6.5</td>
+                <td>—</td>
+                <td>920</td>
+                <td>1</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2800</td>
+                <td class="col-wrap">待订舱</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-04-02 10:40</td>
+                <td>—</td>
+                <td>孙七</td>
+                <td>2026-04-02 10:40</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>22</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402022" class="op-link" data-request-code="YC-20260402022">YC-20260402022</a></td>
+                <td>2026-04-03 12:20</td>
+                <td>国内空运</td>
+                <td>合作承运商</td>
+                <td>G0022：承运商22</td>
+                <td>固定线路</td>
+                <td>中班机</td>
+                <td>—</td>
+                <td>彭师傅</td>
+                <td>—</td>
+                <td>客户V</td>
+                <td>1</td>
+                <td class="col-wrap">深圳宝安</td>
+                <td>1</td>
+                <td class="col-wrap">北京顺义</td>
+                <td>PEK-D5</td>
+                <td>2</td>
+                <td>4.2</td>
+                <td>4.1</td>
+                <td>680</td>
+                <td>1</td>
+                <td>0.4</td>
+                <td>2.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2300</td>
+                <td class="col-wrap">提货/安检中</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 12:20</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-03 18:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>23</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402023" class="op-link" data-request-code="YC-20260402023">YC-20260402023</a></td>
+                <td>2026-04-03 09:50</td>
+                <td>国内空运</td>
+                <td>临时承运商</td>
+                <td>G0023：承运商23</td>
+                <td>临时线路</td>
+                <td>晚班机</td>
+                <td>—</td>
+                <td>彭师傅</td>
+                <td>—</td>
+                <td>客户W</td>
+                <td>1</td>
+                <td class="col-wrap">深圳宝安</td>
+                <td>1</td>
+                <td class="col-wrap">北京顺义</td>
+                <td>PEK-T1</td>
+                <td>2</td>
+                <td>4.2</td>
+                <td>—</td>
+                <td>680</td>
+                <td>1</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2400</td>
+                <td class="col-wrap">临时补舱</td>
+                <td>进行中</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 14:00</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 14:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>24</td>
+                <td><a href="#" class="op-link">复制</a></td>
+                <td><a href="城际要车详情.html?requestCode=YC-20260402024" class="op-link" data-request-code="YC-20260402024">YC-20260402024</a></td>
+                <td>2026-04-04 21:20</td>
+                <td>国内空运</td>
+                <td>临时承运商</td>
+                <td>G0024：承运商24</td>
+                <td>临时线路</td>
+                <td>晚班机</td>
+                <td>—</td>
+                <td>彭师傅</td>
+                <td>—</td>
+                <td>客户X</td>
+                <td>1</td>
+                <td class="col-wrap">深圳宝安</td>
+                <td>1</td>
+                <td class="col-wrap">北京顺义</td>
+                <td>PEK-T1</td>
+                <td>2</td>
+                <td>4.2</td>
+                <td>4.1</td>
+                <td>680</td>
+                <td>1</td>
+                <td>0.4</td>
+                <td>2.5</td>
+                <td>—</td>
+                <td>否</td>
+                <td>—</td>
+                <td>0</td>
+                <td>0</td>
+                <td>无</td>
+                <td>CNY 2300</td>
+                <td class="col-wrap">临时线路已交付</td>
+                <td>已完成</td>
+                <td>—</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-02 15:00</td>
+                <td>—</td>
+                <td>钱一</td>
+                <td>2026-04-04 23:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var ops = document.querySelector(".ops-section");
+      if (!ops) return;
+      var actionButtons = ops.querySelectorAll(".ops-action");
+
+      function syncSelectedState() {
+        actionButtons.forEach(function (btn) {
+          btn.setAttribute("aria-pressed", btn.classList.contains("is-selected") ? "true" : "false");
+        });
+      }
+
+      syncSelectedState();
+
+      ops.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ops-action[data-action]");
+        if (!btn) return;
+        actionButtons.forEach(function (item) {
+          item.classList.remove("is-selected");
+        });
+        btn.classList.add("is-selected");
+        syncSelectedState();
+        var act = btn.getAttribute("data-action");
+        if (act === "export") {
+          window.alert("原型：城际要车导出");
+          return;
+        }
+        var n = document.querySelectorAll(".data-table tbody input[type='checkbox']:checked").length;
+        if (!n) {
+          window.alert("请先勾选要操作的城际要车任务。");
+          return;
+        }
+        if (act === "cancel-task") {
+          window.alert("原型：取消城际要车（已选 " + n + " 条）");
+        } else if (act === "mark-done") {
+          window.alert("原型：标记完成（已选 " + n + " 条）");
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var optionMap = {
+        carrier: [
+          "G0001：承运商01",
+          "G0002：承运商02",
+          "G0003：承运商03",
+          "G0004：承运商04",
+          "G0005：承运商05",
+          "G0006：承运商06",
+          "G0007：承运商07",
+          "G0008：承运商08",
+          "G0009：承运商09",
+          "G0010：承运商10",
+          "G0011：承运商11",
+          "G0012：承运商12",
+          "G0013：承运商13",
+          "G0014：承运商14",
+          "G0015：承运商15",
+          "G0016：承运商16",
+          "G0017：承运商17",
+          "G0018：承运商18",
+          "G0019：承运商19",
+          "G0020：承运商20",
+          "G0021：承运商21",
+          "G0022：承运商22",
+          "G0023：承运商23",
+          "G0024：承运商24"
+        ]
+      };
+
+      var controls = document.querySelectorAll("input[data-filterable]");
+      if (!controls.length) return;
+
+      function closeMenu(menu) {
+        menu.classList.remove("is-open");
+        menu.hidden = true;
+        menu.innerHTML = "";
+      }
+
+      function closeAllMenus() {
+        document.querySelectorAll(".filterable-menu").forEach(function (menu) {
+          closeMenu(menu);
+        });
+      }
+
+      function renderMenu(input) {
+        var key = input.getAttribute("data-filterable");
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+
+        var keyword = input.value.trim().toLowerCase();
+        var options = (optionMap[key] || []).filter(function (item) {
+          return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+        });
+
+        if (!options.length) {
+          menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+        } else {
+          menu.innerHTML = options
+            .map(function (item) {
+              return '<div class="filterable-option" role="option" data-value="' + item + '">' + item + "</div>";
+            })
+            .join("");
+        }
+
+        menu.hidden = false;
+        menu.classList.add("is-open");
+
+        menu.querySelectorAll(".filterable-option").forEach(function (option) {
+          option.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+            input.value = option.getAttribute("data-value") || "";
+            closeMenu(menu);
+          });
+        });
+      }
+
+      controls.forEach(function (input) {
+        input.addEventListener("focus", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("input", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            var menu = input.parentElement.querySelector(".filterable-menu");
+            if (menu) closeMenu(menu);
+          }
+        });
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".q-ctl")) {
+          closeAllMenus();
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var table = document.querySelector(".data-table");
+      if (!table) return;
+
+      function getText(td) {
+        return (td && td.textContent ? td.textContent : "").trim();
+      }
+
+      function buildRowData(tr) {
+        var tds = tr ? tr.querySelectorAll("td") : [];
+        if (!tds || !tds.length) return null;
+
+        // 与表头列一致（从“要车编码”开始取关键字段）
+        return {
+          requestCode: getText(tds[3]),
+          useCarTime: getText(tds[4]),
+          transportType: getText(tds[5]),
+          carrierType: getText(tds[6]),
+          carrierName: getText(tds[7]),
+          lineType: getText(tds[8]),
+          vehicleType: getText(tds[9]),
+          plateNo: getText(tds[10]),
+          cnDriver: getText(tds[11]),
+          hkDriver: getText(tds[12]),
+          customer: getText(tds[13]),
+          fee: getText(tds[32]),
+          remark: getText(tds[33]),
+          taskStatus: getText(tds[34]),
+        };
+      }
+
+      table.addEventListener("click", function (e) {
+        var copyLink = e.target.closest("a.op-link");
+        if (copyLink && (copyLink.textContent || "").replace(/\s+/g, "") === "复制") {
+          e.preventDefault();
+          var trCopy = copyLink.closest("tr");
+          var rowCopy = buildRowData(trCopy);
+          if (!rowCopy) return;
+          try {
+            sessionStorage.setItem(
+              "ERP_INTERCITY_CAR_REQUEST_COPY",
+              JSON.stringify({
+                transportType: rowCopy.transportType,
+                carrierType: rowCopy.carrierType,
+                lineType: rowCopy.lineType,
+                vehicleType: rowCopy.vehicleType,
+                carrierName: rowCopy.carrierName
+              })
+            );
+          } catch (err) {}
+          window.location.href = "创建城际要车.html";
+          return;
+        }
+
+        var a = e.target.closest("a.op-link[data-request-code]");
+        if (!a) return;
+
+        var tr = a.closest("tr");
+        var rowData = buildRowData(tr);
+        if (!rowData || !rowData.requestCode) return;
+
+        try {
+          sessionStorage.setItem("ERP_INTERCITY_CAR_REQUEST_DETAIL", JSON.stringify(rowData));
+        } catch (err) {}
+      });
+    })();
+  </script>
+</body>
+</html>

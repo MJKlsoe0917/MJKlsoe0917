@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>页面标题 · 万邦速达</title>
+  <!-- 本模板位于 产品原型/common/，与 prototype-shell 同目录故用相对文件名。复制到其它目录时请改为 ../common/ 或 ../../../common/ 等 -->
+  <link rel="stylesheet" href="prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+    }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .page {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      overflow: auto;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- module / active：与当前侧栏高亮一致；其它业务页复制后改模块名 -->
+  <!-- 模板说明：
+    1. page-shell-template.html：通用综合模板（标题栏 + tab + 分块）
+    2. page-list-template.html：列表页模板
+    3. page-detail-template.html：详情/表单页模板
+  -->
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      module: "专车报价",
+      active: "专车报价",
+      topbarActive: "要车",
+      sidebarFromProductRoot: "../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">页面标题</div>
+            <div class="header-actions">
+              <a class="header-link" href="javascript:void(0)">取消</a>
+              <a class="header-link" href="javascript:void(0)">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <!--
+        如无需 Tab，直接从这里开始放业务内容即可。
+        如需 Tab，保留下面结构并复制 section。
+        -->
+        <div class="tabs-bar">
+          <button class="tab-btn is-active" type="button" data-tab="tab1">Tab 1</button>
+          <button class="tab-btn" type="button" data-tab="tab2">Tab 2</button>
+        </div>
+
+        <div class="tab-panels">
+          <section class="tab-panel is-active" data-panel="tab1">
+            <section class="detail-block">
+              <h2 class="block-title">基础信息</h2>
+              <p style="padding:0 2px;color:#5c6370;line-height:1.8;">在此编写第一个页签的内容。</p>
+            </section>
+          </section>
+
+          <section class="tab-panel" data-panel="tab2">
+            <section class="detail-block">
+              <h2 class="block-title">扩展信息</h2>
+              <p style="padding:0 2px;color:#5c6370;line-height:1.8;">在此编写第二个页签的内容。</p>
+            </section>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="prototype-shell.js"></script>
+  <script>
+    (function () {
+      var tabButtons = document.querySelectorAll(".tab-btn");
+      var tabPanels = document.querySelectorAll(".tab-panel");
+
+      if (!tabButtons.length || !tabPanels.length) return;
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          var tab = button.getAttribute("data-tab");
+          tabButtons.forEach(function (item) {
+            item.classList.toggle("is-active", item === button);
+          });
+          tabPanels.forEach(function (panel) {
+            panel.classList.toggle("is-active", panel.getAttribute("data-panel") === tab);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

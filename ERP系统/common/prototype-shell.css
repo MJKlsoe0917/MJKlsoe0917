@@ -1,0 +1,753 @@
+/**
+ * 产品原型 · 公共顶栏 + 左侧菜单（导航栏与侧栏）
+ * 位置：产品原型根目录下的 common/
+ * 侧栏默认色与字级在 body 上已对齐供应商门户；各页 :root 可保留 --purple 等，勿再覆盖侧栏专用变量除非有意为之
+ *
+ * --intercity-sidebar-width：与 .sidebar-menu 同宽
+ * --intercity-main-padding-x：与主列表 query-section / list-section 左右内边距一致（默认 16px）
+ *
+ * 主内容区与 .page 标题栏吸顶、内层滚动：见文中「ERP 主内容区 + 标题栏滚动」一节。
+ */
+
+body {
+  /* 侧栏宽度与供应商门户 --sidebar-w 一致 */
+  --intercity-sidebar-width: 200px;
+  --intercity-main-padding-x: 16px;
+  --intercity-topbar: #eb3b19;
+  /* 侧栏背景、描边、菜单字级与交互与供应商门户 supplier-shell 对齐 */
+  --sidebar-bg: #f7f7f7;
+  --sidebar-border: #e8e8e8;
+  --menu-orange: #e64a19;
+  --menu-hover: rgba(230, 74, 25, 0.06);
+  --menu-l1-hover-bg: rgba(0, 0, 0, 0.04);
+}
+
+.topbar {
+  height: 72px;
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+  margin: 0; /* 避免 <header> 等替换后仍带默认外边距，与下方主区之间出现缝隙 */
+  display: grid;
+  grid-template-columns: var(--intercity-sidebar-width) minmax(0, 1fr) auto;
+  grid-template-rows: 72px;
+  align-items: center;
+  column-gap: 0;
+  padding: 0;
+  /* 纯色顶栏，无渐变、无阴影；中间系统菜单区用形状略呈上下向中间收拢的「鼓面」感，颜色与顶栏一致 */
+  background: var(--intercity-topbar);
+  box-shadow: none;
+  z-index: 10;
+}
+
+body.sidebar-is-collapsed .topbar {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+/* 1+2：与侧栏等宽区域内的品牌 + 隐藏图标 */
+.topbar-tray {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 10px 0 12px;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.topbar-brand {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.15px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.topbar-menu-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.topbar-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.topbar-menu-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.topbar-menu-btn svg {
+  display: block;
+}
+
+/* 3. 系统菜单：与顶栏同色；上下留缝、横向大圆角，视觉上像从上下沿向中间隆起，无阴影 */
+.topbar-module-nav {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0;
+  margin: 6px 10px 6px 0;
+  padding: 0 10px 0 var(--intercity-main-padding-x);
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  border-radius: 999px;
+  background: var(--intercity-topbar);
+  box-shadow: none;
+}
+
+.topbar-module-nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.topbar-mod {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 70px;
+  padding: 7px 12px 9px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.topbar-mod-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* 菜单项之间的白色竖线分隔（红底上可见；末项右侧无线） */
+.topbar-module-nav > .topbar-mod:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+/* 未选中：与导航栏同色（透明底融入红底） */
+.topbar-mod:not(.is-active) {
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.topbar-mod:not(.is-active) .topbar-mod-label {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.topbar-mod:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: transparent;
+}
+
+.topbar-mod:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+/* 选中：白底，文字与图标用深色/品牌色，整体呈「白色块」高亮（无投影） */
+.topbar-mod.is-active {
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  box-shadow: none;
+}
+
+/* 选中项右侧：白底上与半透明白线对比弱，用浅灰线与下一项（红底）区分 */
+.topbar-module-nav > .topbar-mod.is-active:not(:last-child) {
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+
+.topbar-mod.is-active .topbar-mod-label {
+  color: var(--menu-orange);
+}
+
+.topbar-mod-icon {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.topbar-mod:not(.is-active) .topbar-mod-icon-back {
+  fill: rgba(255, 255, 255, 0.45);
+}
+
+.topbar-mod:not(.is-active) .topbar-mod-icon-front {
+  fill: rgba(255, 255, 255, 0.92);
+}
+
+.topbar-mod.is-active .topbar-mod-icon-back {
+  fill: #fcd4cc;
+}
+
+.topbar-mod.is-active .topbar-mod-icon-front {
+  fill: var(--intercity-topbar, #eb3b19);
+}
+
+.topbar-user {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 22px;
+  min-width: 120px;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.topbar-user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.topbar-right {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .topbar-tray {
+    padding-left: 12px;
+    padding-right: var(--intercity-main-padding-x);
+  }
+
+  .topbar-user {
+    min-width: 100px;
+    padding: 0 12px;
+  }
+}
+
+.app-layout.sidebar-is-collapsed .sidebar-menu {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0;
+  border-right-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: width 0.22s ease, opacity 0.18s ease;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  align-items: stretch;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-menu {
+  width: var(--intercity-sidebar-width);
+  flex-shrink: 0;
+  transition: width 0.22s ease, opacity 0.18s ease;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 14px 12px 8px;
+}
+
+.menu-group {
+  margin-bottom: 2px;
+}
+
+.menu-group + .menu-group {
+  margin-top: 6px;
+}
+
+button.menu-level1 {
+  width: 100%;
+  margin: 0 0 2px 0;
+  padding: 11px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.35;
+  color: #333;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+button.menu-level1:hover {
+  background: var(--menu-l1-hover-bg);
+}
+
+.menu-group.is-open.has-active-child button.menu-level1 {
+  background: var(--menu-orange);
+  color: #fff;
+  font-weight: 600;
+}
+
+.menu-group.is-open.has-active-child .menu-icon--l1 {
+  color: #fff;
+}
+
+.menu-group.is-open.has-active-child button.menu-level1 .menu-chevron {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 无二级菜单的一级项（SIDEBAR_TREE 中 l2 为空时使用） */
+.menu-level1--static {
+  width: 100%;
+  margin: 0 0 4px 0;
+  padding: 11px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.35;
+  color: #333;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  cursor: default;
+}
+
+.menu-level1-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c5c5c;
+}
+
+.menu-icon--l1 {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-icon--l1 svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.menu-icon--l2 {
+  width: 20px;
+  height: 20px;
+  align-self: center;
+  margin-top: 0;
+  color: #5c5c5c;
+}
+
+.menu-icon--l2 svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.menu-item:hover .menu-icon--l2,
+.menu-item.active .menu-icon--l2 {
+  color: var(--menu-orange);
+}
+
+button.menu-level1 .menu-level1-text {
+  flex: 1;
+  min-width: 0;
+}
+
+button.menu-level1 .menu-chevron {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #8a8a8a;
+  line-height: 1;
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.menu-group.is-open button.menu-level1 .menu-chevron {
+  transform: rotate(180deg);
+}
+
+.menu-group:not(.is-open) button.menu-level1 .menu-chevron {
+  transform: rotate(0deg);
+}
+
+.menu-sub {
+  padding: 4px 0 8px 0;
+  display: none;
+  background: transparent;
+}
+
+.menu-group.is-open .menu-sub {
+  display: block;
+}
+
+a.menu-item {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.menu-item {
+  padding: 8px 12px 8px 20px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #4a4a4a;
+  cursor: pointer;
+  border: none;
+  border-bottom: none;
+  transition: color 0.15s ease, background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item:hover {
+  background: var(--menu-hover);
+  color: var(--menu-orange);
+}
+
+.menu-item.active {
+  background: transparent;
+  color: var(--menu-orange);
+  font-weight: 500;
+  padding-left: 20px;
+}
+
+.menu-item.active:hover {
+  background: var(--menu-hover);
+  color: var(--menu-orange);
+}
+
+.menu-item.active .menu-icon--l2 {
+  color: var(--menu-orange);
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/*
+ * ERP 主内容区 + 标题栏滚动（凡引用本 CSS 且使用顶栏/侧栏壳的页面统一生效）
+ *
+ * - .main-content / .main-area：占满顶栏下剩余高度，自身不出现整区滚动条。
+ * - .page（直接子级）：flex 纵排；内容超出时整块可滚；.page-head 使用 sticky 吸顶。
+ * - .detail-main / .page-scroll / .erp-page-body：仅在此区域内滚动（占满标题下剩余高度）。
+ *
+ * 列表页（main-area 下为 query-section + list-section、无 .page）不受影响。
+ * 选择器含 body .app-layout 且子选择器优先级高于各页内联里的 .page，避免逐页改 overflow。
+ */
+
+/* 侧栏右侧、顶栏下方的「主工作区」容器：负责占满剩余视口高度，由内部 .page 或列表区再分工滚动 */
+body .app-layout .main-content,
+body .app-layout .main-area {
+  flex: 1; /* 在 body 的纵向 flex 里吃掉顶栏下全部剩余空间 */
+  min-width: 0; /* 允许在窄屏/侧栏存在时收缩，避免子项 min-content 把横向撑出滚动条 */
+  min-height: 0; /* 关键：让 flex 子项高度可小于内容高度，否则内层 overflow 无法生效 */
+  width: 100%;
+  margin: 0;
+  padding: 0; /* 避免主区上内边距在顶栏与业务标题之间露出灰底 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 滚动交给 .page 或 .detail-main，本层不整体滚动 */
+}
+
+/* 白底业务页卡片：常见结构为 page-head（标题）+ 正文；整块可纵向滚动，标题条 sticky 吸顶 */
+body .app-layout .main-content > .page,
+body .app-layout .main-area > .page {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* 顶栏与页面标题栏之间禁止留白：滚动容器若保留 padding-top，sticky 吸顶时会在上方露出一条底/背景色 */
+  padding-top: 0;
+  overflow-x: auto; /* 宽表格等可横向滚动 */
+  overflow-y: auto; /* 无 .detail-main 时整页滚；有内层滚动区时通常只有内层出现滚动条 */
+  -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+}
+
+/* 标题下方的「唯一滚动区」：与 .page-head 配合，实现标题固定、仅正文滚动（须配合 flex 与 min-height:0） */
+body .app-layout .page .detail-main,
+body .app-layout .page .page-scroll,
+body .app-layout .page .erp-page-body {
+  flex: 1 1 auto; /* 占满标题下剩余纵向空间 */
+  min-width: 0;
+  min-height: 0; /* 与父级 flex 配合，否则子元素会被内容撑高导致外层滚动 */
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- ERP 页面标题栏（业务页勿再重复写 .page-head / .header 等）---------- */
+
+/* 标题栏外框：sticky 在 .page 的滚动视口内吸顶；左右负边距抵消 .page 常见 padding-left/right:12px，顶边与主区顶部贴齐 */
+body .page-head,
+body .erp-page-head {
+  position: sticky;
+  top: 0;
+  z-index: 5; /* 滚过表单时标题盖住下方内容 */
+  flex-shrink: 0; /* 纵向 flex 布局下不被压扁 */
+  margin: 0 -12px 12px -12px; /* 不再使用 margin-top:-12px（.page 已由公共样式去掉 padding-top） */
+  padding: 0;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* 标题行：左标题、右操作链接；上下内边距对称，保证整块在栏高内垂直居中 */
+body .header,
+body .erp-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line, #dcdfe6);
+  box-sizing: border-box;
+}
+
+body .header-title,
+body .erp-page-title {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25; /* 与右侧链接行高一致，避免字框上下留白不均导致「看起来不居中」 */
+  color: #303848;
+  letter-spacing: 0.2px;
+}
+
+/* 右侧「取消 / 保存」等操作区（父级 .header 已 align-items:center，此处与标题同高对齐） */
+body .header-actions,
+body .erp-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+body .header-link,
+body .erp-page-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--purple, #7d5bc9);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+body .header-link:hover,
+body .erp-page-link:hover {
+  text-decoration: underline;
+}
+
+/* 窄屏：标题略缩小，避免与操作区抢横向空间 */
+@media (max-width: 780px) {
+  body .header-title,
+  body .erp-page-title {
+    font-size: 16px;
+  }
+}
+
+/* 更窄：操作链接换行并右对齐，避免挤出视口 */
+@media (max-width: 640px) {
+  body .header-actions,
+  body .erp-page-actions {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    justify-content: flex-end;
+  }
+}
+
+/*
+ * ERP 分块标题「色块」：灰色背景条 + 左侧紫色竖条（::before），用于「用车信息」等区块标题。
+ *
+ * 【色块整体高度】由下面几项共同决定（改高度优先动前两处，避免单独拉大字号）：
+ *   - padding 上下：当前 4px；曾用 12px 14px 等较大值，减小可明显压扁整条灰底。
+ *   - line-height：当前 1.25；略降可再收一点行高。
+ *   - font-size：当前 14px；增大标题字会连带撑高色块。
+ * margin 仅影响标题与下方内容的间距，不改变色块本身高度。
+ *
+ * 【左侧竖条高度】：::before 的 height 使用 0.95em（相对字号），与文字行高成比例；
+ * width 为竖条粗细。若改为固定 px，换字号时竖条与文字可能不协调。
+ */
+body .block-title,
+body .erp-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px 0;
+  /* 色块高度：上下内边距（与 line-height、font-size 一起决定灰条总高） */
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #f0f2f5;
+  color: #303848;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+body .block-title::before,
+body .erp-section-title::before {
+  content: "";
+  width: 3px;
+  /* 竖条视觉高度：相对字号缩放，略小于 1em 避免条比字行更显高 */
+  height: 0.95em;
+  flex-shrink: 0;
+  align-self: center;
+  border-radius: 2px;
+  /* 与各页 :root --purple 一致；勿在业务页单独覆盖 ::before 的 background，避免竖线颜色不统一 */
+  background: var(--purple, #7d5bc9);
+}
+
+/* ERP 页面 Tab 公共样式 */
+body .tabs-bar,
+body .erp-tabs-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--line, #dcdfe6);
+  overflow: hidden;
+}
+
+body .tab-btn,
+body .erp-tab-btn {
+  margin: 0;
+  margin-bottom: -1px;
+  padding: 14px 12px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #5c6370;
+  font-family: inherit;
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+body .tab-btn:hover,
+body .erp-tab-btn:hover {
+  color: #7d5bc9;
+}
+
+body .tab-btn.is-active,
+body .erp-tab-btn.is-active {
+  color: var(--purple, #7d5bc9);
+  font-weight: 600;
+  border-bottom-color: var(--purple, #7d5bc9);
+}
+
+body .tab-panels,
+body .erp-tab-panels {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+body .tab-panel,
+body .erp-tab-panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+  padding: 0;
+}
+
+body .tab-panel.is-active,
+body .erp-tab-panel.is-active {
+  display: flex;
+}
+
+body .tab-panel.tab-panel--plain,
+body .erp-tab-panel.erp-tab-panel--plain,
+body .erp-tab-panel.tab-panel--plain,
+body .tab-panel.erp-tab-panel--plain {
+  padding: 20px;
+  overflow: auto;
+}
+
+body .tab-panel.tab-panel--plain.is-active,
+body .erp-tab-panel.erp-tab-panel--plain.is-active,
+body .erp-tab-panel.tab-panel--plain.is-active,
+body .tab-panel.erp-tab-panel--plain.is-active {
+  display: block;
+}

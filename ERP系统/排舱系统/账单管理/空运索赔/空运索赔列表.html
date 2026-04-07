@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>空运索赔列表 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quote-query {
+      display: grid;
+      grid-template-columns: minmax(200px, 280px) minmax(260px, 1fr);
+      gap: 12px 16px;
+      align-items: stretch;
+    }
+
+    .quote-query-bulk {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+    }
+
+    .bulk-field {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 104px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .bulk-field .bulk-select {
+      width: 100%;
+      height: 36px;
+      margin: 0;
+      padding: 0 28px 0 10px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .bulk-field textarea {
+      flex: 0 1 auto;
+      width: 100%;
+      min-height: 60px;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .bulk-field textarea::placeholder {
+      color: #9aa1ad;
+    }
+
+    .quote-query-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .quote-query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field .q-ctl {
+      width: 100%;
+      position: relative;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .filterable-input {
+      padding-right: 28px !important;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center !important;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 20;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query .qi {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+      min-height: 35px;
+      padding: 10px 16px 0;
+      box-sizing: border-box;
+      background: #fff;
+      border: none;
+      box-shadow: none;
+      outline: none;
+    }
+
+    a.ops-action {
+      text-decoration: none;
+      color: var(--purple);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 4px 10px 4px 8px;
+      border: none;
+      border-radius: 4px;
+      border-left: 3px solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover:not(.is-selected) {
+      background: #f0f1f4;
+    }
+
+    .ops-action:active:not(.is-selected) {
+      background: #e6e7eb;
+    }
+
+    .ops-action.is-selected {
+      background: #ede8f7;
+      border-left-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action.is-selected:hover {
+      background: #e4dbf5;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      flex-shrink: 0;
+      color: inherit;
+      opacity: 0.95;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.18);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-mask.is-open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 248px;
+      background: #fff;
+      border-radius: 2px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      height: 48px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      color: #303848;
+      font-weight: 500;
+    }
+
+    .modal-close {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #303848;
+    }
+
+    .modal-body {
+      padding: 14px 12px 16px;
+    }
+
+    .modal-field {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-label {
+      text-align: right;
+      font-size: 13px;
+      color: #303848;
+      white-space: nowrap;
+    }
+
+    .modal-label.required::before {
+      content: "*";
+      color: #d63b3b;
+      margin-right: 2px;
+    }
+
+    .modal-field select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 2px;
+      padding: 0 28px 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .modal-btn {
+      min-width: 80px;
+      height: 36px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #4f5664;
+    }
+
+    .modal-btn--primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .modal-btn--primary:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .table-area {
+      flex: 1;
+      min-height: 0;
+      padding: 12px 16px 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .data-table-wrap {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-bottom: none;
+      background: #fff;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: auto;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      white-space: nowrap;
+      color: #4f5664;
+    }
+
+    .data-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 11px;
+      font-size: 12px;
+      line-height: 22px;
+      background: #ede8f7;
+      color: var(--purple);
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "排舱",
+      sidebarActiveL1: "账单管理",
+      sidebarActiveL2: "空运索赔",
+      sidebarFromProductRoot: "../../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="tabs-bar" id="tabsBar">
+        <button class="tab-btn is-active" type="button" data-tab="all">全部</button>
+        <button class="tab-btn" type="button" data-tab="pendingConfirm">待确认</button>
+        <button class="tab-btn" type="button" data-tab="supplierPending">待供应商处理</button>
+        <button class="tab-btn" type="button" data-tab="appealPending">申诉待处理</button>
+        <button class="tab-btn" type="button" data-tab="appealRejected">申诉驳回</button>
+        <button class="tab-btn" type="button" data-tab="resultApproval">索赔结果审批</button>
+      </div>
+
+      <div class="tab-panels">
+        <section class="tab-panel is-active" data-panel="all">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔状态</option><option>待确认</option><option>待供应商处理</option><option>申诉待处理</option><option>申诉驳回</option><option>索赔结果审批</option><option>已确认</option><option>已取消</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔类型</option><option>时效延误</option><option>丢货</option><option>CCA索赔</option><option>其它索赔</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="approver" placeholder="当前审批人" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="businessOwner" placeholder="负责商务" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="follower" placeholder="跟单员" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" placeholder="飞书审批编码" /></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ops-section" data-ops-group>
+            <button type="button" class="ops-action is-selected" data-open-claim-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              </span>
+              新增索赔
+            </button>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-all"></table>
+            </div>
+          </div>
+        </section>
+        <section class="tab-panel" data-panel="pendingConfirm">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-pendingConfirm"></table>
+            </div>
+          </div>
+        </section>
+        <section class="tab-panel" data-panel="supplierPending">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔类型</option><option>时效延误</option><option>丢货</option><option>CCA索赔</option><option>其它索赔</option></select></div></div>
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-supplierPending"></table>
+            </div>
+          </div>
+        </section>
+        <section class="tab-panel" data-panel="appealPending">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔类型</option><option>时效延误</option><option>丢货</option><option>CCA索赔</option><option>其它索赔</option></select></div></div>
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-appealPending"></table>
+            </div>
+          </div>
+        </section>
+        <section class="tab-panel" data-panel="appealRejected">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔类型</option><option>时效延误</option><option>丢货</option><option>CCA索赔</option><option>其它索赔</option></select></div></div>
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-appealRejected"></table>
+            </div>
+          </div>
+        </section>
+        <section class="tab-panel" data-panel="resultApproval">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="提单号">
+                    <option>提单号</option>
+                  </select>
+                  <textarea placeholder="请输入提单号，多个提单号请换行输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl range-input"><select><option>创建时间</option></select><input type="text" placeholder="请选择时间" /></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="supplier" placeholder="供应商" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>采购方式</option><option>商业临采</option><option>空运包机</option><option>BSA固定位</option><option>固定位托底</option><option>包机托底</option></select></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>直飞/转飞</option><option>直飞</option><option>转飞</option></select></div></div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="originPort" placeholder="起运港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><input type="text" class="filterable-input" data-filterable="destinationPort" placeholder="目的港" autocomplete="off" /><div class="filterable-menu" hidden></div></div></div>
+                  <div class="q-field"><div class="q-ctl"><select><option>索赔类型</option><option>时效延误</option><option>丢货</option><option>CCA索赔</option><option>其它索赔</option></select></div></div>
+                  <div class="query-action-cell"><button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-area">
+            <div class="data-table-wrap">
+              <table class="data-table" id="table-resultApproval"></table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="claimTypeModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="claimTypeModalTitle">
+      <div class="modal-head">
+        <div id="claimTypeModalTitle">索赔类型选择</div>
+        <button type="button" class="modal-close" data-close-claim-modal aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <div class="modal-label required">索赔类型</div>
+          <div>
+            <select id="claimTypeSelect">
+              <option value="">请选择索赔类型</option>
+              <option value="delay">时效延误</option>
+              <option value="loss">丢货</option>
+              <option value="cca">CCA索赔</option>
+              <option value="other">其它索赔</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn" data-close-claim-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" id="claimTypeConfirmBtn">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var columnMap = {
+        "提单号": "WB240801001",
+        "负责商务": "李海峰",
+        "跟单员": "王小雨",
+        "供应商": "G01183:深圳市广宏达物流有限公司",
+        "索赔状态": "待确认",
+        "采购方式": "临采",
+        "直飞/转飞": "直飞",
+        "起运港": "SZX",
+        "目的港": "LAX",
+        "航司": "CZ",
+        "航班号": "CZ327",
+        "ETD": "2026-04-01 08:30",
+        "ATD": "2026-04-01 09:05",
+        "ETA": "2026-04-01 18:40",
+        "ATA": "2026-04-01 19:12",
+        "计费重量(KG)": "1260",
+        "索赔类型": "延误索赔",
+        "索赔标准": "按航班延误标准",
+        "索赔原因": "航班晚起飞导致到港延误",
+        "索赔金额": "3500",
+        "实赔金额": "2800",
+        "汇率": "7.12",
+        "发起人": "陈佳",
+        "发起时间": "2026-04-01 10:15",
+        "索赔确认时间": "2026-04-01 14:20",
+        "当前审批人": "刘总监",
+        "一级审批": "张经理",
+        "二级审批": "刘总监",
+        "三级审批": "王总",
+        "审批时间": "2026-04-01 16:00",
+        "飞书审批编号": "FS202604010001"
+      };
+
+      var fullColumns = [
+        "序号", "提单号", "负责商务", "跟单员", "供应商", "索赔状态", "采购方式", "直飞/转飞", "起运港",
+        "目的港", "航司", "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型",
+        "索赔标准", "索赔原因", "索赔金额", "实赔金额", "汇率", "发起人", "发起时间", "索赔确认时间",
+        "当前审批人", "一级审批", "二级审批", "三级审批", "审批时间", "飞书审批编号"
+      ];
+
+      var resultApprovalColumns = [
+        "序号", "操作", "提单号", "负责商务", "跟单员", "供应商", "采购方式", "直飞/转飞", "起运港",
+        "目的港", "航司", "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型",
+        "索赔标准", "索赔原因", "索赔金额", "实赔金额", "汇率", "发起人", "发起时间", "索赔确认时间",
+        "当前审批人", "一级审批", "二级审批", "三级审批", "审批时间", "飞书审批编号"
+      ];
+
+      var simpleColumns = [
+        "序号", "操作", "提单号", "负责商务", "跟单员", "供应商", "采购方式", "直飞/转飞", "起运港", "目的港", "航司",
+        "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型", "索赔标准", "索赔原因",
+        "索赔金额", "汇率", "发起人", "发起时间"
+      ];
+
+      var supplierPendingColumns = [
+        "序号", "提单号", "负责商务", "跟单员", "供应商", "采购方式", "直飞/转飞", "起运港", "目的港", "航司",
+        "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型", "索赔标准", "索赔原因",
+        "索赔金额", "汇率", "发起人", "发起时间"
+      ];
+
+      var appealPendingColumns = [
+        "序号", "操作", "提单号", "负责商务", "跟单员", "供应商", "采购方式", "直飞/转飞", "起运港", "目的港", "航司",
+        "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型", "索赔标准", "索赔原因",
+        "索赔金额", "赔付金额", "申诉原因", "汇率", "发起人", "发起时间"
+      ];
+
+      var appealRejectedColumns = [
+        "序号", "提单号", "负责商务", "跟单员", "供应商", "采购方式", "直飞/转飞", "起运港", "目的港", "航司",
+        "航班号", "ETD", "ATD", "ETA", "ATA", "计费重量(KG)", "索赔类型", "索赔标准", "索赔原因",
+        "索赔金额", "赔付金额", "申诉原因", "驳回原因", "汇率", "发起人", "发起时间"
+      ];
+
+      var tableConfig = {
+        all: fullColumns,
+        pendingConfirm: simpleColumns,
+        supplierPending: supplierPendingColumns,
+        appealPending: appealPendingColumns,
+        appealRejected: appealRejectedColumns,
+        resultApproval: resultApprovalColumns
+      };
+
+      var statusOrder = ["待确认", "待供应商处理", "申诉待处理", "申诉驳回", "索赔结果审批", "已确认", "已取消"];
+      var tableStatusMap = {
+        pendingConfirm: "待确认",
+        supplierPending: "待供应商处理",
+        appealPending: "申诉待处理",
+        appealRejected: "申诉驳回",
+        resultApproval: "索赔结果审批"
+      };
+
+      var claimTypeTemplates = [
+        {
+          type: "时效延误",
+          standard: "240H<延误时效<=360H 扣除12%运费",
+          reasons: ["落地延误", "航班晚起飞", "中转衔接异常", "目的港提取延误", "交接晚点", "清关延迟", "末端派送超时"],
+          baseAmount: 900,
+          baseCompensation: 620,
+          currency: "CNY"
+        },
+        {
+          type: "丢货",
+          standard: "未声明价值：按26 SDR/公斤赔偿，赔付限额与实际货值，二者取低，外加“丢失货物的运费”",
+          reasons: ["缺失1件货物", "货物件数不符", "到港少件", "转运丢失", "目的港提货短少", "仓内清点异常", "分拨遗失"],
+          baseAmount: 1500,
+          baseCompensation: 1080,
+          currency: "CNY"
+        },
+        {
+          type: "CCA索赔",
+          standard: "按实际责任认定赔付",
+          reasons: ["箱单异常导致CCA费用产生", "标签错误触发CCA", "改配产生CCA费用", "目的站更正资料收费", "舱单更改附加费用", "货描错误补录费用", "数据异常导致重申报"],
+          baseAmount: 1208,
+          baseCompensation: 500,
+          currency: "CNY"
+        },
+        {
+          type: "其它索赔",
+          standard: "按实际责任认定赔付",
+          reasons: ["操作异常产生额外费用", "仓储超期费用", "提货安排失误", "错分流向产生倒货费", "改单处理费", "异常装卸附加费", "客户额外服务补偿"],
+          baseAmount: 860,
+          baseCompensation: 360,
+          currency: "CNY"
+        }
+      ];
+
+      var routePool = [
+        { supplier: "LIHANGHK:利航國際貨運(香港)有限公司", procurement: "商业临采", flightMode: "直飞", origin: "SZX", destination: "LHR", airline: "CX", flightNo: "CX357", owner: "xiaojun.zhu", follower: "mingmei.he", approver: "刘总监", initiator: "陈佳", exchangeRate: "7.12" },
+        { supplier: "G01191:北京智运航空运输代理有限公司广州分公司", procurement: "BSA固定位", flightMode: "转飞", origin: "HKG", destination: "YYZ", airline: "MH", flightNo: "MH6107", owner: "kaishan.xu", follower: "haihua.zhuang", approver: "张经理", initiator: "李晨", exchangeRate: "0.92" },
+        { supplier: "G01073:SKY BEST GROUP COMPANY LIMITED", procurement: "商业临采", flightMode: "直飞", origin: "PVG", destination: "AMS", airline: "EK", flightNo: "EK9847", owner: "xujie.peng", follower: "donggen.wen", approver: "周经理", initiator: "王莉", exchangeRate: "7.10" },
+        { supplier: "G00655:速达货运（香港）有限公司", procurement: "BSA固定位", flightMode: "转飞", origin: "EHU", destination: "MAD", airline: "MP", flightNo: "MP9470", owner: "meijiao.liu", follower: "mei.ye", approver: "刘总监", initiator: "张敏", exchangeRate: "7.08" },
+        { supplier: "AIRGLOBAL:世航货运有限公司", procurement: "商业临采", flightMode: "直飞", origin: "CAN", destination: "LGG", airline: "O3", flightNo: "O3152", owner: "yongmei.wang", follower: "shubin.huang", approver: "王总", initiator: "赵宇", exchangeRate: "7.11" },
+        { supplier: "HANWEN:深圳市涵文国际货运代理有限公司", procurement: "BSA固定位", flightMode: "转飞", origin: "NKG", destination: "STN", airline: "MU", flightNo: "MU851", owner: "pengji.lv", follower: "xiaoyan.yuan", approver: "刘总监", initiator: "孙璐", exchangeRate: "7.09" },
+        { supplier: "G01183:深圳市广宏达物流有限公司", procurement: "商业临采", flightMode: "直飞", origin: "XMN", destination: "LAX", airline: "CZ", flightNo: "CZ327", owner: "lihaifeng.li", follower: "wangxiaoyu", approver: "王总", initiator: "周洁", exchangeRate: "7.06" }
+      ];
+
+      function padNumber(value, length) {
+        return String(value).padStart(length, "0");
+      }
+
+      function formatCurrency(currency, amount) {
+        return currency + "  " + amount.toFixed(2);
+      }
+
+      function formatDate(day, hour, minute) {
+        return "2026-04-" + padNumber(day, 2) + " " + padNumber(hour, 2) + ":" + padNumber(minute, 2);
+      }
+
+      function buildApprovalText(status, level, detailPageApprover) {
+        if (["待确认", "待供应商处理", "申诉待处理", "申诉驳回", "已取消"].indexOf(status) > -1) {
+          return "—";
+        }
+        if (level === 1) return "张三-审批通过：同意处理";
+        if (level === 2) return "李四-审批通过：金额合理";
+        return detailPageApprover + "-审批通过：执行赔付";
+      }
+
+      function getClaimStandardByType(template) {
+        if (template.type === "CCA索赔" || template.type === "其它索赔") {
+          return "";
+        }
+        return template.standard;
+      }
+
+      function getExchangeRateByType(template, route) {
+        if (["时效延误", "CCA索赔", "其它索赔"].indexOf(template.type) > -1) {
+          return "";
+        }
+        return route.exchangeRate;
+      }
+
+      var sampleRows = [];
+      claimTypeTemplates.forEach(function (template, typeIndex) {
+        statusOrder.forEach(function (status, statusIndex) {
+          var route = routePool[(typeIndex + statusIndex) % routePool.length];
+          var day = typeIndex * 7 + statusIndex + 1;
+          var claimAmount = template.baseAmount + statusIndex * 140 + typeIndex * 90;
+          var compensationAmount = status === "申诉驳回" || status === "已取消"
+            ? 0
+            : template.baseCompensation + statusIndex * 90 + typeIndex * 60;
+          sampleRows.push({
+            "提单号": (176 + typeIndex * 111) + "-" + padNumber(27436183 + statusIndex * 23147 + typeIndex * 8801, 8),
+            "负责商务": route.owner,
+            "跟单员": route.follower,
+            "供应商": route.supplier,
+            "索赔状态": status,
+            "采购方式": route.procurement,
+            "直飞/转飞": route.flightMode,
+            "起运港": route.origin,
+            "目的港": route.destination,
+            "航司": route.airline,
+            "航班号": route.flightNo,
+            "ETD": formatDate(day, 8 + (statusIndex % 4), 10),
+            "ATD": formatDate(day, 8 + (statusIndex % 4), 45),
+            "ETA": formatDate(day, 18 + (statusIndex % 3), 20),
+            "ATA": formatDate(day, 18 + (statusIndex % 3), 52),
+            "计费重量(KG)": String(920 + typeIndex * 180 + statusIndex * 65),
+            "索赔类型": template.type,
+            "索赔标准": getClaimStandardByType(template),
+            "索赔原因": template.reasons[statusIndex],
+            "索赔金额": formatCurrency(template.currency, claimAmount),
+            "赔付金额": formatCurrency(template.currency, compensationAmount),
+            "申诉原因": status === "申诉待处理" || status === "申诉驳回" ? "补充材料后申请调整赔付" : "—",
+            "驳回原因": status === "申诉驳回" ? "申诉材料不足，维持原结果" : "—",
+            "实赔金额": formatCurrency(template.currency, compensationAmount),
+            "汇率": getExchangeRateByType(template, route),
+            "发起人": route.initiator,
+            "发起时间": formatDate(day, 10, 15),
+            "索赔确认时间": status === "待确认" || status === "已取消" ? "—" : formatDate(day, 14, 20),
+            "当前审批人": status === "已确认" || status === "已取消" ? "—" : route.approver,
+            "一级审批": buildApprovalText(status, 1, route.approver),
+            "二级审批": buildApprovalText(status, 2, route.approver),
+            "三级审批": buildApprovalText(status, 3, route.approver),
+            "审批时间": status === "索赔结果审批" || status === "已确认" ? formatDate(day, 16, 0) : "",
+            "飞书审批编号": "FS202604" + padNumber(typeIndex + 1, 2) + padNumber(statusIndex + 1, 2)
+          });
+        });
+      });
+
+      function getSourceTabKey(tableId) {
+        var map = {
+          "table-all": "all",
+          "table-pendingConfirm": "pendingConfirm",
+          "table-supplierPending": "supplierPending",
+          "table-appealPending": "appealPending",
+          "table-appealRejected": "appealRejected",
+          "table-resultApproval": "resultApproval"
+        };
+        return map[tableId] || "all";
+      }
+
+      function getDetailPageByClaimType(claimType) {
+        if (claimType === "时效延误") return "索赔详情/详情_时效延误.html";
+        if (claimType === "丢货") return "索赔详情/详情_丢货.html";
+        if (
+          claimType === "CCA索赔和其它索赔" ||
+          claimType === "CCA索赔和其他索赔" ||
+          claimType === "CCA索赔货其它索赔" ||
+          claimType === "CCA索赔" ||
+          claimType === "其它索赔"
+        ) {
+          return "索赔详情/详情_CCA索赔和其它索赔.html";
+        }
+        return "索赔详情/详情_时效延误.html";
+      }
+
+      function buildDetailLink(rowData, tableId, text) {
+        var detailPage = getDetailPageByClaimType(rowData["索赔类型"]);
+        var sourceTab = getSourceTabKey(tableId);
+        return (
+          '<a href="' +
+          detailPage +
+          "?mawb=" +
+          encodeURIComponent(rowData["提单号"] || "") +
+          "&sourceTab=" +
+          encodeURIComponent(sourceTab) +
+          "&claimStatus=" +
+          encodeURIComponent(rowData["索赔状态"] || "") +
+          "&claimType=" +
+          encodeURIComponent(rowData["索赔类型"] || "") +
+          '" class="op-link">' +
+          text +
+          "</a>"
+        );
+      }
+
+      function getOperationText(tableId) {
+        if (tableId === "table-pendingConfirm") return "索赔确认";
+        if (tableId === "table-appealPending") return "申诉处理";
+        if (tableId === "table-resultApproval") return "索赔结果审批";
+        return "";
+      }
+
+      function renderCell(col, rowData, tableId, rowIndex) {
+        var value = rowData[col] != null ? rowData[col] : (columnMap[col] || "");
+        if (col === "序号") {
+          return String(rowIndex + 1);
+        }
+        if (col === "操作") {
+          var operationText = getOperationText(tableId);
+          return operationText ? buildDetailLink(rowData, tableId, operationText) : "—";
+        }
+        if (
+          tableId === "table-all" &&
+          (col === "一级审批" || col === "二级审批" || col === "三级审批") &&
+          ["待确认", "待供应商处理", "申诉待处理", "申诉代理", "申诉驳回"].indexOf(rowData["索赔状态"]) > -1
+        ) {
+          return "—";
+        }
+        if (col === "提单号") {
+          return buildDetailLink(rowData, tableId, value);
+        }
+        if (col === "索赔状态") {
+          return '<span class="status-tag">' + value + "</span>";
+        }
+        return value;
+      }
+
+      function renderTable(tableId, columns) {
+        var table = document.getElementById(tableId);
+        if (!table) return;
+        var sourceTab = getSourceTabKey(tableId);
+        var rows = sourceTab === "all"
+          ? sampleRows
+          : sampleRows.filter(function (rowData) {
+            return rowData["索赔状态"] === tableStatusMap[sourceTab];
+          });
+        var thead = "<thead><tr>" + columns.map(function (col) {
+          return "<th>" + col + "</th>";
+        }).join("") + "</tr></thead>";
+
+        var tbody = "<tbody>" + rows.map(function (rowData, rowIndex) {
+          return "<tr>" + columns.map(function (col) {
+            return "<td>" + renderCell(col, rowData, tableId, rowIndex) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") + "</tbody>";
+
+        table.innerHTML = thead + tbody;
+      }
+
+      Object.keys(tableConfig).forEach(function (key) {
+        renderTable("table-" + key, tableConfig[key]);
+      });
+
+      var filterableOptionsMap = {
+        businessOwner: ["李海峰", "周静", "陈思远", "黄嘉敏", "赵文博"],
+        supplier: ["G01183:深圳市广宏达物流有限公司", "G00968:深圳市恒峰国际货运代理有限公司", "JIAHONG:深圳市嘉鸿国际货运代理有限公司", "G01181:上海川速物流有限公司"],
+        approver: ["刘总监", "王总", "张经理", "周经理"],
+        originPort: ["SZX", "CAN", "PVG", "HKG", "XMN"],
+        destinationPort: ["LAX", "JFK", "ORD", "LHR", "FRA"],
+        follower: ["王小雨", "李梦婷", "陈晓东", "周凯"]
+      };
+
+      function closeFilterableMenu(menu) {
+        if (!menu) return;
+        menu.classList.remove("is-open");
+        menu.hidden = true;
+        menu.innerHTML = "";
+      }
+
+      function closeAllFilterableMenus() {
+        document.querySelectorAll(".filterable-menu").forEach(function (menu) {
+          closeFilterableMenu(menu);
+        });
+      }
+
+      function renderFilterableMenu(input) {
+        var key = input.getAttribute("data-filterable");
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+        var keyword = String(input.value || "").trim().toLowerCase();
+        var options = (filterableOptionsMap[key] || []).filter(function (item) {
+          return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+        });
+        if (!options.length) {
+          menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+        } else {
+          menu.innerHTML = options.map(function (item) {
+            return '<div class="filterable-option" data-value="' + item + '">' + item + '</div>';
+          }).join("");
+        }
+        menu.hidden = false;
+        menu.classList.add("is-open");
+        menu.querySelectorAll(".filterable-option").forEach(function (option) {
+          option.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+            input.value = option.getAttribute("data-value") || "";
+            closeFilterableMenu(menu);
+          });
+        });
+      }
+
+      document.querySelectorAll("input[data-filterable]").forEach(function (input) {
+        input.addEventListener("focus", function () {
+          closeAllFilterableMenus();
+          renderFilterableMenu(input);
+        });
+        input.addEventListener("input", function () {
+          closeAllFilterableMenus();
+          renderFilterableMenu(input);
+        });
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeFilterableMenu(input.parentElement.querySelector(".filterable-menu"));
+          }
+        });
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".q-ctl")) {
+          closeAllFilterableMenus();
+        }
+      });
+
+      var tabButtons = document.querySelectorAll(".tab-btn");
+      var tabPanels = document.querySelectorAll(".tab-panel");
+      tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          var tab = button.getAttribute("data-tab");
+          tabButtons.forEach(function (item) {
+            item.classList.toggle("is-active", item === button);
+          });
+          tabPanels.forEach(function (panel) {
+            panel.classList.toggle("is-active", panel.getAttribute("data-panel") === tab);
+          });
+        });
+      });
+
+      var claimTypeModal = document.getElementById("claimTypeModal");
+      var claimTypeSelect = document.getElementById("claimTypeSelect");
+      var claimTypeConfirmBtn = document.getElementById("claimTypeConfirmBtn");
+
+      function openClaimTypeModal() {
+        if (!claimTypeModal) return;
+        claimTypeModal.classList.add("is-open");
+        claimTypeModal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeClaimTypeModal() {
+        if (!claimTypeModal) return;
+        claimTypeModal.classList.remove("is-open");
+        claimTypeModal.setAttribute("aria-hidden", "true");
+      }
+
+      document.querySelectorAll("[data-open-claim-modal]").forEach(function (trigger) {
+        trigger.addEventListener("click", function () {
+          openClaimTypeModal();
+        });
+      });
+
+      document.querySelectorAll("[data-close-claim-modal]").forEach(function (trigger) {
+        trigger.addEventListener("click", function () {
+          closeClaimTypeModal();
+        });
+      });
+
+      if (claimTypeModal) {
+        claimTypeModal.addEventListener("click", function (event) {
+          if (event.target === claimTypeModal) {
+            closeClaimTypeModal();
+          }
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && claimTypeModal && claimTypeModal.classList.contains("is-open")) {
+          closeClaimTypeModal();
+        }
+      });
+
+      if (claimTypeConfirmBtn) {
+        claimTypeConfirmBtn.addEventListener("click", function () {
+          var claimType = claimTypeSelect ? claimTypeSelect.value : "";
+          if (!claimType) {
+            window.alert("请选择索赔类型！");
+            if (claimTypeSelect) {
+              claimTypeSelect.focus();
+            }
+            return;
+          }
+          if (claimType === "delay") {
+            window.location.href = "索赔新增/新增_时效延误.html";
+            return;
+          }
+          if (claimType === "loss") {
+            window.location.href = "索赔新增/新增_丢货.html";
+            return;
+          }
+          if (claimType === "cca" || claimType === "other") {
+            window.location.href = "索赔新增/新增_CCA索赔和其它索赔.html";
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

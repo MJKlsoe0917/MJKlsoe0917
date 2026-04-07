@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>报价详情_拼车 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --panel: #ffffff;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 右侧内容区：宽度 = 视口宽 − 侧栏宽；高度随浏览器剩余视口；白底承载表单 */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 0;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-sizing: border-box;
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    .card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin-bottom: 12px;
+    }
+
+    /* 页面标题栏见 ../../../common/prototype-shell.css；---------- 详情页：主区 + 右侧状态 ---------- */
+    .detail-body {
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .detail-main {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow-y: auto;
+      padding-bottom: 16px;
+    }
+
+    .detail-status {
+      flex: 0 0 28%;
+      min-width: 300px;
+      max-width: 420px;
+      border-left: 1px solid var(--line);
+      padding-left: 28px;
+      box-sizing: border-box;
+    }
+
+    .detail-block {
+      margin-bottom: 24px;
+    }
+
+    .detail-block:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 用车信息：四列排布 + 32px 控件 */
+    .detail-block--use-car .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .detail-block--use-car .form-grid--cols {
+      row-gap: 16px;
+    }
+
+    .detail-block--use-car .form-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .detail-block--use-car .field {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      column-gap: 10px;
+      min-height: 32px;
+      align-items: center;
+      background: transparent;
+    }
+
+    .detail-block--use-car .field-label {
+      text-align: right;
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .detail-block--use-car .field-control {
+      min-width: 0;
+    }
+
+    .detail-block--use-car input,
+    .detail-block--use-car select {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .detail-block--use-car .readonly-input,
+    .detail-block--use-car .readonly-select,
+    .detail-block--use-car select:disabled {
+      color: #303848;
+      background: #f5f6f8;
+    }
+
+    .detail-block--use-car select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #f5f6f8
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      padding-right: 28px;
+    }
+
+    .detail-block--use-car .readonly-input--one-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-block--use-car .duration-wrap {
+      display: grid;
+      grid-template-columns: 1fr 32px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .detail-block--use-car .duration-wrap > input {
+      border-radius: 4px 0 0 4px;
+      min-width: 0;
+    }
+
+    .detail-block--use-car .duration-unit {
+      border: 1px solid #cfd5df;
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #303848;
+      background: #f5f6f8;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      column-gap: 16px;
+      min-height: 52px;
+      align-items: center;
+      background: transparent;
+    }
+
+    .field-label {
+      text-align: right;
+      justify-self: stretch;
+      padding: 0;
+      color: #353b48;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid #8a8f98;
+      background: #fff;
+      padding: 0 10px;
+      font-size: 18px;
+      color: #2f3542;
+      outline: none;
+      border-radius: 2px;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .duration-wrap {
+      display: grid;
+      grid-template-columns: 1fr 34px;
+      width: 100%;
+    }
+
+    .duration-unit {
+      border: 1px solid #8a8f98;
+      border-left: none;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #2f3542;
+      background: #fff;
+    }
+
+    .detail-block:not(.detail-block--use-car) input[readonly],
+    .detail-block:not(.detail-block--use-car) select:disabled {
+      background: #f7f8fa;
+      color: #303848;
+      cursor: default;
+      opacity: 1;
+    }
+
+    .detail-block:not(.detail-block--use-car) .duration-wrap input[readonly] + .duration-unit {
+      background: #f7f8fa;
+    }
+
+    .detail-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .detail-table th {
+      background: #f0f2f5;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #303848;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .detail-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eef0f3;
+      color: #2f3542;
+      vertical-align: top;
+    }
+
+    .detail-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .detail-table td.detail-empty-tip {
+      color: var(--muted);
+      text-align: center;
+      padding: 16px 12px;
+    }
+
+    /* 审批记录 / 操作日志：与城际要车详情「要车变更记录」一致（全格线、表头底色、列宽均分），对齐空运报价详情 */
+    .detail-table.detail-table--grid {
+      --grid-cols: 5;
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border: 1px solid var(--line);
+    }
+
+    .detail-table.detail-table--grid.detail-table--cols-3 {
+      --grid-cols: 3;
+    }
+
+    .detail-table.detail-table--grid.detail-table--cols-6 {
+      --grid-cols: 6;
+      --seq-col-width: 56px;
+    }
+
+    .detail-table.detail-table--grid thead th {
+      width: calc(100% / var(--grid-cols));
+    }
+
+    /* 操作日志：序号列收窄，其余列均分剩余宽度 */
+    .detail-table.detail-table--grid.detail-table--cols-6 thead th:first-child {
+      width: var(--seq-col-width);
+    }
+
+    .detail-table.detail-table--grid.detail-table--cols-6 thead th:nth-child(n + 2) {
+      width: calc((100% - var(--seq-col-width)) / 5);
+    }
+
+    .detail-table.detail-table--grid th {
+      background: #f6f7fb;
+      color: #353b48;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      padding: 9px 8px;
+      text-align: center;
+      white-space: normal;
+    }
+
+    .detail-table.detail-table--grid td {
+      border: 1px solid var(--line);
+      padding: 9px 8px;
+      font-size: 13px;
+      color: #4f5664;
+      vertical-align: top;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .detail-table.detail-table--grid tbody tr:last-child td {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-table.detail-table--grid td.detail-empty-tip {
+      padding: 9px 8px;
+    }
+
+    /* 报价信息：与拼车报价新增区间表同风格；详情为三列只读（序号 / 重量区间 / 费率），无操作列、不可编辑 */
+    .quote-info-section {
+      padding-bottom: 8px;
+    }
+
+    .quote-interval-rows {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 16px;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .quote-interval-column {
+      flex: 1 1 0;
+      min-width: 340px;
+    }
+
+    .quote-interval-table-wrap {
+      width: 100%;
+      max-width: none;
+      overflow-x: auto;
+    }
+
+    .quote-interval-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      font-size: 15px;
+      table-layout: fixed;
+    }
+
+    .quote-interval-table th,
+    .quote-interval-table td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+
+    .quote-interval-table thead th {
+      background: #fafbfc;
+      font-weight: 600;
+      color: #353b48;
+      text-align: center;
+    }
+
+    .quote-interval-table thead .th-group-title {
+      background: #eef1f5;
+      font-weight: 600;
+      color: #353b48;
+      text-align: center;
+      padding: 8px 10px;
+    }
+
+    .quote-interval-table col.quote-col-sn {
+      width: 48px;
+    }
+
+    .quote-interval-table thead th.col-sn {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .quote-interval-table th.col-sn,
+    .quote-interval-table td.col-sn {
+      width: 48px;
+      min-width: 48px;
+      max-width: 52px;
+      text-align: center;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .quote-interval-table .col-weight {
+      width: 58%;
+      min-width: 200px;
+    }
+
+    .quote-interval-table .col-rate {
+      width: 42%;
+      min-width: 88px;
+    }
+
+    .quote-interval-table--readonly td.col-weight,
+    .quote-interval-table--readonly td.col-rate {
+      color: #2f3542;
+      text-align: center;
+    }
+
+    .quote-interval-table td.quote-interval-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 12px 10px;
+    }
+
+    .status-timeline {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .status-item {
+      position: relative;
+      padding-left: 28px;
+      padding-bottom: 48px;
+    }
+
+    .status-item::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 12px;
+      bottom: 6px;
+      width: 2px;
+      background: #e4e7ed;
+    }
+
+    .status-item:last-child {
+      padding-bottom: 16px;
+    }
+
+    .status-item:last-child::before {
+      display: none;
+    }
+
+    .status-dot {
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #dcdfe6;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #cfd4dc;
+      box-sizing: border-box;
+    }
+
+    .status-item.is-active .status-dot {
+      background: var(--purple);
+      box-shadow: 0 0 0 1px var(--purple);
+    }
+
+    /* 待审批入口：前三节点为紫色圆环样式 */
+    .status-timeline--pending-approval .status-item.is-active .status-dot {
+      background: var(--purple);
+      box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(125, 91, 201, 0.45);
+    }
+
+    .status-timeline--pending-approval .status-item.is-active::before {
+      background: #d4c4f0;
+    }
+
+    .status-timeline--pending-approval .status-item:not(.is-active) .status-name {
+      color: #303848;
+    }
+
+    /* 已生效 / 历史报价：五步全部完成态，节点均为紫色 */
+    .status-timeline--completed-flow .status-item.is-active .status-dot {
+      background: var(--purple);
+      box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(125, 91, 201, 0.45);
+    }
+
+    .status-timeline--completed-flow .status-item.is-active::before {
+      background: #d4c4f0;
+    }
+
+    .status-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #303848;
+      margin-bottom: 8px;
+    }
+
+    .status-item:not(.is-active) .status-name {
+      color: var(--muted);
+    }
+
+    .status-meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 780px) {
+      .detail-body {
+        flex-direction: column;
+      }
+
+      .detail-status {
+        flex: none;
+        width: 100%;
+        max-width: none;
+        border-left: none;
+        border-top: 1px solid var(--line);
+        padding: 16px 0 0 0;
+      }
+
+      .field-label {
+        font-size: 18px;
+      }
+      input, select, .duration-unit {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .detail-block--use-car .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .detail-block--use-car .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .page::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+  </style>
+</head>
+<body>
+  <script>window.__PROTOTYPE_SHELL__ = {
+      module: "拼车报价",
+      active: "拼车报价",
+      topbarActive: "要车",
+      sidebarFromProductRoot: "../../../",
+    };</script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title" id="detailPageTitle">拼车报价详情</div>
+            <div class="header-actions" id="detailHeaderActions">
+              <a class="header-link" data-action="edit" href="拼车报价新增.html">编辑</a>
+              <a class="header-link" data-action="delete" href="#">删除</a>
+              <a class="header-link" data-action="invalidate" href="#">作废</a>
+              <a class="header-link" data-action="quoteConfirm" href="#">提交确认</a>
+              <a class="header-link" data-action="quoteApprove" href="#">报价审批</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <div class="detail-main">
+            <section class="detail-block detail-block--use-car">
+              <h2 class="block-title">用车信息</h2>
+              <div class="form-grid form-grid--cols">
+                <div class="form-col">
+                  <div class="field">
+                    <div class="field-label">承运商</div>
+                    <div class="field-control"><input id="detailCarrier" class="readonly-input" type="text" readonly value="" aria-label="承运商" /></div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">运输时效</div>
+                    <div class="field-control">
+                      <div class="duration-wrap">
+                        <input id="detailDuration" class="readonly-input" type="text" readonly value="" />
+                        <div class="duration-unit">H</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="field">
+                    <div class="field-label">提货地</div>
+                    <div class="field-control"><input id="detailPickup" class="readonly-input" type="text" readonly value="" aria-label="提货地" /></div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">卸货地</div>
+                    <div class="field-control"><input id="detailDropoff" class="readonly-input" type="text" readonly value="" aria-label="卸货地" /></div>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="field">
+                    <div class="field-label">生效日期</div>
+                    <div class="field-control"><input id="detailEffectiveDate" class="readonly-input" type="text" readonly value="" /></div>
+                  </div>
+                  <div class="field">
+                    <div class="field-label">失效日期</div>
+                    <div class="field-control"><input id="detailExpiryDate" class="readonly-input" type="text" readonly value="" /></div>
+                  </div>
+                </div>
+                <div class="form-col">
+                  <div class="field">
+                    <div class="field-label">备注</div>
+                    <div class="field-control"><input id="detailRemark" class="readonly-input readonly-input--one-line" type="text" readonly value="" placeholder="—" /></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="detail-block">
+              <h2 class="block-title erp-section-title">报价信息</h2>
+              <div class="section quote-info-section">
+                <div class="quote-interval-rows">
+                  <div class="quote-interval-column">
+                    <div class="quote-interval-table-wrap">
+                      <table class="quote-interval-table quote-interval-table--readonly" id="detailQuoteTableFreight" aria-label="运费区间">
+                        <colgroup>
+                          <col class="quote-col-sn" />
+                          <col />
+                          <col />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th class="th-group-title" colspan="3">运费</th>
+                          </tr>
+                          <tr>
+                            <th class="col-sn">序号</th>
+                            <th class="col-weight">重量区间(KG)</th>
+                            <th class="col-rate">费率(CNY)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="detailQuoteIntervalTbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="quote-interval-column">
+                    <div class="quote-interval-table-wrap">
+                      <table class="quote-interval-table quote-interval-table--readonly" id="detailQuoteTablePickup" aria-label="提货费区间">
+                        <colgroup>
+                          <col class="quote-col-sn" />
+                          <col />
+                          <col />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th class="th-group-title" colspan="3">提货费</th>
+                          </tr>
+                          <tr>
+                            <th class="col-sn">序号</th>
+                            <th class="col-weight">重量区间(KG)</th>
+                            <th class="col-rate">费率(CNY)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="detailQuoteIntervalTbody2"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="quote-interval-column">
+                    <div class="quote-interval-table-wrap">
+                      <table class="quote-interval-table quote-interval-table--readonly" id="detailQuoteTableDelivery" aria-label="送货费区间">
+                        <colgroup>
+                          <col class="quote-col-sn" />
+                          <col />
+                          <col />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th class="th-group-title" colspan="3">送货费</th>
+                          </tr>
+                          <tr>
+                            <th class="col-sn">序号</th>
+                            <th class="col-weight">重量区间(KG)</th>
+                            <th class="col-rate">费率(CNY)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="detailQuoteIntervalTbody3"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="detail-block">
+              <h2 class="block-title">审批记录</h2>
+              <table class="detail-table detail-table--grid">
+                  <thead>
+                    <tr>
+                      <th>审批节点</th>
+                      <th>审批人</th>
+                      <th>实际审批人</th>
+                      <th>审批时间</th>
+                      <th>审批意见</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detailApprovalTbody">
+                    <tr>
+                      <td>一级审批</td>
+                      <td>张明</td>
+                      <td>张明</td>
+                      <td>2026-01-08 10:30</td>
+                      <td>审批通过</td>
+                    </tr>
+                    <tr>
+                      <td>二级审批</td>
+                      <td>李华</td>
+                      <td>李华</td>
+                      <td>2026-01-08 14:00</td>
+                      <td>同意</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </section>
+
+            <section class="detail-block">
+              <h2 class="block-title">操作日志</h2>
+              <table class="detail-table detail-table--grid detail-table--cols-6">
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>时间</th>
+                      <th>操作人</th>
+                      <th>操作</th>
+                      <th>描述</th>
+                      <th>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>01</td>
+                      <td>2025-03-28 09:06</td>
+                      <td>system</td>
+                      <td>到港</td>
+                      <td>已到港</td>
+                      <td>10.0.0.1</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </section>
+          </div>
+
+          <aside class="detail-status" aria-label="报价状态">
+            <h2 class="block-title">报价状态</h2>
+            <ul class="status-timeline" id="detailStatusTimeline">
+              <li class="status-item is-active">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div class="status-name">报价创建</div>
+                <div class="status-meta">创建人：测试<br />创建时间：2026-01-07 17:00</div>
+              </li>
+              <li class="status-item">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div class="status-name">待确认</div>
+              </li>
+              <li class="status-item">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div class="status-name">待审批</div>
+              </li>
+              <li class="status-item">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div class="status-name">已生效</div>
+              </li>
+              <li class="status-item">
+                <span class="status-dot" aria-hidden="true"></span>
+                <div class="status-name">已失效</div>
+              </li>
+            </ul>
+          </aside>
+
+          <template id="tpl-detail-status-default">
+            <li class="status-item is-active">
+              <span class="status-dot" aria-hidden="true"></span>
+              <div class="status-name">报价创建</div>
+              <div class="status-meta">创建人：测试<br />创建时间：2026-01-07 17:00</div>
+            </li>
+            <li class="status-item">
+              <span class="status-dot" aria-hidden="true"></span>
+              <div class="status-name">待确认</div>
+            </li>
+            <li class="status-item">
+              <span class="status-dot" aria-hidden="true"></span>
+              <div class="status-name">待审批</div>
+            </li>
+            <li class="status-item">
+              <span class="status-dot" aria-hidden="true"></span>
+              <div class="status-name">已生效</div>
+            </li>
+            <li class="status-item">
+              <span class="status-dot" aria-hidden="true"></span>
+              <div class="status-name">已失效</div>
+            </li>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var STORAGE_KEY = "vanbon_quote_detail_row_v1";
+
+      function parseValidity(s) {
+        s = (s || "").trim();
+        var m = s.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})\s*[~～]\s*(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+        if (!m) return { eff: "", exp: "" };
+        return { eff: m[1] + "-" + m[2] + "-" + m[3], exp: m[4] + "-" + m[5] + "-" + m[6] };
+      }
+
+      function setInput(el, v) {
+        if (el) el.value = v == null ? "" : String(v);
+      }
+
+      function escapeHtml(str) {
+        var d = document.createElement("div");
+        d.textContent = str;
+        return d.innerHTML;
+      }
+
+      /**
+       * 与列表 Tab 对应：1 已生效 2 待确认 3 待审批 4 历史报价
+       * 无 sourceTab（非列表进入）时显示全部，便于单独打开详情原型。
+       */
+      function applyDetailHeaderActions(sourceTab) {
+        var c = document.getElementById("detailHeaderActions");
+        if (!c) return;
+        var showMap = {
+          "1": { edit: false, delete: false, invalidate: true, quoteConfirm: false, quoteApprove: false },
+          "2": { edit: true, delete: true, invalidate: false, quoteConfirm: true, quoteApprove: false },
+          "3": { edit: false, delete: false, invalidate: false, quoteConfirm: false, quoteApprove: true },
+          "4": { edit: false, delete: false, invalidate: false, quoteConfirm: false, quoteApprove: false },
+        };
+        var links = c.querySelectorAll("a.header-link[data-action]");
+        if (!sourceTab || !showMap[sourceTab]) {
+          links.forEach(function (a) {
+            a.style.display = "";
+          });
+          return;
+        }
+        var v = showMap[sourceTab];
+        links.forEach(function (a) {
+          var key = a.getAttribute("data-action");
+          a.style.display = v[key] ? "" : "none";
+        });
+      }
+
+      function formatQuoteIntervalDisplay(row) {
+        row = row || {};
+        if (row.interval != null && String(row.interval).trim()) return String(row.interval).trim();
+        var a = row.from != null ? String(row.from).trim() : "";
+        var b = row.to != null ? String(row.to).trim() : "";
+        if (!a && !b) return "—";
+        return "[" + a + ", " + b + ")";
+      }
+
+      /** 报价信息示例（列表跳转未带区间数据时仍用于原型展示） */
+      var QUOTE_SAMPLE_DEFAULTS = {
+        quoteFreight: [
+          { interval: "[0, 100)", rate: "2.0" },
+          { interval: "[100, 500)", rate: "2.8" },
+          { interval: "[500, 1000)", rate: "3.5" },
+          { interval: "[1000, ∞)", rate: "4.2" },
+        ],
+        quotePickup: [
+          { interval: "[0, 100)", rate: "0.8" },
+          { interval: "[100, 300)", rate: "1.8" },
+        ],
+        quoteDelivery: [
+          { interval: "[0, 200)", rate: "1.2" },
+          { interval: "[200, ∞)", rate: "2.6" },
+        ],
+      };
+
+      function quoteRowsOrSample(key, d) {
+        var arr = d[key];
+        if (Array.isArray(arr) && arr.length) return arr;
+        return QUOTE_SAMPLE_DEFAULTS[key] || [];
+      }
+
+      function renderQuoteIntervalTbody(tbodyId, rows) {
+        var tbody = document.getElementById(tbodyId);
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        var list = Array.isArray(rows) ? rows : [];
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="3" class="quote-interval-empty">暂无数据</td></tr>';
+          return;
+        }
+        for (var i = 0; i < list.length; i++) {
+          var row = list[i] || {};
+          var interval = formatQuoteIntervalDisplay(row);
+          var rate = row.rate != null ? String(row.rate) : "";
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td class=\"col-sn\">" +
+            (i + 1) +
+            '</td><td class="col-weight">' +
+            escapeHtml(interval) +
+            '</td><td class="col-rate">' +
+            escapeHtml(rate) +
+            "</td>";
+          tbody.appendChild(tr);
+        }
+      }
+
+      function applyPayload(d) {
+        if (!d) return;
+        var title = document.getElementById("detailPageTitle");
+        if (title) title.textContent = d.quoteCode ? "拼车报价详情 · " + d.quoteCode : "拼车报价详情";
+
+        setInput(document.getElementById("detailCarrier"), d.carrier);
+        setInput(document.getElementById("detailPickup"), d.pickup);
+        setInput(document.getElementById("detailDropoff"), d.dropoff);
+        setInput(document.getElementById("detailDuration"), d.duration);
+        var rm = (d.remark || "").trim();
+        setInput(document.getElementById("detailRemark"), rm === "—" ? "" : rm);
+        setInput(document.getElementById("detailEffectiveDate"), d.effectiveDate);
+        setInput(document.getElementById("detailExpiryDate"), d.expiryDate);
+
+        renderQuoteIntervalTbody("detailQuoteIntervalTbody", quoteRowsOrSample("quoteFreight", d));
+        renderQuoteIntervalTbody("detailQuoteIntervalTbody2", quoteRowsOrSample("quotePickup", d));
+        renderQuoteIntervalTbody("detailQuoteIntervalTbody3", quoteRowsOrSample("quoteDelivery", d));
+
+        var tb = document.getElementById("detailApprovalTbody");
+        if (tb) {
+          var appr = Array.isArray(d.approvals) ? d.approvals : [];
+          tb.innerHTML = "";
+          var nodes = ["一级审批", "二级审批", "三级审批"];
+          for (var i = 0; i < 3; i++) {
+            var line = (appr[i] || "").trim();
+            if (!line || line === "—") continue;
+            var parts = line.split("-").map(function (x) {
+              return x.trim();
+            });
+            var tr = document.createElement("tr");
+            tr.innerHTML =
+              "<td>" +
+              nodes[i] +
+              "</td><td>" +
+              escapeHtml(parts[0] || "—") +
+              "</td><td>" +
+              escapeHtml(parts[0] || "—") +
+              '</td><td>—</td><td>' +
+              escapeHtml(line) +
+              "</td>";
+            tb.appendChild(tr);
+          }
+          if (!tb.children.length) {
+            tb.innerHTML = '<tr><td colspan="5" class="detail-empty-tip">暂无审批记录</td></tr>';
+          }
+        }
+
+        applyDetailHeaderActions(d.sourceTab);
+        renderDetailStatusTimeline(d.sourceTab, d);
+      }
+
+      function parsePrimaryApprovalLine(line) {
+        line = (line || "").trim();
+        if (!line || line === "—") {
+          return { person: "测试", result: "审批通过", comment: "xxxx" };
+        }
+        var parts = line.split("-").map(function (s) {
+          return s.trim();
+        });
+        return {
+          person: parts[0] || "测试",
+          result: parts[1] || "审批通过",
+          comment: parts.length > 2 ? parts.slice(2).join("-") : "xxxx",
+        };
+      }
+
+      function formatStatusDateTimeStart(isoDate) {
+        isoDate = (isoDate || "").trim();
+        if (!isoDate) return "2026-01-07 00:00";
+        return isoDate + " 00:00";
+      }
+
+      function formatStatusDateTimeEnd(isoDate) {
+        isoDate = (isoDate || "").trim();
+        if (!isoDate) return "2026-12-31 23:59";
+        return isoDate + " 23:59";
+      }
+
+      function renderDetailStatusTimeline(sourceTab, d) {
+        var ul = document.getElementById("detailStatusTimeline");
+        var tpl = document.getElementById("tpl-detail-status-default");
+        if (!ul) return;
+
+        if (sourceTab === "1" || sourceTab === "4") {
+          d = d || {};
+          var creator = (d.creator || "").trim() || "测试";
+          var createTime = (d.createTime || "").trim() || "2026-01-07 17:00";
+          var confirmer = (d.confirmer || "").trim() || "测试";
+          var confirmTime = (d.confirmTime || "").trim() || createTime || "2026-01-07 17:00";
+          var appr = Array.isArray(d.approvals) ? d.approvals : [];
+          var ap = parsePrimaryApprovalLine(appr[0] || "");
+          var approvalTime = confirmTime || "2026-01-07 17:00";
+          var effDisplay = formatStatusDateTimeStart(d.effectiveDate);
+          var expDisplay = formatStatusDateTimeEnd(d.expiryDate);
+
+          ul.className = "status-timeline status-timeline--completed-flow";
+          ul.innerHTML =
+            '<li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">报价创建</div><div class="status-meta">创建人：' +
+            escapeHtml(creator) +
+            "<br />创建时间：" +
+            escapeHtml(createTime) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已确认</div><div class="status-meta">确认人：' +
+            escapeHtml(confirmer) +
+            "<br />确认时间：" +
+            escapeHtml(confirmTime) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已审批</div><div class="status-meta">审批人：' +
+            escapeHtml(ap.person) +
+            "<br />审批时间：" +
+            escapeHtml(approvalTime) +
+            "<br />审批结果：" +
+            escapeHtml(ap.result) +
+            "<br />审批意见：" +
+            escapeHtml(ap.comment) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已生效</div><div class="status-meta">生效时间：' +
+            escapeHtml(effDisplay) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已失效</div><div class="status-meta">失效时间：' +
+            escapeHtml(expDisplay) +
+            "</div></li>";
+          return;
+        }
+
+        if (sourceTab === "3") {
+          d = d || {};
+          var creator = (d.creator || "").trim() || "测试";
+          var createTime = (d.createTime || "").trim() || "2026-01-07 17:00";
+          var confirmer = (d.confirmer || "").trim() || "测试";
+          var confirmTime = (d.confirmTime || "").trim() || createTime || "2026-01-07 17:00";
+          var approver = (d.currentApprover || "").trim() || "测试";
+
+          ul.className = "status-timeline status-timeline--pending-approval";
+          ul.innerHTML =
+            '<li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">报价创建</div><div class="status-meta">创建人：' +
+            escapeHtml(creator) +
+            "<br />创建时间：" +
+            escapeHtml(createTime) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已确认</div><div class="status-meta">确认人：' +
+            escapeHtml(confirmer) +
+            "<br />确认时间：" +
+            escapeHtml(confirmTime) +
+            '</div></li><li class="status-item is-active"><span class="status-dot" aria-hidden="true"></span><div class="status-name">审批中</div><div class="status-meta">当前审批人：' +
+            escapeHtml(approver) +
+            '</div></li><li class="status-item"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已生效</div></li><li class="status-item"><span class="status-dot" aria-hidden="true"></span><div class="status-name">已失效</div></li>';
+          return;
+        }
+
+        ul.className = "status-timeline";
+        ul.innerHTML = "";
+        if (tpl && tpl.content) {
+          ul.appendChild(tpl.content.cloneNode(true));
+        }
+      }
+
+      try {
+        var raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          applyPayload(JSON.parse(raw));
+          return;
+        }
+      } catch (e) {}
+
+      var pv = parseValidity("2026/01/01~2026/04/30");
+      applyPayload({
+        quoteCode: "BJ20260323001",
+        carrier: "G01183:深圳市广宏达物流有限公司",
+        pickup: "常平",
+        dropoff: "青衣",
+        duration: "24",
+        remark: "含装卸",
+        effectiveDate: pv.eff,
+        expiryDate: pv.exp,
+        approvals: ["张明-审批通过-价格合理", "李华-审批通过-同意执行", "系统-审批通过-自动补齐"],
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>详情表单页模板 · 万邦速达</title>
+  <link rel="stylesheet" href="prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+    }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .page {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      overflow: auto;
+      background: #fff;
+    }
+    .detail-block {
+      margin-bottom: 20px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+    .field {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      column-gap: 10px;
+      min-height: 36px;
+      align-items: center;
+    }
+    .field--span-2 {
+      grid-column: span 2;
+    }
+    .field--span-4 {
+      grid-column: 1 / -1;
+    }
+    .field-label {
+      text-align: right;
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+    .field-control {
+      min-width: 0;
+    }
+    .field-control input,
+    .field-control select,
+    .field-control textarea {
+      width: 100%;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      background: #fff;
+      color: #303848;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+    .field-control input,
+    .field-control select {
+      height: 36px;
+      padding: 0 10px;
+    }
+    .field-control textarea {
+      min-height: 72px;
+      padding: 8px 10px;
+      resize: vertical;
+    }
+    @media (max-width: 1100px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+      }
+      .field--span-2,
+      .field--span-4 {
+        grid-column: auto;
+      }
+    }
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "排舱",
+      sidebarActiveL1: "账单管理",
+      sidebarActiveL2: "空运索赔",
+      sidebarFromProductRoot: "../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">详情/表单页标题</div>
+            <div class="header-actions">
+              <a class="header-link" href="javascript:void(0)">返回</a>
+              <a class="header-link" href="javascript:void(0)">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="detail-block">
+          <h2 class="block-title">基础信息</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label required">单号</div>
+              <div class="field-control"><input type="text" /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">状态</div>
+              <div class="field-control"><select><option>请选择</option></select></div>
+            </div>
+            <div class="field">
+              <div class="field-label">创建人</div>
+              <div class="field-control"><input type="text" /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">创建时间</div>
+              <div class="field-control"><input type="text" /></div>
+            </div>
+            <div class="field field--span-4">
+              <div class="field-label">备注</div>
+              <div class="field-control"><textarea></textarea></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title">扩展信息</h2>
+          <div class="form-grid">
+            <div class="field field--span-2">
+              <div class="field-label">说明</div>
+              <div class="field-control"><input type="text" /></div>
+            </div>
+            <div class="field field--span-2">
+              <div class="field-label">附件</div>
+              <div class="field-control"><input type="text" placeholder="可替换为上传区或表格" /></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="prototype-shell.js"></script>
+</body>
+</html>

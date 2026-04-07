@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>报价新增_空运 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --panel: #ffffff;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 右侧内容区：宽度 = 视口宽 − 侧栏宽；高度随浏览器剩余视口；白底承载表单 */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 0;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-sizing: border-box;
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    .card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin-bottom: 12px;
+    }
+
+    /* 页面标题栏见 ../../../common/prototype-shell.css；表单区内边距；顶栏由公共 .block-title 留白 */
+    .section {
+      padding: 0 10px 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 20px;
+      row-gap: 0;
+      align-items: start;
+      overflow: visible;
+    }
+
+    /* 线路信息：四列平铺字段，备注跨两列 */
+    .form-grid--route {
+      row-gap: 5px;
+    }
+
+    .form-grid--route > .field--span-2 {
+      grid-column: span 2;
+    }
+
+    .form-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      column-gap: 12px;
+      min-height: 46px;
+      align-items: center;
+      background: transparent;
+    }
+
+    .field-label {
+      text-align: right;
+      justify-self: stretch;
+      padding: 0;
+      color: #353b48;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .field-control .filterable-ctl {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 50;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #8a8f98;
+      background: #fff;
+      padding: 0 10px;
+      font-size: 15px;
+      color: #2f3542;
+      outline: none;
+      border-radius: 2px;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    input.filterable-input {
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .duration-wrap {
+      display: grid;
+      grid-template-columns: 1fr 32px;
+      width: 100%;
+    }
+
+    .duration-unit {
+      border: 1px solid #8a8f98;
+      border-left: none;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #2f3542;
+      background: #fff;
+    }
+
+    @media (max-width: 780px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+        row-gap: 12px;
+      }
+      .field-label {
+        font-size: 18px;
+      }
+      input, select, .duration-unit {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-grid--route > .field--span-2 {
+        grid-column: span 1;
+      }
+    }
+
+    .page::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    /* 报价信息：区间表 */
+    .quote-info-section {
+      padding-bottom: 8px;
+    }
+
+    .btn-add-interval {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 15px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .btn-add-interval:hover {
+      opacity: 0.88;
+    }
+
+    .btn-add-interval-icon {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .quote-interval-table-wrap {
+      width: 100%;
+      max-width: 600px;
+      overflow-x: auto;
+    }
+
+    .quote-interval-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      font-size: 15px;
+      table-layout: fixed;
+    }
+
+    .quote-interval-table th,
+    .quote-interval-table td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      vertical-align: middle;
+      height: 48px;
+      box-sizing: border-box;
+    }
+
+    .quote-interval-table thead th {
+      background: #fafbfc;
+      font-weight: 600;
+      color: #353b48;
+      text-align: center;
+    }
+
+    .quote-interval-table tfoot .quote-interval-add-row td.quote-interval-sn-op-cell {
+      background: #fff;
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-left: 1px solid #fff;
+      border-bottom: 1px solid #fff;
+      padding: 6px 4px;
+      vertical-align: middle;
+    }
+
+    .quote-interval-table tfoot .quote-interval-add-row td.quote-interval-add-cell {
+      background: #f0f1f3;
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .quote-interval-table tfoot .quote-interval-add-row .btn-add-interval {
+      margin: 0 auto;
+    }
+
+    .quote-interval-table .col-sn {
+      width: 22px;
+      text-align: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .quote-interval-table .col-op {
+      width: 30px;
+      text-align: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .quote-interval-table .col-weight {
+      width: 44%;
+    }
+
+    .quote-interval-table .col-rate {
+      width: 28%;
+    }
+
+    .quote-interval-table .link-delete {
+      color: var(--purple);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+    }
+
+    .quote-interval-table .link-delete:hover {
+      text-decoration: underline;
+    }
+
+    .weight-interval-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .weight-bracket {
+      color: #2f3542;
+      font-size: 15px;
+      line-height: 36px;
+      user-select: none;
+    }
+
+    .weight-interval-cell input.weight-input {
+      width: 76px;
+      min-width: 56px;
+      max-width: 108px;
+      flex: 0 1 auto;
+      height: 36px;
+    }
+
+    .quote-interval-table input.rate-input {
+      width: 100%;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <script>window.__PROTOTYPE_SHELL__ = {
+      module: "国内空运",
+      active: "国内空运",
+      topbarActive: "要车",
+      sidebarFromProductRoot: "../../../",
+    };</script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">新增空运报价</div>
+            <div class="header-actions">
+              <a class="header-link" href="空运报价列表.html">取消</a>
+              <a class="header-link" href="空运报价列表.html" id="saveQuoteLink">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="card">
+          <h2 class="block-title erp-section-title">线路信息</h2>
+          <div class="section">
+            <div class="form-grid form-grid--route">
+              <!-- 第1列：承运商、航班、备注(跨两列) -->
+              <div class="field">
+                <div class="field-label required">承运商</div>
+                <div class="field-control">
+                  <div class="filterable-ctl">
+                    <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                    <div class="filterable-menu" hidden></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 第2列：提货地、卸货地 -->
+              <div class="field">
+                <div class="field-label required">提货地</div>
+                <div class="field-control">
+                  <div class="filterable-ctl">
+                    <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="请输入或选择提货地" autocomplete="off" />
+                    <div class="filterable-menu" hidden></div>
+                  </div>
+                </div>
+              </div>
+              <!-- 第3列：运输时效、到门时效 -->
+              <div class="field">
+                <div class="field-label">运输时效</div>
+                <div class="field-control">
+                  <div class="duration-wrap">
+                    <input id="durationInput" type="text" placeholder="时长" />
+                    <div class="duration-unit">H</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 第4列：生效日期、失效日期 -->
+              <div class="field">
+                <div class="field-label required">生效日期</div>
+                <div class="field-control">
+                  <input id="effectiveDate" type="date" name="effectiveDate" title="点击选择生效日期" />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label required">航班</div>
+                <div class="field-control">
+                  <select id="flightSelect">
+                    <option value="">请选择航班</option>
+                    <option value="早班机">早班机</option>
+                    <option value="午班机">午班机</option>
+                    <option value="晚班机">晚班机</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required">卸货地</div>
+                <div class="field-control">
+                  <div class="filterable-ctl">
+                    <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="请输入或选择卸货地" autocomplete="off" />
+                    <div class="filterable-menu" hidden></div>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">到门时效</div>
+                <div class="field-control">
+                  <input id="doorEtaInput" type="text" placeholder="请输入到门时效" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required">失效日期</div>
+                <div class="field-control">
+                  <input id="expiryDate" type="date" name="expiryDate" title="点击选择失效日期" />
+                </div>
+              </div>
+
+              <div class="field field--span-2">
+                <div class="field-label">备注信息</div>
+                <div class="field-control">
+                  <input id="remarkInput" type="text" placeholder="线路备注信息" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="block-title erp-section-title">报价信息</h2>
+          <div class="section quote-info-section">
+            <div class="quote-interval-table-wrap">
+              <table class="quote-interval-table" id="quoteIntervalTable">
+                <thead>
+                  <tr>
+                    <th class="col-sn">序号</th>
+                    <th class="col-op">操作</th>
+                    <th class="col-weight">重量区间(KG)</th>
+                    <th class="col-rate">费率(CNY)</th>
+                  </tr>
+                </thead>
+                <tbody id="quoteIntervalTbody"></tbody>
+                <tfoot>
+                  <tr class="quote-interval-add-row">
+                    <td colspan="2" class="quote-interval-sn-op-cell" aria-hidden="true"></td>
+                    <td colspan="2" class="quote-interval-add-cell">
+                      <button type="button" class="btn-add-interval" id="addQuoteIntervalBtn" aria-label="新增区间">
+                        <svg class="btn-add-interval-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                          <path d="M12 3V12M12 12L20 7.5M12 12L4 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        新增区间
+                      </button>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var optionMap = {
+        pickup: ["常平", "肇庆", "麻涌", "花都"],
+        dropoff: ["青衣", "葵涌", "机场", "深圳机场", "广州机场", "东莞"],
+        carrier: [
+          "G01183:深圳市广宏达物流有限公司",
+          "G00968:深圳市恒峰国际货运代理有限公司",
+          "JIAHONG:深圳市嘉鸿国际货运代理有限公司",
+          "LIANYUAN:深圳市联远供应链管理有限公司",
+          "G01164:深圳市锦升物流有限公司",
+          "G01181:上海川速物流有限公司"
+        ]
+      };
+
+      var controls = document.querySelectorAll("input[data-filterable]");
+      if (!controls.length) return;
+
+      function closeMenu(menu) {
+        menu.classList.remove("is-open");
+        menu.hidden = true;
+        menu.innerHTML = "";
+      }
+
+      function closeAllMenus() {
+        document.querySelectorAll(".filterable-menu").forEach(function (menu) {
+          closeMenu(menu);
+        });
+      }
+
+      function renderMenu(input) {
+        var key = input.getAttribute("data-filterable");
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+
+        var keyword = input.value.trim().toLowerCase();
+        var options = (optionMap[key] || []).filter(function (item) {
+          return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+        });
+
+        if (!options.length) {
+          menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+        } else {
+          menu.innerHTML = options
+            .map(function (item) {
+              return '<div class="filterable-option" data-value="' + item + '">' + item + "</div>";
+            })
+            .join("");
+        }
+
+        menu.hidden = false;
+        menu.classList.add("is-open");
+
+        menu.querySelectorAll(".filterable-option").forEach(function (option) {
+          option.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+            input.value = option.getAttribute("data-value") || "";
+            closeMenu(menu);
+          });
+        });
+      }
+
+      controls.forEach(function (input) {
+        input.addEventListener("focus", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("input", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            var menu = input.parentElement.querySelector(".filterable-menu");
+            if (menu) closeMenu(menu);
+          }
+        });
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".filterable-ctl")) {
+          closeAllMenus();
+        }
+      });
+    })();
+
+    (function () {
+      var saveLink = document.getElementById("saveQuoteLink");
+      if (!saveLink) return;
+
+      function getFieldValue(field) {
+        if (!field) return "";
+        var input = field.querySelector("input, select, textarea");
+        if (!input) return "";
+        return String(input.value || "").trim();
+      }
+
+      function focusField(field) {
+        if (!field) return;
+        var input = field.querySelector("input, select, textarea");
+        if (input && typeof input.focus === "function") {
+          input.focus();
+        }
+      }
+
+      function validateRequiredFields() {
+        var requiredLabels = document.querySelectorAll(".field-label.required");
+        for (var i = 0; i < requiredLabels.length; i++) {
+          var label = requiredLabels[i];
+          var field = label.parentElement;
+          var labelText = (label.textContent || "").replace(/\*/g, "").trim();
+          if (!field || !labelText) continue;
+          if (getFieldValue(field)) continue;
+          alert(labelText + "为空，请填写" + labelText + "！");
+          focusField(field);
+          return false;
+        }
+        return true;
+      }
+
+      saveLink.addEventListener("click", function (event) {
+        if (!validateRequiredFields()) {
+          event.preventDefault();
+          return;
+        }
+        window.location.href = saveLink.getAttribute("href") || "空运报价列表.html";
+      });
+    })();
+
+    (function () {
+      var COPY_KEY = "vanbon_air_quote_copy_prefill_v1";
+      var raw;
+      try {
+        raw = sessionStorage.getItem(COPY_KEY);
+        if (!raw) return;
+        sessionStorage.removeItem(COPY_KEY);
+      } catch (e) {
+        return;
+      }
+      var d;
+      try {
+        d = JSON.parse(raw);
+      } catch (e2) {
+        return;
+      }
+
+      var carrierIn = document.querySelector('input[data-filterable="carrier"]');
+      if (carrierIn && d.carrier) carrierIn.value = d.carrier;
+
+      var pickupIn = document.querySelector('input[data-filterable="pickup"]');
+      if (pickupIn && d.pickup) pickupIn.value = d.pickup;
+
+      var dropoffIn = document.querySelector('input[data-filterable="dropoff"]');
+      if (dropoffIn && d.dropoff) dropoffIn.value = d.dropoff;
+
+      var dur = document.getElementById("durationInput");
+      if (dur && d.duration) {
+        var num = String(d.duration).replace(/[^\d.]/g, "");
+        dur.value = num || String(d.duration).trim();
+      }
+
+      var flightSelect = document.getElementById("flightSelect");
+      if (flightSelect && d.flight) {
+        var flight = String(d.flight).trim();
+        var foundFlight = false;
+        for (var i = 0; i < flightSelect.options.length; i++) {
+          var opt = flightSelect.options[i];
+          if (opt.value === flight || (opt.textContent || "").trim() === flight) {
+            flightSelect.selectedIndex = i;
+            foundFlight = true;
+            break;
+          }
+        }
+        if (!foundFlight) {
+          var newOpt = document.createElement("option");
+          newOpt.value = flight;
+          newOpt.textContent = flight;
+          flightSelect.appendChild(newOpt);
+          flightSelect.value = flight;
+        }
+      }
+
+      var effectiveDateEl = document.getElementById("effectiveDate");
+      if (effectiveDateEl && d.effectiveDate) effectiveDateEl.value = d.effectiveDate;
+
+      var expiryDateEl = document.getElementById("expiryDate");
+      if (expiryDateEl && d.expiryDate) expiryDateEl.value = d.expiryDate;
+
+      var doorEtaInput = document.getElementById("doorEtaInput");
+      if (doorEtaInput && d.doorEta) doorEtaInput.value = d.doorEta;
+
+      var remarkInput = document.getElementById("remarkInput");
+      if (remarkInput && d.remark) remarkInput.value = d.remark;
+    })();
+
+    (function () {
+      var tbody = document.getElementById("quoteIntervalTbody");
+      var addBtn = document.getElementById("addQuoteIntervalBtn");
+      if (!tbody || !addBtn) return;
+
+      function reindexRows() {
+        var rows = tbody.querySelectorAll("tr");
+        for (var i = 0; i < rows.length; i++) {
+          var sn = rows[i].querySelector(".interval-sn");
+          if (sn) sn.textContent = String(i + 1);
+        }
+      }
+
+      function createRow() {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td class="col-sn"><span class="interval-sn"></span></td>' +
+          '<td class="col-op"><button type="button" class="link-delete" data-action="delete-interval">删除</button></td>' +
+          '<td class="col-weight">' +
+          '<div class="weight-interval-cell">' +
+          '<span class="weight-bracket">[</span>' +
+          '<input type="text" class="weight-input" name="weightFrom[]" placeholder="" autocomplete="off" />' +
+          '<input type="text" class="weight-input" name="weightTo[]" placeholder="" autocomplete="off" />' +
+          '<span class="weight-bracket">)</span>' +
+          "</div>" +
+          "</td>" +
+          '<td class="col-rate"><input type="text" class="rate-input" name="rate[]" placeholder="" autocomplete="off" /></td>';
+        return tr;
+      }
+
+      function addRow() {
+        tbody.appendChild(createRow());
+        reindexRows();
+      }
+
+      addBtn.addEventListener("click", function () {
+        addRow();
+      });
+
+      tbody.addEventListener("click", function (event) {
+        var btn = event.target.closest("[data-action='delete-interval']");
+        if (!btn) return;
+        var tr = btn.closest("tr");
+        if (!tr || !tbody.contains(tr)) return;
+        if (tbody.querySelectorAll("tr").length <= 1) {
+          alert("至少保留一行区间。");
+          return;
+        }
+        tr.remove();
+        reindexRows();
+      });
+
+      addRow();
+      addRow();
+    })();
+  </script>
+</body>
+</html>

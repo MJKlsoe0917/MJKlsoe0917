@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>新增CCA索赔和其它索赔 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    /* 页面标题栏见 ../../../../common/prototype-shell.css */
+
+    .detail-block {
+      margin-bottom: 20px;
+    }
+
+    /* 空运索赔：表单区略收敛字号；竖线颜色与粗细由 ERP 公共 prototype-shell 统一（与 --purple 一致） */
+    body .block-title,
+    body .erp-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      column-gap: 10px;
+      min-height: 32px;
+      align-items: center;
+    }
+
+    .field--span-2 {
+      grid-column: span 2;
+    }
+
+    .field--empty {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .field-label {
+      text-align: right;
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      min-width: 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .readonly-input,
+    .readonly-select {
+      color: #303848;
+      background: #f5f6f8;
+    }
+
+    .readonly-select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      pointer-events: none;
+      background: #f5f6f8
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .input-unit {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      width: 100%;
+    }
+
+    .input-unit .readonly-input,
+    .input-unit input {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+
+    .input-unit select:not(:first-child) {
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .input-unit span {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      background: #eef0f3;
+      color: #4f5664;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .ops-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .ops-action:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      line-height: 1;
+      font-size: 16px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--line);
+      padding: 8px 8px;
+      font-size: 13px;
+      color: #4f5664;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .data-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    @media (max-width: 1100px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+      }
+
+      .field--span-2 {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "排舱",
+      sidebarActiveL1: "账单管理",
+      sidebarActiveL2: "空运索赔",
+      sidebarFromProductRoot: "../../../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">新增CCA索赔和其它索赔</div>
+            <div class="header-actions">
+              <a class="header-link" href="../空运索赔列表.html">取消</a>
+              <a class="header-link" href="../空运索赔列表.html">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="detail-block">
+          <h2 class="block-title">航班信息</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label required">提单号</div>
+              <div class="field-control"><input type="text" value="784-40070155" /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">采购方式</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="商业临采" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ETD</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-27 07:40" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">负责商务</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="李海峰" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">供应商</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="G01183:深圳市广宏达物流有限公司" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">直飞/转飞</div>
+              <div class="field-control">
+                <select class="readonly-select" disabled>
+                  <option selected>直飞</option>
+                  <option>转飞</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">ATD</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-27 22:29" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">跟单员</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="王小雨" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">航司</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="CZ" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">起运港</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="SZX" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ETA</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-28 01:20" readonly /></div>
+            </div>
+            <div class="field field--empty" aria-hidden="true">
+              <div class="field-label">占位</div>
+              <div class="field-control"><input type="text" value="" /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">航班号</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="CZ327" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">目的港</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="LAX" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ATA</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-31 14:32" readonly /></div>
+            </div>
+            <div class="field field--empty" aria-hidden="true">
+              <div class="field-label">占位</div>
+              <div class="field-control"><input type="text" value="" /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title">索赔信息</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">索赔类型</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="CCA索赔" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔标准</div>
+              <div class="field-control">
+                <select class="readonly-select" disabled>
+                  <option selected></option>
+                  <option>按实际责任认定赔付</option>
+                </select>
+              </div>
+            </div>
+            <div class="field field--span-2">
+              <div class="field-label">索赔原因</div>
+              <div class="field-control"><input type="text" value="货物丢失" /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">箱数</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="72" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">计费重</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input type="text" value="1800.00" />
+                  <span>KG</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label required">索赔金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input type="text" value="1208.00" />
+                  <select aria-label="索赔金额币种">
+                    <option selected>币种</option>
+                    <option>CNY</option>
+                    <option>HKD</option>
+                    <option>USD</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field field--empty" aria-hidden="true">
+              <div class="field-label">占位</div>
+              <div class="field-control"><input type="text" value="" /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title">索赔函</h2>
+          <div class="ops-section">
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">+</span>
+              上传文件
+            </button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:56px;">序号</th>
+                <th style="width:92px;">操作</th>
+                <th style="width:160px;">文件类型</th>
+                <th>附件名称</th>
+                <th style="width:128px;">上传人</th>
+                <th style="width:168px;">上传时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td><a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">下载</a> <span style="color:#c0c4cc;">|</span> <a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">移除</a></td>
+                <td>索赔函</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>02</td>
+                <td><a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">下载</a> <span style="color:#c0c4cc;">|</span> <a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">移除</a></td>
+                <td>货物价值证明文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>03</td>
+                <td><a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">下载</a> <span style="color:#c0c4cc;">|</span> <a href="javascript:void(0)" style="color:#7d5bc9; text-decoration:none;">移除</a></td>
+                <td>其他文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../../common/prototype-shell.js"></script>
+</body>
+</html>

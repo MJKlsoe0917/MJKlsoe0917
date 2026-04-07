@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>丢货索赔详情 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    /* 页面标题栏见 ../../../../common/prototype-shell.css */
+
+    .confirm-modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.2);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .confirm-modal-mask.is-open {
+      display: flex;
+    }
+
+    .confirm-modal {
+      width: 560px;
+      max-width: calc(100vw - 32px);
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .confirm-modal-head {
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      color: #303848;
+    }
+
+    .confirm-modal-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .confirm-modal-close {
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .confirm-modal-body {
+      padding: 16px 16px 0;
+    }
+
+    .confirm-form-row {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .confirm-form-label {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-height: 32px;
+      font-size: 13px;
+      color: #303848;
+    }
+
+    .confirm-form-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .confirm-form-control {
+      min-width: 0;
+      padding-bottom: 12px;
+    }
+
+    .confirm-form-control select {
+      border: 1px solid #cfd5df;
+      border-radius: 2px;
+      height: 32px;
+    }
+
+    .confirm-form-control textarea {
+      width: 100%;
+      min-height: 136px;
+      border: 1px solid #cfd5df;
+      border-radius: 2px;
+      resize: none;
+      padding: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .confirm-textarea-wrap {
+      position: relative;
+    }
+
+    .confirm-textarea-count {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      font-size: 12px;
+      color: #4f5664;
+      pointer-events: none;
+    }
+
+    .confirm-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 8px 16px 16px;
+      margin: 0 -16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .confirm-btn {
+      min-width: 72px;
+      height: 36px;
+      border-radius: 4px;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #303848;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .confirm-btn--primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .detail-block {
+      margin-bottom: 20px;
+    }
+
+    /* 空运索赔：表单区略收敛字号；竖线颜色与粗细由 ERP 公共 prototype-shell 统一（与 --purple 一致） */
+    body .block-title,
+    body .erp-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      column-gap: 10px;
+      min-height: 32px;
+      align-items: center;
+    }
+
+    .field--files {
+      align-items: start;
+    }
+
+    .field--files .field-label {
+      padding-top: 8px;
+    }
+
+    .field--label-top {
+      align-items: start;
+    }
+
+    .field--label-top .field-label {
+      padding-top: 8px;
+    }
+
+    .field--span-2 {
+      grid-column: span 2;
+    }
+
+    .field--span-3 {
+      grid-column: span 3;
+    }
+
+    .field--span-4 {
+      grid-column: 1 / -1;
+    }
+
+    .field--empty {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .field-label {
+      text-align: right;
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .field-label--top {
+      align-self: start;
+      padding-top: 8px;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      min-width: 0;
+    }
+
+    .readonly-input--one-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #fff;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .readonly-input,
+    .readonly-select {
+      color: #303848;
+      background: #f5f6f8;
+    }
+
+    .readonly-select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      pointer-events: none;
+      background: #f5f6f8
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .input-unit {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      width: 100%;
+    }
+
+    .input-unit .readonly-input,
+    .input-unit input,
+    .input-unit select {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+
+    .input-unit span {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      background: #eef0f3;
+      color: #4f5664;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .ops-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .ops-action:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      line-height: 1;
+      font-size: 16px;
+    }
+
+    .ops-action.is-disabled {
+      background: #c9ced6;
+      border-color: #c9ced6;
+      color: #fff;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .op-link.is-disabled {
+      color: #c0c4cc;
+      cursor: not-allowed;
+      pointer-events: none;
+      text-decoration: none;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--line);
+      padding: 8px 8px;
+      font-size: 13px;
+      color: #4f5664;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .data-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 1100px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+      }
+
+      .field--span-2 {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "排舱",
+      sidebarActiveL1: "账单管理",
+      sidebarActiveL2: "空运索赔",
+      sidebarFromProductRoot: "../../../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">丢货索赔详情</div>
+            <div class="header-actions">
+              <a class="header-link" href="javascript:void(0)" id="pageActionLink" style="display:none;"></a>
+            </div>
+          </div>
+        </div>
+
+        <section class="detail-block" data-section="flight">
+          <h2 class="block-title erp-section-title">航班信息</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label required">提单号</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="784-40070155" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">采购方式</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="商业临采" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ETD</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-27 07:40" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">负责商务</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="xiaojun.zhu" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">供应商</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="LIHANGHK:利航國際貨運(香港)有限公司" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">直飞/转飞</div>
+              <div class="field-control"><select class="readonly-select" disabled><option selected>直飞</option></select></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ATD</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-27 22:29" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">跟单员</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="mingmei.he" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">航司</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="CX" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">起运港</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="HKG" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ETA</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-28 01:20" readonly /></div>
+            </div>
+            <div class="field field--empty" aria-hidden="true">
+              <div class="field-label">占位</div>
+              <div class="field-control"><input type="text" value="" /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">航班号</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="CX357" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">目的港</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="LHR" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">ATA</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="2025-05-31 14:32" readonly /></div>
+            </div>
+            <div class="field field--empty" aria-hidden="true">
+              <div class="field-label">占位</div>
+              <div class="field-control"><input type="text" value="" /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" data-section="boxList">
+          <h2 class="block-title erp-section-title">丢货箱号</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:56px;">序号</th>
+                <th style="width:170px;">箱号</th>
+                <th style="width:78px;">重量</th>
+                <th style="width:88px;">尺寸</th>
+                <th style="width:88px;">cbm</th>
+                <th style="width:78px;">包装数</th>
+                <th style="width:110px;">到达时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td>YWCW26012900296</td>
+                <td>32.5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>02</td>
+                <td>YWCW26012900280</td>
+                <td>32.5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="detail-block" data-section="claim">
+          <h2 class="block-title erp-section-title">索赔信息</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">索赔类型</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="丢货" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔标准</div>
+              <div class="field-control"><input class="readonly-input readonly-input--one-line" type="text" value="未声明价值：按26 SDR/公斤赔偿，赔付限额与实际货值，二者取低，外加“丢失货物的运费”" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔原因</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="货物丢失" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔原因</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="货物丢失" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label required">箱数</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="10" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label required">丢货货值</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="1208.00" readonly />
+                  <span>USD</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label required">索赔金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="1208.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔状态</div>
+              <div class="field-control"><input class="readonly-input" id="claimStatusInput" type="text" value="待商务确认" data-default-value="待商务确认" readonly /></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label required">计费重</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="120" readonly />
+                  <span>KG</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label required">丢货运费</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="200.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">实赔金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" id="actualPaidAmountInput" type="text" value="" data-actual-value="" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">汇率</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="6.08" readonly /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" data-section="claimLetter">
+          <h2 class="block-title erp-section-title">索赔函</h2>
+          <div class="ops-section">
+            <button type="button" class="ops-action" id="claimLetterUploadBtn">
+              <span class="ops-ico" aria-hidden="true">+</span>
+              上传文件
+            </button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:56px;">序号</th>
+                <th style="width:92px;">操作</th>
+                <th style="width:160px;">文件类型</th>
+                <th>附件名称</th>
+                <th style="width:128px;">上传人</th>
+                <th style="width:168px;">上传时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a> <span style="color:#c0c4cc;">|</span> <a class="op-link claim-letter-remove-link" href="javascript:void(0)">移除</a></td>
+                <td>索赔函</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>02</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a> <span style="color:#c0c4cc;">|</span> <a class="op-link claim-letter-remove-link" href="javascript:void(0)">移除</a></td>
+                <td>货物价值证明文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>03</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a> <span style="color:#c0c4cc;">|</span> <a class="op-link claim-letter-remove-link" href="javascript:void(0)">移除</a></td>
+                <td>其他文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>haihua.zhuang</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="detail-block" data-section="business">
+          <h2 class="block-title erp-section-title">商务确认</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">确认人</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="测试" readonly /></div>
+            </div>
+            <div class="field">
+              <div class="field-label">确认结果</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="推送供应商处理" readonly /></div>
+            </div>
+            <div class="field field--span-2">
+              <div class="field-label">原因</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="不发起索赔" readonly /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" data-section="supplierAppeal">
+          <h2 class="block-title erp-section-title">供应商申诉</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label required">赔付金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="500" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field field--span-3">
+              <div class="field-label required">申诉原因</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="申请金额减免" readonly /></div>
+            </div>
+
+            <div class="field field--files field--span-4">
+              <div class="field-label required">证明文件</div>
+              <div class="field-control" style="display:block;">
+                <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
+                  <a class="op-link" href="javascript:void(0)">XXXX申诉证明文件.pdf　下载</a>
+                  <a class="op-link" href="javascript:void(0)">XXXX申诉证明文件.pdf　下载</a>
+                  <a class="op-link" href="javascript:void(0)">XXXX申诉证明文件.pdf　下载</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" data-section="appealProcess">
+          <h2 class="block-title erp-section-title">申诉处理</h2>
+          <div class="form-grid">
+            <div class="field">
+              <div class="field-label">处理结果</div>
+              <div class="field-control"><input class="readonly-input" id="appealProcessResultInput" type="text" value="申诉同意" data-default-value="申诉同意" readonly /></div>
+            </div>
+            <div class="field field--span-3">
+              <div class="field-label">处理备注</div>
+              <div class="field-control"><input class="readonly-input" type="text" value="申请理由合理，同意按￥500.00扣罚" readonly /></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" data-section="approval">
+          <h2 class="block-title erp-section-title">审批记录</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>审批节点</th>
+                <th>审批人</th>
+                <th>实际审批人</th>
+                <th>审批时间</th>
+                <th>审批意见</th>
+                <th>审批备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>一级审批</td>
+                <td>平台销售1、平台销售2</td>
+                <td>平台销售1</td>
+                <td>2025-11-14 14:29</td>
+                <td>审批通过</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>二级审批</td>
+                <td>供应商部门1、供应商部门2</td>
+                <td>供应商部门1</td>
+                <td>2025-11-14 15:29</td>
+                <td>审批不通过</td>
+                <td>价格偏差较大，请尽快控制在38-39</td>
+              </tr>
+              <tr>
+                <td>三级审批</td>
+                <td>米姐</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="detail-block" data-section="logs">
+          <h2 class="block-title erp-section-title">操作日志</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">序号</th>
+                <th style="width:128px;">时间</th>
+                <th style="width:84px;">操作人</th>
+                <th style="width:84px;">操作</th>
+                <th style="width:132px;">描述</th>
+                <th style="width:106px;">IP</th>
+                <th style="width:150px;">环境</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td>2025-03-28 09:06</td>
+                <td>system</td>
+                <td>Arrival</td>
+                <td>已到港</td>
+                <td></td>
+                <td>Ihs Message Consuming Host</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-modal-mask" id="claimConfirmModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="claimConfirmModalTitle">
+      <div class="confirm-modal-head">
+        <div class="confirm-modal-title" id="claimConfirmModalTitle">索赔确认</div>
+        <button type="button" class="confirm-modal-close" id="claimConfirmCloseBtn" aria-label="关闭">×</button>
+      </div>
+      <div class="confirm-modal-body">
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">索赔确认</div>
+          <div class="confirm-form-control">
+            <select id="claimConfirmResult">
+              <option value="">请选择</option>
+              <option value="pushSupplier">推送供应商处理</option>
+              <option value="noClaim">不发起索赔</option>
+            </select>
+          </div>
+        </div>
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">原因</div>
+          <div class="confirm-form-control">
+            <div class="confirm-textarea-wrap">
+              <textarea id="claimConfirmReason" maxlength="100" placeholder="请填写原因"></textarea>
+              <div class="confirm-textarea-count"><span id="claimConfirmCount">0</span>/100</div>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="confirm-btn" id="claimConfirmCancelBtn">取消</button>
+          <button type="button" class="confirm-btn confirm-btn--primary" id="claimConfirmSubmitBtn">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-modal-mask" id="appealProcessModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="appealProcessModalTitle">
+      <div class="confirm-modal-head">
+        <div class="confirm-modal-title" id="appealProcessModalTitle">申诉处理</div>
+        <button type="button" class="confirm-modal-close" id="appealProcessCloseBtn" aria-label="关闭">×</button>
+      </div>
+      <div class="confirm-modal-body">
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">处理结果</div>
+          <div class="confirm-form-control">
+            <select id="appealProcessResult">
+              <option value="">请选择处理结果</option>
+              <option value="approve">申诉同意</option>
+              <option value="reject">申诉驳回</option>
+            </select>
+          </div>
+        </div>
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">处理备注</div>
+          <div class="confirm-form-control">
+            <div class="confirm-textarea-wrap">
+              <textarea id="appealProcessRemark" maxlength="100" placeholder="请填写处理备注"></textarea>
+              <div class="confirm-textarea-count"><span id="appealProcessCount">0</span>/100</div>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="confirm-btn" id="appealProcessCancelBtn">取消</button>
+          <button type="button" class="confirm-btn confirm-btn--primary" id="appealProcessSubmitBtn">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-modal-mask" id="resultApprovalModal" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="resultApprovalModalTitle">
+      <div class="confirm-modal-head">
+        <div class="confirm-modal-title" id="resultApprovalModalTitle">索赔结果审批</div>
+        <button type="button" class="confirm-modal-close" id="resultApprovalCloseBtn" aria-label="关闭">×</button>
+      </div>
+      <div class="confirm-modal-body">
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">审批意见</div>
+          <div class="confirm-form-control">
+            <select id="resultApprovalOpinion">
+              <option value="">请选择审批意见</option>
+              <option value="approve">审批通过</option>
+              <option value="reject">审批驳回</option>
+            </select>
+          </div>
+        </div>
+        <div class="confirm-form-row">
+          <div class="confirm-form-label required">审批备注</div>
+          <div class="confirm-form-control">
+            <div class="confirm-textarea-wrap">
+              <textarea id="resultApprovalRemark" maxlength="100" placeholder="请填写审批备注"></textarea>
+              <div class="confirm-textarea-count"><span id="resultApprovalCount">0</span>/100</div>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-modal-actions">
+          <button type="button" class="confirm-btn" id="resultApprovalCancelBtn">取消</button>
+          <button type="button" class="confirm-btn confirm-btn--primary" id="resultApprovalSubmitBtn">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      function getQuery(name) {
+        var url = new URL(window.location.href);
+        return url.searchParams.get(name) || "";
+      }
+
+      function showSections(keys) {
+        var allowed = {};
+        keys.forEach(function (key) {
+          allowed[key] = true;
+        });
+        document.querySelectorAll("[data-section]").forEach(function (block) {
+          var key = block.getAttribute("data-section");
+          block.style.display = allowed[key] ? "" : "none";
+        });
+      }
+
+      function getVisibleSections(sourceTab, claimStatus) {
+        var normalizedStatus = claimStatus === "待确认" ? "待商务确认" : claimStatus;
+        var byStatus = {
+          "待商务确认": ["flight", "boxList", "claim", "claimLetter", "logs"],
+          "待供应商处理": ["flight", "boxList", "claim", "claimLetter", "business", "logs"],
+          "申诉待处理": ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "logs"],
+          "申诉驳回": ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "logs"],
+          "索赔结果审批": ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "approval", "logs"],
+          "已确认": ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "approval", "logs"]
+        };
+
+        var byTab = {
+          pendingConfirm: ["flight", "boxList", "claim", "claimLetter", "logs"],
+          supplierPending: ["flight", "boxList", "claim", "claimLetter", "business", "logs"],
+          appealPending: ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "logs"],
+          appealRejected: ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "logs"],
+          resultApproval: ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "approval", "logs"]
+        };
+
+        if (sourceTab === "all") {
+          return byStatus[normalizedStatus] || ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "approval", "logs"];
+        }
+        return byTab[sourceTab] || ["flight", "boxList", "claim", "claimLetter", "business", "supplierAppeal", "appealProcess", "approval", "logs"];
+      }
+
+      function getHeaderActionText(sourceTab, claimStatus) {
+        var normalizedStatus = claimStatus === "待确认" ? "待商务确认" : claimStatus;
+        var byStatus = {
+          "待商务确认": "索赔确认",
+          "申诉待处理": "申诉处理",
+          "索赔结果审批": "索赔结果审批"
+        };
+        var byTab = {
+          pendingConfirm: "索赔确认",
+          appealPending: "申诉处理",
+          resultApproval: "索赔结果审批"
+        };
+        if (sourceTab === "all") {
+          return byStatus[normalizedStatus] || "";
+        }
+        return byTab[sourceTab] || "";
+      }
+
+      function updateHeaderAction(sourceTab, claimStatus) {
+        var actionLink = document.getElementById("pageActionLink");
+        if (!actionLink) return;
+        var actionText = getHeaderActionText(sourceTab, claimStatus);
+        if (!actionText) {
+          actionLink.style.display = "none";
+          actionLink.textContent = "";
+          return;
+        }
+        actionLink.textContent = actionText;
+        actionLink.style.display = "";
+      }
+
+      function updateActualPaidAmount(claimStatus) {
+        var actualPaidAmountInput = document.getElementById("actualPaidAmountInput");
+        if (!actualPaidAmountInput) return;
+        var normalizedStatus = claimStatus === "待确认" ? "待商务确认" : claimStatus;
+        var shouldShowAmount = normalizedStatus === "索赔结果审批" || normalizedStatus === "已确认";
+        var actualValue = actualPaidAmountInput.getAttribute("data-actual-value") || "";
+        actualPaidAmountInput.value = shouldShowAmount ? actualValue : "";
+      }
+
+      function updateAppealProcessResult(claimStatus) {
+        var appealProcessResultInput = document.getElementById("appealProcessResultInput");
+        if (!appealProcessResultInput) return;
+        var normalizedStatus = claimStatus === "待确认" ? "待商务确认" : claimStatus;
+        var defaultValue = appealProcessResultInput.getAttribute("data-default-value") || "";
+        appealProcessResultInput.value = normalizedStatus === "申诉驳回" ? "申诉驳回" : defaultValue;
+      }
+
+      function updateClaimStatusDisplay(claimStatus) {
+        var claimStatusInput = document.getElementById("claimStatusInput");
+        if (!claimStatusInput) return;
+        var defaultValue = claimStatusInput.getAttribute("data-default-value") || "";
+        claimStatusInput.value = claimStatus || defaultValue;
+      }
+
+      function updateClaimLetterActions(claimStatus) {
+        var normalizedStatus = claimStatus === "待确认" ? "待商务确认" : claimStatus;
+        var canEdit = normalizedStatus === "待商务确认" || normalizedStatus === "待供应商处理";
+        var uploadBtn = document.getElementById("claimLetterUploadBtn");
+        if (uploadBtn) {
+          uploadBtn.classList.toggle("is-disabled", !canEdit);
+          uploadBtn.disabled = !canEdit;
+        }
+        document.querySelectorAll(".claim-letter-remove-link").forEach(function (link) {
+          link.classList.toggle("is-disabled", !canEdit);
+          if (canEdit) {
+            link.removeAttribute("aria-disabled");
+            link.removeAttribute("tabindex");
+          } else {
+            link.setAttribute("aria-disabled", "true");
+            link.setAttribute("tabindex", "-1");
+          }
+        });
+      }
+
+      var claimConfirmModal = document.getElementById("claimConfirmModal");
+      var claimConfirmCloseBtn = document.getElementById("claimConfirmCloseBtn");
+      var claimConfirmCancelBtn = document.getElementById("claimConfirmCancelBtn");
+      var claimConfirmSubmitBtn = document.getElementById("claimConfirmSubmitBtn");
+      var claimConfirmReason = document.getElementById("claimConfirmReason");
+      var claimConfirmCount = document.getElementById("claimConfirmCount");
+      var appealProcessModal = document.getElementById("appealProcessModal");
+      var appealProcessCloseBtn = document.getElementById("appealProcessCloseBtn");
+      var appealProcessCancelBtn = document.getElementById("appealProcessCancelBtn");
+      var appealProcessSubmitBtn = document.getElementById("appealProcessSubmitBtn");
+      var appealProcessRemark = document.getElementById("appealProcessRemark");
+      var appealProcessCount = document.getElementById("appealProcessCount");
+      var resultApprovalModal = document.getElementById("resultApprovalModal");
+      var resultApprovalCloseBtn = document.getElementById("resultApprovalCloseBtn");
+      var resultApprovalCancelBtn = document.getElementById("resultApprovalCancelBtn");
+      var resultApprovalSubmitBtn = document.getElementById("resultApprovalSubmitBtn");
+      var resultApprovalRemark = document.getElementById("resultApprovalRemark");
+      var resultApprovalCount = document.getElementById("resultApprovalCount");
+
+      function updateReasonCount() {
+        if (!claimConfirmReason || !claimConfirmCount) return;
+        claimConfirmCount.textContent = String((claimConfirmReason.value || "").length);
+      }
+
+      function updateAppealProcessCount() {
+        if (!appealProcessRemark || !appealProcessCount) return;
+        appealProcessCount.textContent = String((appealProcessRemark.value || "").length);
+      }
+
+      function updateResultApprovalCount() {
+        if (!resultApprovalRemark || !resultApprovalCount) return;
+        resultApprovalCount.textContent = String((resultApprovalRemark.value || "").length);
+      }
+
+      function openClaimConfirmModal() {
+        if (!claimConfirmModal) return;
+        claimConfirmModal.classList.add("is-open");
+        claimConfirmModal.setAttribute("aria-hidden", "false");
+        updateReasonCount();
+      }
+
+      function closeClaimConfirmModal() {
+        if (!claimConfirmModal) return;
+        claimConfirmModal.classList.remove("is-open");
+        claimConfirmModal.setAttribute("aria-hidden", "true");
+      }
+
+      function openAppealProcessModal() {
+        if (!appealProcessModal) return;
+        appealProcessModal.classList.add("is-open");
+        appealProcessModal.setAttribute("aria-hidden", "false");
+        updateAppealProcessCount();
+      }
+
+      function closeAppealProcessModal() {
+        if (!appealProcessModal) return;
+        appealProcessModal.classList.remove("is-open");
+        appealProcessModal.setAttribute("aria-hidden", "true");
+      }
+
+      function openResultApprovalModal() {
+        if (!resultApprovalModal) return;
+        resultApprovalModal.classList.add("is-open");
+        resultApprovalModal.setAttribute("aria-hidden", "false");
+        updateResultApprovalCount();
+      }
+
+      function closeResultApprovalModal() {
+        if (!resultApprovalModal) return;
+        resultApprovalModal.classList.remove("is-open");
+        resultApprovalModal.setAttribute("aria-hidden", "true");
+      }
+
+      var sourceTab = getQuery("sourceTab");
+      var claimStatus = getQuery("claimStatus");
+      showSections(getVisibleSections(sourceTab, claimStatus));
+      updateHeaderAction(sourceTab, claimStatus);
+      updateActualPaidAmount(claimStatus);
+      updateAppealProcessResult(claimStatus);
+      updateClaimStatusDisplay(claimStatus);
+      updateClaimLetterActions(claimStatus);
+
+      var pageActionLink = document.getElementById("pageActionLink");
+      if (pageActionLink) {
+        pageActionLink.addEventListener("click", function (event) {
+          if (pageActionLink.textContent === "索赔确认") {
+            event.preventDefault();
+            openClaimConfirmModal();
+            return;
+          }
+          if (pageActionLink.textContent === "申诉处理") {
+            event.preventDefault();
+            openAppealProcessModal();
+            return;
+          }
+          if (pageActionLink.textContent === "索赔结果审批") {
+            event.preventDefault();
+            openResultApprovalModal();
+          }
+        });
+      }
+
+      if (claimConfirmReason) {
+        claimConfirmReason.addEventListener("input", updateReasonCount);
+      }
+
+      if (claimConfirmCloseBtn) {
+        claimConfirmCloseBtn.addEventListener("click", closeClaimConfirmModal);
+      }
+
+      if (claimConfirmCancelBtn) {
+        claimConfirmCancelBtn.addEventListener("click", closeClaimConfirmModal);
+      }
+
+      if (claimConfirmSubmitBtn) {
+        claimConfirmSubmitBtn.addEventListener("click", closeClaimConfirmModal);
+      }
+
+      if (claimConfirmModal) {
+        claimConfirmModal.addEventListener("click", function (event) {
+          if (event.target === claimConfirmModal) {
+            closeClaimConfirmModal();
+          }
+        });
+      }
+
+      if (appealProcessRemark) {
+        appealProcessRemark.addEventListener("input", updateAppealProcessCount);
+      }
+
+      if (appealProcessCloseBtn) {
+        appealProcessCloseBtn.addEventListener("click", closeAppealProcessModal);
+      }
+
+      if (appealProcessCancelBtn) {
+        appealProcessCancelBtn.addEventListener("click", closeAppealProcessModal);
+      }
+
+      if (appealProcessSubmitBtn) {
+        appealProcessSubmitBtn.addEventListener("click", closeAppealProcessModal);
+      }
+
+      if (appealProcessModal) {
+        appealProcessModal.addEventListener("click", function (event) {
+          if (event.target === appealProcessModal) {
+            closeAppealProcessModal();
+          }
+        });
+      }
+
+      if (resultApprovalRemark) {
+        resultApprovalRemark.addEventListener("input", updateResultApprovalCount);
+      }
+
+      if (resultApprovalCloseBtn) {
+        resultApprovalCloseBtn.addEventListener("click", closeResultApprovalModal);
+      }
+
+      if (resultApprovalCancelBtn) {
+        resultApprovalCancelBtn.addEventListener("click", closeResultApprovalModal);
+      }
+
+      if (resultApprovalSubmitBtn) {
+        resultApprovalSubmitBtn.addEventListener("click", closeResultApprovalModal);
+      }
+
+      if (resultApprovalModal) {
+        resultApprovalModal.addEventListener("click", function (event) {
+          if (event.target === resultApprovalModal) {
+            closeResultApprovalModal();
+          }
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && claimConfirmModal && claimConfirmModal.classList.contains("is-open")) {
+          closeClaimConfirmModal();
+        }
+        if (event.key === "Escape" && appealProcessModal && appealProcessModal.classList.contains("is-open")) {
+          closeAppealProcessModal();
+        }
+        if (event.key === "Escape" && resultApprovalModal && resultApprovalModal.classList.contains("is-open")) {
+          closeResultApprovalModal();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

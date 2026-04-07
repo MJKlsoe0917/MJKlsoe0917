@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>报价修改_专车 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --panel: #ffffff;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 右侧内容区：宽度 = 视口宽 − 侧栏宽；高度随浏览器剩余视口；白底承载表单 */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 0;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-sizing: border-box;
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    .card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin-bottom: 12px;
+    }
+
+    /* 页面标题栏见 ../../../common/prototype-shell.css；表单区内边距；顶栏由公共 .block-title 留白 */
+    .section {
+      padding: 0 10px 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 20px;
+      row-gap: 0;
+      align-items: start;
+      overflow: visible;
+    }
+
+    .form-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    /* 备注输入框横向延伸至第 4 列（两列宽 + 列间距） */
+    .form-grid > .form-col:nth-child(3) {
+      overflow: visible;
+    }
+
+    .form-grid > .form-col:nth-child(3) .field--remark-wide {
+      width: calc(200% + 20px);
+      max-width: calc(200% + 20px);
+      box-sizing: border-box;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      column-gap: 12px;
+      min-height: 46px;
+      align-items: center;
+      background: transparent;
+    }
+
+    .field-label {
+      text-align: right;
+      justify-self: stretch;
+      padding: 0;
+      color: #353b48;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      padding: 0;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .field-control .filterable-ctl {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 50;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #8a8f98;
+      background: #fff;
+      padding: 0 10px;
+      font-size: 15px;
+      color: #2f3542;
+      outline: none;
+      border-radius: 2px;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    input.filterable-input {
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .duration-wrap {
+      display: grid;
+      grid-template-columns: 1fr 32px;
+      width: 100%;
+    }
+
+    .duration-unit {
+      border: 1px solid #8a8f98;
+      border-left: none;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #2f3542;
+      background: #fff;
+    }
+
+    /* 左侧输入 + 右侧下拉（运输价格、报关费等） */
+    .input-group-split {
+      display: grid;
+      grid-template-columns: 1fr minmax(110px, auto);
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .input-group-split > input {
+      border-radius: 2px 0 0 2px;
+      min-width: 0;
+    }
+
+    .input-group-split > select.input-group-select {
+      width: auto;
+      min-width: 110px;
+      max-width: 160px;
+      border-left: none;
+      border-radius: 0 2px 2px 0;
+      padding-left: 8px;
+      padding-right: 28px;
+    }
+
+    input.time-field-input {
+      cursor: pointer;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    /* 悬浮时间选择面板（锚定在输入框下方/上方） */
+    .time-picker-popover {
+      position: fixed;
+      z-index: 300;
+      min-width: 300px;
+      max-width: min(400px, calc(100vw - 16px));
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18), 0 0 0 1px var(--line);
+      overflow: hidden;
+      display: none;
+      box-sizing: border-box;
+    }
+
+    .time-picker-popover.is-open {
+      display: block;
+    }
+
+    .time-picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      gap: 10px;
+      background: #fafbfc;
+    }
+
+    .time-picker-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #303848;
+    }
+
+    .time-picker-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .time-picker-close {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      line-height: 1;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 2px 6px;
+      font-family: inherit;
+    }
+
+    .time-picker-close:hover {
+      color: var(--text);
+    }
+
+    .time-picker-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .time-picker-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      align-items: center;
+      column-gap: 10px;
+    }
+
+    .time-picker-row label,
+    .time-picker-row > span:first-child {
+      font-size: 13px;
+      color: #353b48;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .time-picker-time-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .time-picker-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--line);
+      background: #fafbfc;
+    }
+
+    .tp-btn {
+      min-width: 72px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #303848;
+    }
+
+    .tp-btn--primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .tp-btn--primary:hover {
+      filter: brightness(1.05);
+    }
+
+    @media (max-width: 780px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+        row-gap: 12px;
+      }
+      .form-grid > .form-col:nth-child(3) .field--remark-wide {
+        width: 100%;
+        max-width: 100%;
+      }
+      .field-label {
+        font-size: 18px;
+      }
+      input, select, .duration-unit {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .page::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+  </style>
+</head>
+<body>
+  <script>window.__PROTOTYPE_SHELL__ = {
+      module: "专车报价",
+      active: "专车报价",
+      topbarActive: "要车",
+      sidebarFromProductRoot: "../../../",
+    };</script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title" id="editPageTitle">修改专车报价</div>
+            <div class="header-actions">
+              <a class="header-link" href="专车报价列表.html">取消</a>
+              <a class="header-link" href="专车报价列表.html" id="saveQuoteLink">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="card">
+          <h2 class="block-title erp-section-title">线路信息</h2>
+          <div class="section">
+            <div class="form-grid">
+              <div class="form-col">
+                <div class="field">
+                  <div class="field-label required">承运商</div>
+                  <div class="field-control">
+                    <div class="filterable-ctl">
+                      <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label required">运输类型</div>
+                  <div class="field-control">
+                    <select id="transportTypeSelect">
+                      <option value="">请选择运输类型</option>
+                      <option value="港车运输">港车运输</option>
+                      <option value="国内专车">国内专车</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label required">车型</div>
+                  <div class="field-control">
+                    <select id="vehicleModelSelect">
+                      <option value="">请先选择运输类型</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label required">运输价格</div>
+                  <div class="field-control">
+                    <div class="input-group-split">
+                      <input id="transportPriceInput" type="text" placeholder="请输入运输价格" />
+                      <select id="transportPriceUnit" class="input-group-select" aria-label="运输价格单位">
+                        <option value="HKD/车">HKD/车</option>
+                        <option value="CNY/车">CNY/车</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="field">
+                  <div class="field-label required">提货地</div>
+                  <div class="field-control">
+                    <div class="filterable-ctl">
+                      <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="请输入或选择提货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label required">卸货地</div>
+                  <div class="field-control">
+                    <div class="filterable-ctl">
+                      <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="请输入或选择卸货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label" id="labelSealPort">封关口岸</div>
+                  <div class="field-control">
+                    <div class="filterable-ctl">
+                      <input type="text" class="filterable-input" id="sealPortInput" aria-label="封关口岸" data-filterable="sealPort" placeholder="请输入或选择封关口岸" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label" id="labelBorderPort">过关口岸</div>
+                  <div class="field-control">
+                    <select id="borderPortSelect">
+                      <option value="">请选择过关口岸</option>
+                      <option>深圳湾</option>
+                      <option>港珠澳</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="field">
+                  <div class="field-label">运输时效</div>
+                  <div class="field-control">
+                    <div class="duration-wrap">
+                      <input id="durationInput" type="text" placeholder="时长" />
+                      <div class="duration-unit">H</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label">发车时间</div>
+                  <div class="field-control">
+                    <input id="departureTimeInput" class="time-field-input" type="text" readonly placeholder="点击选择 HH:mm" title="点击选择发车时间（时分）" aria-label="发车时间" />
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label">到达时间</div>
+                  <div class="field-control">
+                    <input id="arrivalTimeInput" class="time-field-input" type="text" readonly placeholder="点击选择 HH:mm" title="点击选择到达时间（时分）" aria-label="到达时间" />
+                  </div>
+                </div>
+                <div class="field field--remark-wide">
+                  <div class="field-label">备注</div>
+                  <div class="field-control"><input type="text" placeholder="线路备注信息" /></div>
+                </div>
+              </div>
+              <div class="form-col">
+                <div class="field">
+                  <div class="field-label required">生效日期</div>
+                  <div class="field-control">
+                    <input id="effectiveDate" type="date" name="effectiveDate" title="点击选择生效日期" />
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label required">失效日期</div>
+                  <div class="field-control">
+                    <input id="expiryDate" type="date" name="expiryDate" title="点击选择失效日期" />
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="field-label" id="labelCustomsFee">报关费</div>
+                  <div class="field-control">
+                    <div class="input-group-split">
+                      <input id="customsFeeInput" type="text" placeholder="请输入报关费" />
+                      <select id="customsFeeUnit" class="input-group-select" aria-label="报关费单位">
+                        <option value="HKD/车">HKD/车</option>
+                        <option value="CNY/车">CNY/车</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="time-picker-popover" id="timePickerPopover" hidden aria-hidden="true">
+    <div class="time-picker-popover-inner" role="dialog" aria-modal="false" aria-labelledby="timePickerTitle">
+      <div class="time-picker-head">
+        <div>
+          <div class="time-picker-title" id="timePickerTitle">选择时间</div>
+          <div class="time-picker-sub" id="timePickerContext" aria-live="polite"></div>
+        </div>
+        <button type="button" class="time-picker-close" id="timePickerCloseBtn" aria-label="关闭">×</button>
+      </div>
+      <div class="time-picker-body">
+        <div class="time-picker-row">
+          <span>时间</span>
+          <div class="time-picker-time-2">
+            <select id="timePickerHour" aria-label="时"></select>
+            <select id="timePickerMinute" aria-label="分"></select>
+          </div>
+        </div>
+      </div>
+      <div class="time-picker-foot">
+        <button type="button" class="tp-btn" id="timePickerCancelBtn">取消</button>
+        <button type="button" class="tp-btn tp-btn--primary" id="timePickerOkBtn">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var transportEl = document.getElementById('transportTypeSelect');
+      var vehicleEl = document.getElementById('vehicleModelSelect');
+      var labelSeal = document.getElementById('labelSealPort');
+      var labelBorder = document.getElementById('labelBorderPort');
+      var labelFee = document.getElementById('labelCustomsFee');
+
+      var VEHICLE_HK = ['中港吨车', '中港柜车'];
+      var VEHICLE_DOM = ['4.2', '7.6', '9.6', '12.5', '16.5', '17.5'];
+
+      function setPortFeeRequired(isRequired) {
+        [labelSeal, labelBorder, labelFee].forEach(function (el) {
+          if (!el) return;
+          el.classList.toggle('required', !!isRequired);
+        });
+      }
+
+      function syncVehicleAndPorts() {
+        var t = transportEl ? transportEl.value : '';
+        if (!vehicleEl) return;
+
+        vehicleEl.innerHTML = '';
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+
+        if (!t) {
+          placeholder.textContent = '请先选择运输类型';
+          vehicleEl.appendChild(placeholder);
+          setPortFeeRequired(false);
+          return;
+        }
+
+        placeholder.textContent = '请选择车型';
+        vehicleEl.appendChild(placeholder);
+
+        var list = t === '港车运输' ? VEHICLE_HK : t === '国内专车' ? VEHICLE_DOM : [];
+        list.forEach(function (text) {
+          var o = document.createElement('option');
+          o.value = text;
+          o.textContent = text;
+          vehicleEl.appendChild(o);
+        });
+
+        setPortFeeRequired(t === '港车运输');
+      }
+
+      if (transportEl) {
+        transportEl.addEventListener('change', syncVehicleAndPorts);
+      }
+      syncVehicleAndPorts();
+    })();
+
+    (function () {
+      var optionMap = {
+        pickup: ["常平", "肇庆", "麻涌", "花都"],
+        dropoff: ["青衣", "葵涌", "机场", "深圳机场", "广州机场", "东莞"],
+        carrier: [
+          "G01183:深圳市广宏达物流有限公司",
+          "G00968:深圳市恒峰国际货运代理有限公司",
+          "JIAHONG:深圳市嘉鸿国际货运代理有限公司",
+          "LIANYUAN:深圳市联远供应链管理有限公司",
+          "G01164:深圳市锦升物流有限公司",
+          "G01181:上海川速物流有限公司"
+        ],
+        sealPort: ["东莞长安", "深圳龙岗", "东莞凤岗"]
+      };
+
+      var controls = document.querySelectorAll("input[data-filterable]");
+      if (!controls.length) return;
+
+      function closeMenu(menu) {
+        menu.classList.remove("is-open");
+        menu.hidden = true;
+        menu.innerHTML = "";
+      }
+
+      function closeAllMenus() {
+        document.querySelectorAll(".filterable-menu").forEach(function (menu) {
+          closeMenu(menu);
+        });
+      }
+
+      function renderMenu(input) {
+        var key = input.getAttribute("data-filterable");
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+
+        var keyword = input.value.trim().toLowerCase();
+        var options = (optionMap[key] || []).filter(function (item) {
+          return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+        });
+
+        if (!options.length) {
+          menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+        } else {
+          menu.innerHTML = options
+            .map(function (item) {
+              return '<div class="filterable-option" data-value="' + item + '">' + item + "</div>";
+            })
+            .join("");
+        }
+
+        menu.hidden = false;
+        menu.classList.add("is-open");
+
+        menu.querySelectorAll(".filterable-option").forEach(function (option) {
+          option.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+            input.value = option.getAttribute("data-value") || "";
+            closeMenu(menu);
+          });
+        });
+      }
+
+      controls.forEach(function (input) {
+        input.addEventListener("focus", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("input", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            var menu = input.parentElement.querySelector(".filterable-menu");
+            if (menu) closeMenu(menu);
+          }
+        });
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".filterable-ctl")) {
+          closeAllMenus();
+        }
+      });
+    })();
+
+    (function () {
+      var pop = document.getElementById("timePickerPopover");
+      var hourSel = document.getElementById("timePickerHour");
+      var minSel = document.getElementById("timePickerMinute");
+      var ctx = document.getElementById("timePickerContext");
+      var depIn = document.getElementById("departureTimeInput");
+      var arrIn = document.getElementById("arrivalTimeInput");
+      if (!pop || !hourSel || !minSel || !depIn || !arrIn) return;
+
+      var activeInput = null;
+
+      function pad2(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function ensureSelectOptions() {
+        if (hourSel.options.length) return;
+        var h;
+        for (h = 0; h < 24; h++) {
+          var ho = document.createElement("option");
+          ho.value = pad2(h);
+          ho.textContent = pad2(h);
+          hourSel.appendChild(ho);
+        }
+        var m;
+        for (m = 0; m < 60; m++) {
+          var mo = document.createElement("option");
+          mo.value = pad2(m);
+          mo.textContent = pad2(m);
+          minSel.appendChild(mo);
+        }
+      }
+
+      function parseToControls(str) {
+        var hourVal = "00";
+        var minVal = "00";
+        var s = (str || "").trim();
+        if (s) {
+          var tm = s.match(/^(\d{1,2}):(\d{1,2})$/);
+          if (tm) {
+            hourVal = pad2(parseInt(tm[1], 10));
+            minVal = pad2(parseInt(tm[2], 10));
+          } else {
+            var parts = s.split(/\s+/);
+            var timePart = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+            var tm2 = timePart && timePart.match(/^(\d{1,2}):(\d{1,2})/);
+            if (tm2) {
+              hourVal = pad2(parseInt(tm2[1], 10));
+              minVal = pad2(parseInt(tm2[2], 10));
+            }
+          }
+        }
+        hourSel.value = hourVal;
+        minSel.value = minVal;
+      }
+
+      function positionNear(anchor) {
+        var rect = anchor.getBoundingClientRect();
+        var gap = 6;
+        var margin = 8;
+        var w = pop.offsetWidth;
+        var h = pop.offsetHeight;
+        var left = rect.left;
+        if (left + w > window.innerWidth - margin) {
+          left = Math.max(margin, window.innerWidth - w - margin);
+        }
+        var top = rect.bottom + gap;
+        if (top + h > window.innerHeight - margin) {
+          top = Math.max(margin, rect.top - gap - h);
+        }
+        pop.style.left = left + "px";
+        pop.style.top = top + "px";
+      }
+
+      function setOpen(open) {
+        pop.classList.toggle("is-open", open);
+        pop.hidden = !open;
+        pop.setAttribute("aria-hidden", open ? "false" : "true");
+        if (!open) {
+          pop.style.left = "";
+          pop.style.top = "";
+        }
+      }
+
+      function openFor(input) {
+        ensureSelectOptions();
+        activeInput = input;
+        if (ctx) {
+          ctx.textContent = input === depIn ? "发车时间" : "到达时间";
+        }
+        parseToControls(input.value);
+        setOpen(true);
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            positionNear(input);
+          });
+        });
+      }
+
+      function confirmPick() {
+        if (!activeInput) {
+          setOpen(false);
+          activeInput = null;
+          return;
+        }
+        activeInput.value = hourSel.value + ":" + minSel.value;
+        setOpen(false);
+        activeInput = null;
+      }
+
+      depIn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openFor(depIn);
+      });
+      depIn.addEventListener("focus", function () {
+        openFor(depIn);
+      });
+
+      arrIn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openFor(arrIn);
+      });
+      arrIn.addEventListener("focus", function () {
+        openFor(arrIn);
+      });
+
+      pop.addEventListener("click", function (e) {
+        e.stopPropagation();
+      });
+
+      document.getElementById("timePickerOkBtn").addEventListener("click", confirmPick);
+      document.getElementById("timePickerCancelBtn").addEventListener("click", function () {
+        setOpen(false);
+        activeInput = null;
+      });
+      document.getElementById("timePickerCloseBtn").addEventListener("click", function () {
+        setOpen(false);
+        activeInput = null;
+      });
+
+      document.addEventListener(
+        "click",
+        function (e) {
+          if (!pop.classList.contains("is-open")) return;
+          if (e.target === depIn || e.target === arrIn) return;
+          if (pop.contains(e.target)) return;
+          setOpen(false);
+          activeInput = null;
+        },
+        true
+      );
+
+      function repositionIfOpen() {
+        if (pop.classList.contains("is-open") && activeInput) {
+          positionNear(activeInput);
+        }
+      }
+
+      window.addEventListener("resize", repositionIfOpen);
+      window.addEventListener("scroll", repositionIfOpen, true);
+
+      var pageScrollEl = document.querySelector(".page");
+      if (pageScrollEl) {
+        pageScrollEl.addEventListener("scroll", repositionIfOpen);
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && pop.classList.contains("is-open")) {
+          setOpen(false);
+          activeInput = null;
+        }
+      });
+    })();
+
+    (function () {
+      var saveLink = document.getElementById("saveQuoteLink");
+      if (!saveLink) return;
+
+      function getFieldValue(field) {
+        if (!field) return "";
+        var input = field.querySelector("input, select, textarea");
+        if (!input) return "";
+        return String(input.value || "").trim();
+      }
+
+      function focusField(field) {
+        if (!field) return;
+        var input = field.querySelector("input, select, textarea");
+        if (input && typeof input.focus === "function") {
+          input.focus();
+        }
+      }
+
+      function validateRequiredFields() {
+        var requiredLabels = document.querySelectorAll(".field-label.required");
+        for (var i = 0; i < requiredLabels.length; i++) {
+          var label = requiredLabels[i];
+          var field = label.parentElement;
+          var labelText = (label.textContent || "").replace(/\*/g, "").trim();
+          if (!field || !labelText) continue;
+          if (getFieldValue(field)) continue;
+          alert(labelText + "为空，请填写" + labelText + "！");
+          focusField(field);
+          return false;
+        }
+        return true;
+      }
+
+      saveLink.addEventListener("click", function (event) {
+        if (!validateRequiredFields()) {
+          event.preventDefault();
+          return;
+        }
+        window.location.href = saveLink.getAttribute("href") || "专车报价列表.html";
+      });
+    })();
+
+    (function () {
+      var EDIT_KEY = "vanbon_quote_edit_prefill_v1";
+      var raw;
+      try {
+        raw = sessionStorage.getItem(EDIT_KEY);
+        if (!raw) return;
+        sessionStorage.removeItem(EDIT_KEY);
+      } catch (e) {
+        return;
+      }
+      var d;
+      try {
+        d = JSON.parse(raw);
+      } catch (e2) {
+        return;
+      }
+
+      var titleEl = document.getElementById("editPageTitle");
+      if (titleEl && d.quoteCode) titleEl.textContent = "修改专车报价 · " + d.quoteCode;
+
+      function setSelectByValueOrText(sel, val) {
+        if (!sel || val == null || String(val).trim() === "") return;
+        var v = String(val).trim();
+        var i;
+        for (i = 0; i < sel.options.length; i++) {
+          var o = sel.options[i];
+          if (o.value === v || (o.textContent || "").trim() === v) {
+            sel.selectedIndex = i;
+            return;
+          }
+        }
+      }
+
+      var carrierIn = document.querySelector('input[data-filterable="carrier"]');
+      if (carrierIn && d.carrier) carrierIn.value = d.carrier;
+
+      var pickupIn = document.querySelector('input[data-filterable="pickup"]');
+      if (pickupIn && d.pickup) pickupIn.value = d.pickup;
+
+      var dropoffIn = document.querySelector('input[data-filterable="dropoff"]');
+      if (dropoffIn && d.dropoff) dropoffIn.value = d.dropoff;
+
+      var sealIn = document.getElementById("sealPortInput");
+      if (sealIn && d.sealPort) sealIn.value = d.sealPort;
+
+      var transportEl = document.getElementById("transportTypeSelect");
+      if (transportEl && d.transportType) {
+        var ti;
+        for (ti = 0; ti < transportEl.options.length; ti++) {
+          var ot = transportEl.options[ti];
+          if (ot.value === d.transportType || (ot.textContent || "").trim() === d.transportType) {
+            transportEl.selectedIndex = ti;
+            break;
+          }
+        }
+        transportEl.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      var vehicleEl = document.getElementById("vehicleModelSelect");
+      if (vehicleEl && d.vehicle) {
+        var vj;
+        var foundV = false;
+        for (vj = 0; vj < vehicleEl.options.length; vj++) {
+          var ov = vehicleEl.options[vj];
+          if (ov.value === d.vehicle || (ov.textContent || "").trim() === d.vehicle) {
+            vehicleEl.selectedIndex = vj;
+            foundV = true;
+            break;
+          }
+        }
+        if (!foundV) {
+          var opt = document.createElement("option");
+          opt.value = d.vehicle;
+          opt.textContent = d.vehicle;
+          vehicleEl.appendChild(opt);
+          vehicleEl.value = d.vehicle;
+        }
+      }
+
+      var borderSel = document.getElementById("borderPortSelect");
+      if (borderSel && d.borderPort) {
+        var bp = String(d.borderPort).trim();
+        var fk;
+        var foundB = false;
+        for (fk = 0; fk < borderSel.options.length; fk++) {
+          var ob = borderSel.options[fk];
+          if ((ob.textContent || "").trim() === bp || ob.value === bp) {
+            borderSel.selectedIndex = fk;
+            foundB = true;
+            break;
+          }
+        }
+        if (!foundB) {
+          var nb = document.createElement("option");
+          nb.value = bp;
+          nb.textContent = bp;
+          borderSel.appendChild(nb);
+          borderSel.value = bp;
+        }
+      }
+
+      var dur = document.getElementById("durationInput");
+      if (dur && d.duration) {
+        var num = String(d.duration).replace(/[^\d.]/g, "");
+        dur.value = num || String(d.duration).trim();
+      }
+
+      var depIn = document.getElementById("departureTimeInput");
+      var arrIn = document.getElementById("arrivalTimeInput");
+      if (depIn && d.departureTime) depIn.value = d.departureTime;
+      if (arrIn && d.arrivalTime) arrIn.value = d.arrivalTime;
+
+      var priceIn = document.getElementById("transportPriceInput");
+      if (priceIn && d.priceAmount != null && String(d.priceAmount).trim() !== "") priceIn.value = d.priceAmount;
+      setSelectByValueOrText(document.getElementById("transportPriceUnit"), d.priceUnit);
+
+      var customsIn = document.getElementById("customsFeeInput");
+      if (customsIn && d.customsAmount != null && String(d.customsAmount).trim() !== "") customsIn.value = d.customsAmount;
+      setSelectByValueOrText(document.getElementById("customsFeeUnit"), d.customsUnit);
+
+      var remarkIn = document.querySelector(".field--remark-wide input[type='text']");
+      if (remarkIn && d.remark) remarkIn.value = d.remark;
+
+      var effEl = document.getElementById("effectiveDate");
+      var expEl = document.getElementById("expiryDate");
+      if (effEl && d.effectiveDate) effEl.value = d.effectiveDate;
+      if (expEl && d.expiryDate) expEl.value = d.expiryDate;
+    })();
+  </script>
+</body>
+</html>

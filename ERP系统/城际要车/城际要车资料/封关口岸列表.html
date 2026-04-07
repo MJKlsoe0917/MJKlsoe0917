@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>封关口岸列表 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --purple: #7d5bc9;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quote-query-simple {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+    }
+
+    .quote-query-simple .q-field {
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+    }
+
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+      min-height: 35px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 4px 10px 4px 8px;
+      border: none;
+      border-radius: 4px;
+      border-left: 3px solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover:not(.is-selected) {
+      background: #f0f1f4;
+    }
+
+    .ops-action.is-selected {
+      background: #ede8f7;
+      border-left-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      height: 100%;
+      overflow: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* 复选框、序号、操作、ID 列收窄 */
+    .data-table th:nth-child(1),
+    .data-table td:nth-child(1) {
+      width: 40px;
+      max-width: 44px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+      width: 48px;
+      max-width: 52px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+      width: 96px;
+      max-width: 110px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:nth-child(4),
+    .data-table td:nth-child(4) {
+      width: 72px;
+      max-width: 80px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      max-width: 220px;
+      min-width: 100px;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    .op-actions {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    .op-actions .op-link:first-child::after {
+      content: "";
+      display: inline-block;
+      width: 1px;
+      height: 12px;
+      margin: 0 8px;
+      background: var(--line);
+      vertical-align: middle;
+    }
+
+    /* 添加封关口岸弹框 */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.45);
+      box-sizing: border-box;
+    }
+
+    .modal-backdrop.is-open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 640px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 48px);
+    }
+
+    .modal-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 10px 14px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #303848;
+    }
+
+    .modal-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      margin: -6px -8px -6px 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: #707886;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .modal-close:hover {
+      background: #f0f2f5;
+      color: #303848;
+    }
+
+    .modal-body {
+      padding: 16px 10px;
+      overflow: auto;
+    }
+
+    .add-port-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 560px) {
+      .add-port-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .add-port-form .add-port-field.col-span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .add-port-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .add-port-field label {
+      flex: 0 0 auto;
+      width: 84px;
+      text-align: right;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 1.35;
+      flex-shrink: 0;
+    }
+
+    .add-port-field .req {
+      color: #e53935;
+      margin-right: 2px;
+    }
+
+    .add-port-field .field-control {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .add-port-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .add-port-field input[type="text"][readonly] {
+      background: #f0f2f5;
+      color: #9096a0;
+      cursor: not-allowed;
+    }
+
+    /* 口岸地址：地图选择嵌入输入框右侧内侧 */
+    .input-with-map-inner {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-with-map-inner input[type="text"] {
+      padding-right: 92px;
+    }
+
+    .btn-map-pick-inner {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      bottom: 1px;
+      min-width: 0;
+      padding: 0 10px;
+      border: none;
+      border-left: 1px solid #e5e8ed;
+      border-radius: 0 3px 3px 0;
+      background: #f7f8fa;
+      color: #303848;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn-map-pick-inner:hover {
+      background: #eef0f3;
+      color: var(--purple);
+    }
+
+    .modal-footer {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 10px;
+      border-top: 1px solid var(--line);
+      background: #fafbfc;
+    }
+
+    .btn-modal-cancel {
+      min-width: 72px;
+      height: 40px;
+      padding: 0 20px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      background: #fff;
+      color: #303848;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-modal-cancel:hover {
+      border-color: #b0b8c4;
+      background: #f7f8fa;
+    }
+
+    .btn-modal-save {
+      min-width: 72px;
+      height: 40px;
+      padding: 0 20px;
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-modal-save:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    /* 删除确认：与提卸货地列表删除确认弹框一致（#delete-confirm-modal 限定，不影响添加/地图弹框） */
+    #delete-confirm-modal.modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 64px 20px 20px;
+      z-index: 2001;
+    }
+
+    #delete-confirm-modal.modal-mask.is-open {
+      display: flex;
+    }
+
+    #delete-confirm-modal .modal {
+      width: min(980px, 96vw);
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(220, 223, 230, 0.9);
+      overflow: hidden;
+    }
+
+    #delete-confirm-modal .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    #delete-confirm-modal .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303848;
+    }
+
+    #delete-confirm-modal .modal-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
+
+    #delete-confirm-modal .modal-close:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+      color: #374151;
+    }
+
+    #delete-confirm-modal .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      background: #fff;
+    }
+
+    #delete-confirm-modal .btn {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #374151;
+      font-family: inherit;
+    }
+
+    #delete-confirm-modal .btn:hover {
+      background: #f8fafc;
+    }
+
+    #delete-confirm-modal .btn-primary {
+      border-color: #4f7cff;
+      background: #4f7cff;
+      color: #fff;
+    }
+
+    #delete-confirm-modal .btn-primary:hover {
+      background: #3f6ef2;
+      border-color: #3f6ef2;
+    }
+
+    #delete-confirm-modal .confirm-modal {
+      width: min(360px, 92vw);
+    }
+
+    #delete-confirm-modal .confirm-body {
+      padding: 18px 16px 8px;
+      font-size: 14px;
+      color: #4f5664;
+      line-height: 1.7;
+    }
+
+    #delete-confirm-modal .confirm-foot {
+      padding: 10px 16px 16px;
+      justify-content: flex-end;
+    }
+
+    #delete-confirm-modal .confirm-modal .modal-head {
+      border-bottom: none;
+    }
+
+    #delete-confirm-modal .confirm-modal .btn-primary {
+      border-color: var(--purple);
+      background: var(--purple);
+    }
+
+    #delete-confirm-modal .confirm-modal .btn-primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    /* 地图选择弹框（叠在添加弹框之上） */
+    #map-pick-modal.modal-backdrop {
+      z-index: 2100;
+      padding: 16px;
+    }
+
+    #map-pick-modal .modal-panel {
+      max-width: 800px;
+    }
+
+    .map-pick-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .map-pick-map-wrap {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #dfe8f0;
+      min-height: 320px;
+    }
+
+    .map-pick-map-placeholder {
+      min-height: 320px;
+      background:
+        linear-gradient(180deg, rgba(180, 210, 235, 0.45) 0%, rgba(210, 225, 238, 0.9) 100%),
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 8px,
+          rgba(255, 255, 255, 0.12) 8px,
+          rgba(255, 255, 255, 0.12) 16px
+        );
+    }
+
+    .map-pick-search-float {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: min(320px, calc(100% - 24px));
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      border: 1px solid var(--line);
+      z-index: 2;
+    }
+
+    .map-pick-search-row {
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      border-bottom: 1px solid #eef0f3;
+    }
+
+    .map-pick-search-row input {
+      flex: 1;
+      min-width: 0;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .map-pick-search-row button {
+      flex-shrink: 0;
+      height: 32px;
+      padding: 0 12px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .map-pick-search-row button:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .map-pick-results {
+      max-height: 160px;
+      overflow: auto;
+    }
+
+    .map-pick-result-item {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .map-pick-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .map-pick-result-item:hover,
+    .map-pick-result-item.is-active {
+      background: #f4f7ff;
+    }
+
+    .map-pick-result-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #303848;
+      margin-bottom: 4px;
+    }
+
+    .map-pick-result-detail {
+      font-size: 12px;
+      color: #707886;
+      line-height: 1.35;
+    }
+
+    .map-pick-form-below {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+    }
+
+    .map-pick-form-below .add-port-field.col-span-2 {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 560px) {
+      .map-pick-form-below {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "要车",
+      sidebarActiveL1: "城际运输资料",
+      sidebarActiveL2: "封关口岸列表",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="query-section">
+        <div class="quote-query-simple">
+          <div class="q-field">
+            <input type="text" placeholder="请输入封关口岸名称" aria-label="封关口岸名称" />
+          </div>
+          <div class="query-action-cell">
+            <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作" data-ops-group>
+        <button type="button" class="ops-action is-selected" data-action="add">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </span>
+          新增封关口岸
+        </button>
+      </div>
+
+      <div class="list-section">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" aria-label="全选" /></th>
+                <th>序号</th>
+                <th>操作</th>
+                <th>ID</th>
+                <th>封关口岸</th>
+                <th>口岸地址</th>
+                <th>经纬度</th>
+                <th>联系人</th>
+                <th>联系电话</th>
+                <th>备注信息</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>修改人</th>
+                <th>修改时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>1</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-001</td>
+                <td>深圳湾口岸</td>
+                <td class="col-wrap">广东省深圳市南山区东滨路1号</td>
+                <td>22.5021, 113.9468</td>
+                <td>周敏</td>
+                <td>0755-8669****</td>
+                <td class="col-wrap">24 小时通关</td>
+                <td>张三</td>
+                <td>2026-01-10 09:00</td>
+                <td>张三</td>
+                <td>2026-03-01 14:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>2</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-002</td>
+                <td>皇岗口岸</td>
+                <td class="col-wrap">广东省深圳市福田区福田南路</td>
+                <td>22.5220, 114.0712</td>
+                <td>李强</td>
+                <td>0755-8339****</td>
+                <td class="col-wrap">—</td>
+                <td>李四</td>
+                <td>2026-01-12 11:30</td>
+                <td>王五</td>
+                <td>2026-02-18 10:05</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>3</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-003</td>
+                <td>港珠澳大桥珠海公路口岸</td>
+                <td class="col-wrap">广东省珠海市香洲区港珠澳大桥珠海连接线</td>
+                <td>22.2156, 113.5764</td>
+                <td>陈芳</td>
+                <td>0756-868****</td>
+                <td class="col-wrap">港澳车辆专用通道</td>
+                <td>赵六</td>
+                <td>2026-02-01 08:45</td>
+                <td>赵六</td>
+                <td>2026-02-01 08:45</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>4</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-004</td>
+                <td>横琴口岸</td>
+                <td class="col-wrap">广东省珠海市横琴新区顺景路</td>
+                <td>22.1420, 113.5489</td>
+                <td>吴磊</td>
+                <td>0756-884****</td>
+                <td class="col-wrap">合作查验、一次放行</td>
+                <td>孙七</td>
+                <td>2026-02-20 16:00</td>
+                <td>孙七</td>
+                <td>2026-03-10 09:12</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>5</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-005</td>
+                <td>沙头角口岸</td>
+                <td class="col-wrap">广东省深圳市盐田区沙深路</td>
+                <td>22.5456, 114.2289</td>
+                <td>郑华</td>
+                <td>0755-2555****</td>
+                <td class="col-wrap">货运时段以现场公告为准</td>
+                <td>陈八</td>
+                <td>2026-03-05 13:20</td>
+                <td>钱一</td>
+                <td>2026-03-28 11:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>6</td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>FG-006</td>
+                <td>文锦渡口岸</td>
+                <td class="col-wrap">广东省深圳市罗湖区文锦渡路</td>
+                <td>22.5312, 114.1286</td>
+                <td>何静</td>
+                <td>0755-2510****</td>
+                <td class="col-wrap">—</td>
+                <td>钱一</td>
+                <td>2026-03-15 10:00</td>
+                <td>钱一</td>
+                <td>2026-03-15 10:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div
+    id="add-port-modal"
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-port-modal-title"
+    aria-hidden="true"
+  >
+    <div class="modal-panel" role="document">
+      <div class="modal-header">
+        <h2 id="add-port-modal-title" class="modal-title">添加封关口岸</h2>
+        <button type="button" class="modal-close" data-add-port-close aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="add-port-form" id="add-port-form" onsubmit="return false;">
+          <div class="add-port-field col-span-2">
+            <label for="add-port-name"><span class="req" aria-hidden="true">*</span>封关口岸</label>
+            <div class="field-control">
+              <input id="add-port-name" name="name" type="text" autocomplete="off" aria-required="true" />
+            </div>
+          </div>
+          <div class="add-port-field col-span-2">
+            <label for="add-port-address"><span class="req" aria-hidden="true">*</span>口岸地址</label>
+            <div class="field-control">
+              <div class="input-with-map-inner">
+                <input
+                  id="add-port-address"
+                  name="address"
+                  type="text"
+                  placeholder="请输入详细地址信息，如道路、门牌号、小区、楼栋号、单元等信息"
+                  autocomplete="off"
+                  aria-required="true"
+                  readonly
+                  aria-readonly="true"
+                />
+                <button type="button" class="btn-map-pick-inner" id="add-port-open-map">地图选择</button>
+              </div>
+            </div>
+          </div>
+          <div class="add-port-field">
+            <label for="add-port-lng"><span class="req" aria-hidden="true">*</span>经度</label>
+            <div class="field-control">
+              <input id="add-port-lng" name="lng" type="text" inputmode="decimal" autocomplete="off" aria-required="true" readonly aria-readonly="true" />
+            </div>
+          </div>
+          <div class="add-port-field">
+            <label for="add-port-lat"><span class="req" aria-hidden="true">*</span>纬度</label>
+            <div class="field-control">
+              <input id="add-port-lat" name="lat" type="text" inputmode="decimal" autocomplete="off" aria-required="true" readonly aria-readonly="true" />
+            </div>
+          </div>
+          <div class="add-port-field">
+            <label for="add-port-contact"><span class="req" aria-hidden="true">*</span>联系人</label>
+            <div class="field-control">
+              <input id="add-port-contact" name="contact" type="text" autocomplete="off" aria-required="true" />
+            </div>
+          </div>
+          <div class="add-port-field">
+            <label for="add-port-phone"><span class="req" aria-hidden="true">*</span>联系电话</label>
+            <div class="field-control">
+              <input id="add-port-phone" name="phone" type="text" autocomplete="off" aria-required="true" />
+            </div>
+          </div>
+          <div class="add-port-field col-span-2">
+            <label for="add-port-remark">备注信息</label>
+            <div class="field-control">
+              <input id="add-port-remark" name="remark" type="text" autocomplete="off" />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" data-add-port-close>取消</button>
+        <button type="button" class="btn-modal-save" id="add-port-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="map-pick-modal"
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="map-pick-modal-title"
+    aria-hidden="true"
+  >
+    <div class="modal-panel" role="document">
+      <div class="modal-header">
+        <h2 id="map-pick-modal-title" class="modal-title">地图选择址</h2>
+        <button type="button" class="modal-close" data-map-pick-close aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="map-pick-body">
+          <div class="map-pick-map-wrap">
+            <div class="map-pick-map-placeholder" aria-hidden="true"></div>
+            <div class="map-pick-search-float">
+              <div class="map-pick-search-row">
+                <input type="text" id="map-pick-search-input" placeholder="搜索地点" autocomplete="off" />
+                <button type="button" id="map-pick-search-btn">搜索</button>
+              </div>
+              <div class="map-pick-results" id="map-pick-results" role="listbox" aria-label="搜索结果"></div>
+            </div>
+          </div>
+          <div class="map-pick-form-below">
+            <div class="add-port-field col-span-2">
+              <label for="map-pick-address"><span class="req" aria-hidden="true">*</span>口岸地址</label>
+              <div class="field-control">
+                <input
+                  id="map-pick-address"
+                  type="text"
+                  placeholder="请输入详细地址信息，如道路、门牌号、小区、楼栋号、单元等信息"
+                  autocomplete="off"
+                  aria-required="true"
+                  readonly
+                  aria-readonly="true"
+                />
+              </div>
+            </div>
+            <div class="add-port-field">
+              <label for="map-pick-lng"><span class="req" aria-hidden="true">*</span>经度</label>
+              <div class="field-control">
+                <input id="map-pick-lng" type="text" inputmode="decimal" autocomplete="off" aria-required="true" readonly aria-readonly="true" />
+              </div>
+            </div>
+            <div class="add-port-field">
+              <label for="map-pick-lat"><span class="req" aria-hidden="true">*</span>纬度</label>
+              <div class="field-control">
+                <input id="map-pick-lat" type="text" inputmode="decimal" autocomplete="off" aria-required="true" readonly aria-readonly="true" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" data-map-pick-close>取消</button>
+        <button type="button" class="btn-modal-save" id="map-pick-confirm">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="delete-confirm-modal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" data-delete-modal-close aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="deleteConfirmModalMsg">你确认要删除当前封关口岸吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" data-delete-modal-close>取消</button>
+        <button type="button" class="btn btn-primary" id="delete-confirm-ok">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var ops = document.querySelector(".ops-section");
+      if (!ops) return;
+      var actionButtons = ops.querySelectorAll(".ops-action");
+
+      function syncSelectedState() {
+        actionButtons.forEach(function (btn) {
+          btn.setAttribute("aria-pressed", btn.classList.contains("is-selected") ? "true" : "false");
+        });
+      }
+
+      syncSelectedState();
+
+      ops.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ops-action[data-action]");
+        if (!btn) return;
+        actionButtons.forEach(function (item) {
+          item.classList.remove("is-selected");
+        });
+        btn.classList.add("is-selected");
+        syncSelectedState();
+        var act = btn.getAttribute("data-action");
+        if (act === "add") {
+          if (typeof window.openPortModal === "function") {
+            window.openPortModal("add");
+          }
+        }
+      });
+    })();
+
+    (function () {
+      var addBackdrop = document.getElementById("add-port-modal");
+      var addForm = document.getElementById("add-port-form");
+      var mapBackdrop = document.getElementById("map-pick-modal");
+      var openMapBtn = document.getElementById("add-port-open-map");
+      var mapResults = document.getElementById("map-pick-results");
+      var mapSearchInput = document.getElementById("map-pick-search-input");
+      var mapSearchBtn = document.getElementById("map-pick-search-btn");
+      var mapPickAddress = document.getElementById("map-pick-address");
+      var mapPickLng = document.getElementById("map-pick-lng");
+      var mapPickLat = document.getElementById("map-pick-lat");
+      var mapConfirm = document.getElementById("map-pick-confirm");
+
+      var addPortAddress = document.getElementById("add-port-address");
+      var addPortLng = document.getElementById("add-port-lng");
+      var addPortLat = document.getElementById("add-port-lat");
+      var addPortModalTitle = document.getElementById("add-port-modal-title");
+
+      var portModalMode = "add";
+
+      var MOCK_PLACES = [
+        {
+          name: "香港西九龙站",
+          detail: "香港特别行政区油尖旺区柯士甸道西3号",
+          lng: "114.1612",
+          lat: "22.3049",
+        },
+        {
+          name: "香港西九龙站(进站口)",
+          detail: "香港特别行政区油尖旺区柯士甸道西3号香港西九龙站",
+          lng: "114.1615",
+          lat: "22.3051",
+        },
+        {
+          name: "深圳湾口岸",
+          detail: "广东省深圳市南山区东滨路1号",
+          lng: "113.9468",
+          lat: "22.5021",
+        },
+      ];
+
+      function renderMapResults(list) {
+        if (!mapResults) return;
+        mapResults.innerHTML = "";
+        list.forEach(function (item, idx) {
+          var div = document.createElement("div");
+          div.className = "map-pick-result-item";
+          div.setAttribute("role", "option");
+          div.innerHTML =
+            '<div class="map-pick-result-name"></div><div class="map-pick-result-detail"></div>';
+          div.querySelector(".map-pick-result-name").textContent = item.name;
+          div.querySelector(".map-pick-result-detail").textContent = item.detail;
+          div.addEventListener("click", function () {
+            mapResults.querySelectorAll(".map-pick-result-item").forEach(function (el) {
+              el.classList.remove("is-active");
+            });
+            div.classList.add("is-active");
+            if (mapPickAddress) mapPickAddress.value = item.detail;
+            if (mapPickLng) mapPickLng.value = item.lng;
+            if (mapPickLat) mapPickLat.value = item.lat;
+          });
+          mapResults.appendChild(div);
+        });
+      }
+
+      function filterMockPlaces(q) {
+        var t = (q || "").trim();
+        if (!t) return MOCK_PLACES.slice();
+        return MOCK_PLACES.filter(function (p) {
+          return p.name.indexOf(t) !== -1 || p.detail.indexOf(t) !== -1;
+        });
+      }
+
+      function runMapSearch() {
+        renderMapResults(filterMockPlaces(mapSearchInput ? mapSearchInput.value : ""));
+      }
+
+      function fillPortFormFromRow(tr) {
+        if (!tr || !addForm) return;
+        var cells = tr.querySelectorAll("td");
+        if (cells.length < 10) return;
+        var name = cells[4].textContent.trim();
+        var address = cells[5].textContent.trim();
+        var lngLatStr = cells[6].textContent.trim();
+        var contact = cells[7].textContent.trim();
+        var phone = cells[8].textContent.trim();
+        var remark = cells[9].textContent.trim();
+        if (remark === "—") remark = "";
+
+        var lat = "";
+        var lng = "";
+        var parts = lngLatStr.split(",");
+        if (parts.length >= 2) {
+          lat = parts[0].trim();
+          lng = parts[1].trim();
+        }
+
+        var nameEl = document.getElementById("add-port-name");
+        var addrEl = document.getElementById("add-port-address");
+        var lngEl = document.getElementById("add-port-lng");
+        var latEl = document.getElementById("add-port-lat");
+        var contactEl = document.getElementById("add-port-contact");
+        var phoneEl = document.getElementById("add-port-phone");
+        var remarkEl = document.getElementById("add-port-remark");
+        if (nameEl) nameEl.value = name;
+        if (addrEl) addrEl.value = address;
+        if (lngEl) lngEl.value = lng;
+        if (latEl) latEl.value = lat;
+        if (contactEl) contactEl.value = contact;
+        if (phoneEl) phoneEl.value = phone;
+        if (remarkEl) remarkEl.value = remark;
+      }
+
+      function openPortModal(mode, tr) {
+        if (!addBackdrop) return;
+        portModalMode = mode === "edit" ? "edit" : "add";
+        if (addForm) addForm.reset();
+        if (addPortModalTitle) {
+          addPortModalTitle.textContent =
+            portModalMode === "edit" ? "修改封关口" : "添加封关口岸";
+        }
+        if (portModalMode === "edit" && tr) {
+          fillPortFormFromRow(tr);
+        }
+        addBackdrop.classList.add("is-open");
+        addBackdrop.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        var nameEl = document.getElementById("add-port-name");
+        if (nameEl) nameEl.focus();
+      }
+
+      function openAddPortModal() {
+        openPortModal("add");
+      }
+
+      function closeAddPortModal() {
+        if (!addBackdrop) return;
+        addBackdrop.classList.remove("is-open");
+        addBackdrop.setAttribute("aria-hidden", "true");
+        portModalMode = "add";
+        if (addPortModalTitle) addPortModalTitle.textContent = "添加封关口岸";
+        if (!mapBackdrop || !mapBackdrop.classList.contains("is-open")) {
+          document.body.style.overflow = "";
+        }
+      }
+
+      function openMapPickModal() {
+        if (!mapBackdrop) return;
+        if (mapPickAddress) mapPickAddress.value = addPortAddress ? addPortAddress.value : "";
+        if (mapPickLng) mapPickLng.value = addPortLng ? addPortLng.value : "";
+        if (mapPickLat) mapPickLat.value = addPortLat ? addPortLat.value : "";
+        if (mapSearchInput) mapSearchInput.value = "香港西九龙站";
+        runMapSearch();
+        mapBackdrop.classList.add("is-open");
+        mapBackdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function closeMapPickModal() {
+        if (!mapBackdrop) return;
+        mapBackdrop.classList.remove("is-open");
+        mapBackdrop.setAttribute("aria-hidden", "true");
+        if (!addBackdrop || !addBackdrop.classList.contains("is-open")) {
+          document.body.style.overflow = "";
+        }
+      }
+
+      window.openAddPortModal = openAddPortModal;
+      window.openPortModal = openPortModal;
+
+      if (addBackdrop) {
+        addBackdrop.querySelectorAll("[data-add-port-close]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            closeAddPortModal();
+          });
+        });
+        addBackdrop.addEventListener("click", function (e) {
+          if (e.target === addBackdrop) closeAddPortModal();
+        });
+      }
+
+      var addPortSave = document.getElementById("add-port-save");
+      if (addPortSave) {
+        addPortSave.addEventListener("click", function () {
+          var msg =
+            portModalMode === "edit"
+              ? "原型：已保存修改（实际系统将提交表单）"
+              : "原型：已点击保存（实际系统将提交表单）";
+          window.alert(msg);
+          closeAddPortModal();
+        });
+      }
+
+      if (openMapBtn) {
+        openMapBtn.addEventListener("click", function () {
+          openMapPickModal();
+        });
+      }
+
+      if (mapBackdrop) {
+        mapBackdrop.querySelectorAll("[data-map-pick-close]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            closeMapPickModal();
+          });
+        });
+        mapBackdrop.addEventListener("click", function (e) {
+          if (e.target === mapBackdrop) closeMapPickModal();
+        });
+      }
+
+      if (mapSearchBtn) mapSearchBtn.addEventListener("click", runMapSearch);
+      if (mapSearchInput) {
+        mapSearchInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            runMapSearch();
+          }
+        });
+      }
+
+      if (mapConfirm) {
+        mapConfirm.addEventListener("click", function () {
+          if (addPortAddress && mapPickAddress) addPortAddress.value = mapPickAddress.value;
+          if (addPortLng && mapPickLng) addPortLng.value = mapPickLng.value;
+          if (addPortLat && mapPickLat) addPortLat.value = mapPickLat.value;
+          closeMapPickModal();
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var delModal = document.getElementById("delete-confirm-modal");
+        if (delModal && delModal.classList.contains("is-open")) {
+          if (typeof window.closeDeleteConfirmModal === "function") {
+            window.closeDeleteConfirmModal();
+          }
+          return;
+        }
+        if (mapBackdrop && mapBackdrop.classList.contains("is-open")) {
+          closeMapPickModal();
+          return;
+        }
+        if (addBackdrop && addBackdrop.classList.contains("is-open")) {
+          closeAddPortModal();
+        }
+      });
+    })();
+
+    (function () {
+      var delBackdrop = document.getElementById("delete-confirm-modal");
+      var okBtn = document.getElementById("delete-confirm-ok");
+      var tableWrap = document.querySelector(".data-table-wrap");
+      if (!delBackdrop || !tableWrap) return;
+
+      var pendingRow = null;
+
+      function openDeleteConfirmModal(row) {
+        pendingRow = row || null;
+        delBackdrop.classList.add("is-open");
+        delBackdrop.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDeleteConfirmModal() {
+        delBackdrop.classList.remove("is-open");
+        delBackdrop.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        pendingRow = null;
+      }
+
+      window.closeDeleteConfirmModal = closeDeleteConfirmModal;
+
+      tableWrap.addEventListener("click", function (e) {
+        var link = e.target.closest("a[data-action=\"delete\"]");
+        if (!link) return;
+        e.preventDefault();
+        var tr = link.closest("tr");
+        openDeleteConfirmModal(tr);
+      });
+
+      delBackdrop.addEventListener("click", function (e) {
+        if (e.target === delBackdrop) {
+          closeDeleteConfirmModal();
+        }
+      });
+
+      delBackdrop.querySelectorAll("[data-delete-modal-close]").forEach(function (el) {
+        el.addEventListener("click", closeDeleteConfirmModal);
+      });
+
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          window.alert("原型：已删除（实际将调用接口）");
+          if (pendingRow && pendingRow.parentNode) {
+            pendingRow.parentNode.removeChild(pendingRow);
+          }
+          closeDeleteConfirmModal();
+        });
+      }
+
+      tableWrap.addEventListener("click", function (e) {
+        var editLink = e.target.closest('a[data-action="edit"]');
+        if (!editLink) return;
+        e.preventDefault();
+        var tr = editLink.closest("tr");
+        if (tr && typeof window.openPortModal === "function") {
+          window.openPortModal("edit", tr);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

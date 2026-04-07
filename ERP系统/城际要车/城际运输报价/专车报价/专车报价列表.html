@@ -1,0 +1,3787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>模板页 · 万邦速达</title>
+  <link rel="stylesheet" href="../../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 右侧主区域 */
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .tab-panel p {
+      color: #5c6370;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    /* ---------- 查询区域（左：报价编码双行；右：两行条件 + 查询） ---------- */
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .quote-query {
+      display: grid;
+      grid-template-columns: minmax(120px, 200px) minmax(220px, 1fr);
+      gap: 12px 16px;
+      align-items: stretch;
+    }
+
+    .quote-query-bulk {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+    }
+
+    .bulk-field {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 104px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .bulk-field .bulk-select {
+      width: 100%;
+      height: 36px;
+      margin: 0;
+      padding: 0 28px 0 10px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .bulk-field textarea {
+      flex: 0 1 auto;
+      width: 100%;
+      min-height: 60px;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .bulk-field textarea::placeholder {
+      color: #9aa1ad;
+    }
+
+    .quote-query-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .quote-query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field .q-ctl {
+      width: 100%;
+      position: relative;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .filterable-input {
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 20;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .query-action-cell--span2 {
+      grid-column: span 2;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .btn-query .qi {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    /* 功能操作区：文字 + 图标，链接式（非按钮框线） */
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+      min-height: 35px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      background: #fff;
+      border: none;
+      box-shadow: none;
+      outline: none;
+    }
+
+    a.ops-action {
+      text-decoration: none;
+      color: var(--purple);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 4px 10px 4px 8px;
+      border: none;
+      border-radius: 4px;
+      border-left: 3px solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover:not(.is-selected) {
+      background: #f0f1f4;
+    }
+
+    .ops-action:active:not(.is-selected) {
+      background: #e6e7eb;
+    }
+
+    .ops-action.is-selected {
+      background: #ede8f7;
+      border-left-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action.is-selected:hover {
+      background: #e4dbf5;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      flex-shrink: 0;
+      color: inherit;
+      opacity: 0.95;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    /* 列表区域：左右内边距与 .query-section 一致，表格与查询区对齐 */
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+      padding: 0 16px 10px;
+      box-sizing: border-box;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+      width: 100%;
+      min-height: 120px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: auto;
+      border: none;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 10px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:first-child,
+    .data-table td:first-child {
+      border-left: 1px solid var(--line);
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: 1px solid var(--line);
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      border-top: none;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table tbody tr {
+      cursor: pointer;
+    }
+
+    .data-table .col-remark {
+      white-space: normal;
+      max-width: 180px;
+      min-width: 80px;
+    }
+
+    /* 一级/二级/三级审批列：长文案换行（列序随 Tab 不同） */
+    .tab-panel[data-tab-panel="1"] .data-table tbody td:nth-child(19),
+    .tab-panel[data-tab-panel="1"] .data-table tbody td:nth-child(20),
+    .tab-panel[data-tab-panel="1"] .data-table tbody td:nth-child(21),
+    .tab-panel[data-tab-panel="3"] .data-table tbody td:nth-child(19),
+    .tab-panel[data-tab-panel="3"] .data-table tbody td:nth-child(20),
+    .tab-panel[data-tab-panel="3"] .data-table tbody td:nth-child(21),
+    .tab-panel[data-tab-panel="4"] .data-table tbody td:nth-child(20),
+    .tab-panel[data-tab-panel="4"] .data-table tbody td:nth-child(21),
+    .tab-panel[data-tab-panel="4"] .data-table tbody td:nth-child(22) {
+      white-space: normal;
+      max-width: 280px;
+      min-width: 160px;
+      vertical-align: top;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 1000;
+    }
+
+    .modal-mask.is-open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    /* 删除确认：固定高度 170px、宽度 300、大圆角 */
+    .modal-dialog.modal-dialog--delete {
+      box-sizing: border-box;
+      width: min(300px, calc(100vw - 48px));
+      height: 170px;
+      max-height: 170px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-head,
+    .modal-dialog.modal-dialog--delete .modal-body,
+    .modal-dialog.modal-dialog--delete .modal-foot {
+      padding: 6px 12px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-head {
+      padding-top: 8px;
+      padding-bottom: 6px;
+      flex-shrink: 0;
+      border-bottom: none;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-title {
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-close {
+      width: 34px;
+      height: 34px;
+      font-size: 24px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 0;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-confirm-text {
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-foot {
+      flex-shrink: 0;
+      padding-top: 14px;
+      padding-bottom: 8px;
+      gap: 8px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-btn {
+      min-width: 68px;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    /* 报价导入 */
+    .modal-dialog.modal-dialog--import {
+      max-width: 560px;
+      width: calc(100% - 32px);
+      border-radius: 8px;
+    }
+
+    .modal-dialog--import .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-dialog--import .modal-close {
+      width: 36px;
+      height: 36px;
+      font-size: 26px;
+    }
+
+    .modal-dialog--import .modal-body--import {
+      padding: 12px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-dialog--import .import-template-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--purple);
+      font-size: 14px;
+      text-decoration: none;
+      width: fit-content;
+    }
+
+    .modal-dialog--import .import-template-link:hover {
+      text-decoration: underline;
+    }
+
+    .modal-dialog--import .import-template-link svg {
+      flex-shrink: 0;
+      color: var(--purple);
+    }
+
+    .modal-dialog--import .import-drop-outer {
+      position: relative;
+      display: block;
+      border: 2px dashed var(--purple);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      background: #faf8fc;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .modal-dialog--import .import-drop-outer:hover,
+    .modal-dialog--import .import-drop-outer.is-dragover {
+      background: #f3eefb;
+      border-color: #6b4ab8;
+    }
+
+    .modal-dialog--import .import-file-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 0;
+    }
+
+    .modal-dialog--import .import-drop-inner {
+      border: 1px dashed var(--purple);
+      border-radius: 6px;
+      min-height: 172px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .modal-dialog--import .import-drop-title {
+      color: var(--purple);
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .modal-dialog--import .import-drop-sub {
+      color: #909399;
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .modal-dialog--import .modal-foot {
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-dialog--import .modal-foot .modal-btn {
+      min-height: 40px;
+      height: 40px;
+      padding: 0 18px;
+    }
+
+    .modal-btn--import-submit {
+      border: 1px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .modal-btn--import-submit:hover {
+      filter: brightness(1.06);
+    }
+
+    /* 卸货超时费 */
+    .modal-dialog.modal-dialog--overtime {
+      max-width: min(800px, calc(100vw - 32px));
+      width: 100%;
+      max-height: min(520px, calc(100vh - 48px));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-dialog--overtime .modal-head {
+      flex-shrink: 0;
+    }
+
+    .modal-dialog--overtime .modal-body.modal-body--overtime {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 20px 20px;
+      border-bottom: none;
+    }
+
+    .overtime-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f0f2f5;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .overtime-add-btn:hover {
+      background: #e8eaed;
+    }
+
+    .overtime-add-btn svg {
+      flex-shrink: 0;
+      color: var(--purple);
+    }
+
+    .overtime-table-wrap {
+      flex: 1;
+      min-width: 0;
+      min-height: 120px;
+      overflow-x: auto;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .overtime-fee-table {
+      width: max-content;
+      min-width: 100%;
+      font-size: 13px;
+      border-collapse: collapse;
+    }
+
+    .overtime-fee-table th,
+    .overtime-fee-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .overtime-fee-table th:last-child,
+    .overtime-fee-table td:last-child {
+      border-right: none;
+    }
+
+    .overtime-fee-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .overtime-fee-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .modal-dialog--overtime .overtime-fee-table .op-link {
+      color: var(--purple);
+    }
+
+    .modal-dialog--overtime .overtime-fee-table .op-link:hover {
+      text-decoration: underline;
+    }
+
+    .modal-dialog--overtime .modal-close {
+      font-size: 24px;
+      width: 34px;
+      height: 34px;
+      line-height: 1;
+    }
+
+    /* 新增卸货超时费（叠在列表弹框之上） */
+    .modal-mask#overtimeFeeAddModal {
+      z-index: 1001;
+    }
+
+    .modal-mask#overtimeFeeEditModal {
+      z-index: 1002;
+    }
+
+    .modal-mask#overtimeDeleteConfirmModal {
+      z-index: 1003;
+    }
+
+    .modal-mask#multiPointDeleteConfirmModal {
+      z-index: 1004;
+    }
+
+    .modal-mask#multiPointFeeAddModal {
+      z-index: 1005;
+    }
+
+    .modal-mask#multiPointFeeEditModal {
+      z-index: 1006;
+    }
+
+    .multi-point-price-ctl .multi-point-price-suffix {
+      width: auto;
+      min-width: 56px;
+      padding: 0 10px;
+      white-space: nowrap;
+    }
+
+    .modal-dialog.modal-dialog--overtime-add {
+      max-width: 720px;
+      width: calc(100% - 32px);
+      border-radius: 8px;
+    }
+
+    .modal-dialog.modal-dialog--overtime-add.modal-dialog--multi-point-add {
+      max-width: 720px;
+    }
+
+    #multiPointFeeAddModal .modal-head,
+    #multiPointFeeAddModal .modal-body,
+    #multiPointFeeAddModal .modal-foot,
+    #multiPointFeeEditModal .modal-head,
+    #multiPointFeeEditModal .modal-body,
+    #multiPointFeeEditModal .modal-foot {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    #multiPointFeeAddModal .overtime-add-field .modal-select,
+    #multiPointFeeAddModal .overtime-add-field .multi-point-price-ctl,
+    #multiPointFeeEditModal .overtime-add-field .modal-select,
+    #multiPointFeeEditModal .overtime-add-field .multi-point-price-ctl {
+      max-width: 720px;
+      width: 100%;
+    }
+
+    .modal-dialog--overtime-add .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-dialog--overtime-add .modal-close {
+      width: 36px;
+      height: 36px;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .modal-dialog--overtime-add .modal-body {
+      padding: 18px 20px 20px;
+    }
+
+    .overtime-add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .overtime-add-field {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 6px;
+    }
+
+    .overtime-add-field label {
+      margin: 0;
+      font-size: 14px;
+      color: #303848;
+      font-weight: 500;
+      line-height: 1.3;
+      justify-self: stretch;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .overtime-add-row {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 6px;
+    }
+
+    .overtime-add-row > .overtime-add-label {
+      margin: 0;
+      font-size: 14px;
+      color: #303848;
+      font-weight: 500;
+      line-height: 1.3;
+      justify-self: stretch;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .overtime-add-row--2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 520px) {
+      .overtime-add-row--2col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .overtime-price-ctl {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .overtime-price-ctl input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      padding: 0 12px;
+      height: 36px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+    }
+
+    .overtime-price-suffix {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      flex-shrink: 0;
+      background: #f5f6f8;
+      border-left: 1px solid var(--line);
+      font-size: 14px;
+      color: #606978;
+    }
+
+    .overtime-time-3 {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .overtime-time-3 .modal-select {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .modal-btn--overtime-save {
+      border: 1px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .modal-btn--overtime-save:hover {
+      filter: brightness(1.06);
+    }
+
+    .modal-head,
+    .modal-body,
+    .modal-foot {
+      padding: 16px 20px;
+    }
+
+    .modal-head,
+    .modal-body {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #303848;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #606978;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+    }
+
+    .modal-confirm-text {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #303848;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-field {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .modal-label {
+      padding-top: 9px;
+      color: #303848;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .modal-required {
+      color: #e34d59;
+      margin-left: 2px;
+    }
+
+    .modal-select,
+    .modal-textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .modal-select {
+      height: 36px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .modal-textarea {
+      min-height: 96px;
+      padding: 10px 12px;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+    }
+
+    .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-btn {
+      min-width: 76px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .modal-btn--default {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #303848;
+    }
+
+    .modal-btn--primary {
+      border: 1px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .op-sep {
+      color: #c0c4cc;
+      margin: 0 6px;
+    }
+
+    .list-section::-webkit-scrollbar,
+    .tab-panel.tab-panel--plain::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+  </style>
+</head>
+<body>
+  <script>window.__PROTOTYPE_SHELL__ = {
+      module: "专车报价",
+      active: "专车报价",
+      topbarActive: "要车",
+      sidebarFromProductRoot: "../../../",
+    };</script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+
+    <main class="main-area">
+      <div class="tabs-bar" role="tablist">
+        <button type="button" class="tab-btn is-active" role="tab" aria-selected="true" aria-controls="tab-panel-1" id="tab-1" data-tab="1">已生效</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-panel-2" id="tab-2" data-tab="2">待确认</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-panel-3" id="tab-3" data-tab="3">待审批</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-panel-4" id="tab-4" data-tab="4">历史报价</button>
+      </div>
+      <div class="tab-panels">
+        <div class="tab-panel is-active" role="tabpanel" id="tab-panel-1" aria-labelledby="tab-1" data-tab-panel="1">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select id="bulk-quote-mode" class="bulk-select" aria-label="报价编码">
+                    <option value="quoteCode">报价编码</option>
+                  </select>
+                  <textarea id="bulk-quote-codes" placeholder="每行一个报价编码" rows="3" spellcheck="false" aria-label="报价编码批量输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl range-input" role="group" aria-label="创建时间">
+                      <select aria-label="创建时间">
+                        <option>创建时间</option>
+                        <option>报价有效期</option>
+                      </select>
+                      <input type="text" placeholder="请选择时间" aria-label="请选择时间" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="承运商" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="运输类型">
+                        <option value="">运输类型</option>
+                        <option>港车运输</option>
+                        <option>国内专车</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="提货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="卸货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="封关口岸" data-filterable="sealPort" placeholder="封关口岸" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="过关口岸">
+                        <option value="">过关口岸</option>
+                        <option>港珠澳</option>
+                        <option>深圳湾</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="query-action-cell">
+                    <button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ops-section" data-ops-group>
+            <button type="button" class="ops-action is-selected" data-open-void-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31A7.902 7.902 0 0 1 12 20zm6.31-3.1L7.1 5.69A7.902 7.902 0 0 1 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg>
+              </span>
+              作废
+            </button>
+            <button type="button" class="ops-action" data-open-overtime-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              </span>
+              超时费
+            </button>
+            <button type="button" class="ops-action" data-open-multi-point-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-3V4H3v13h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4c0 1.66 1.34 3 3 3s3-1.34 3-3h1v-5l-3-4zM6 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm13.5-9l3 4h-3v-4zM18 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+              </span>
+              多点提/卸货费
+            </button>
+          </div>
+
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选" /></th>
+                    <th>序号</th>
+                    <th>操作</th>
+                    <th>报价编码</th>
+                    <th>承运商</th>
+                    <th>运输类型</th>
+                    <th>始发地</th>
+                    <th>目的地</th>
+                    <th>车型</th>
+                    <th>运输时效(H)</th>
+                    <th>发车时间</th>
+                    <th>到达时间</th>
+                    <th>封关口岸</th>
+                    <th>过关口岸</th>
+                    <th>运输价格（本币/车）</th>
+                    <th>报关费（本币/车）</th>
+                    <th>备注</th>
+                    <th>报价有效期</th>
+                    <th>一级审批</th>
+                    <th>二级审批</th>
+                    <th>三级审批</th>
+                    <th>确认人</th>
+                    <th>确认时间</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>修改人</th>
+                    <th>修改时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>1</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323001" class="op-link">BJ20260323001</a></td>
+                    <td>G0001：承运商01</td>
+                    <td>港车运输</td>
+                    <td>常平</td>
+                    <td>青衣</td>
+                    <td>中港吨车</td>
+                    <td>24</td>
+                    <td>2026-03-24 08:30</td>
+                    <td>2026-03-25 18:00</td>
+                    <td>东莞长安</td>
+                    <td>港珠澳</td>
+                    <td>HKD 9000.00</td>
+                    <td>HKD 300.00</td>
+                    <td class="col-remark">含装卸</td>
+                    <td>2026/01/01~2026/04/30</td>
+                    <td>张明-审批通过-价格合理</td>
+                    <td>李华-审批通过-同意执行</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>李经理</td>
+                    <td>2026-03-24 10:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-23 09:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-24 08:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>2</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323002" class="op-link">BJ20260323002</a></td>
+                    <td>G0002：承运商02</td>
+                    <td>港车运输</td>
+                    <td>肇庆</td>
+                    <td>葵涌</td>
+                    <td>中港柜车</td>
+                    <td>12</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>东莞凤岗</td>
+                    <td>深圳湾</td>
+                    <td>HKD 1200.00</td>
+                    <td>HKD 500.00</td>
+                    <td class="col-remark">当日达</td>
+                    <td>2026/01/01~2026/04/15</td>
+                    <td>张明-审批通过-价格合适</td>
+                    <td>王芳-审批通过-无异议</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>赵强</td>
+                    <td>2026-03-24 08:30</td>
+                    <td>赵强</td>
+                    <td>2026-03-23 09:00</td>
+                    <td>赵强</td>
+                    <td>2026-03-24 08:30</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>3</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323003" class="op-link">BJ20260323003</a></td>
+                    <td>G0003：承运商03</td>
+                    <td>港车运输</td>
+                    <td>麻涌</td>
+                    <td>机场</td>
+                    <td>中港吨车</td>
+                    <td>28</td>
+                    <td>2026-03-26 06:00</td>
+                    <td>2026-03-27 20:00</td>
+                    <td>深圳龙岗</td>
+                    <td>港珠澳</td>
+                    <td>HKD 5600.00</td>
+                    <td>HKD 0</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/01</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>周敏</td>
+                    <td>2026-03-22 10:00</td>
+                    <td>周敏</td>
+                    <td>2026-03-25 09:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>4</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323004" class="op-link">BJ20260323004</a></td>
+                    <td>G0004：承运商04</td>
+                    <td>国内专车</td>
+                    <td>常平</td>
+                    <td>深圳机场</td>
+                    <td>7.6</td>
+                    <td>16</td>
+                    <td>2026-03-28 09:00</td>
+                    <td>2026-03-28 21:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 4500.00</td>
+                    <td>—</td>
+                    <td class="col-remark">加急</td>
+                    <td>2026/01/01~2026/06/01</td>
+                    <td>刘洋-审批通过-加急确认</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>陈总</td>
+                    <td>2026-03-27 16:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-26 08:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-27 15:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>5</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323005" class="op-link">BJ20260323005</a></td>
+                    <td>G0005：承运商05</td>
+                    <td>国内专车</td>
+                    <td>花都</td>
+                    <td>广州机场</td>
+                    <td>9.6</td>
+                    <td>8</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 6800.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/15</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-20 11:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-21 10:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>6</td>
+                    <td><a href="#" class="op-link">复制</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323006" class="op-link">BJ20260323006</a></td>
+                    <td>G0006：承运商06</td>
+                    <td>国内专车</td>
+                    <td>麻涌</td>
+                    <td>东莞</td>
+                    <td>12.5</td>
+                    <td>6</td>
+                    <td>2026-03-29 07:00</td>
+                    <td>2026-03-29 15:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 3200.00</td>
+                    <td>—</td>
+                    <td class="col-remark">同城</td>
+                    <td>2026/01/01~2026/04/20</td>
+                    <td>周敏-审批通过-条款OK</td>
+                    <td>吴斌-审批通过-已确认</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>吴斌</td>
+                    <td>2026-03-28 09:00</td>
+                    <td>郑凯</td>
+                    <td>2026-03-27 14:00</td>
+                    <td>郑凯</td>
+                    <td>2026-03-28 08:30</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" role="tabpanel" id="tab-panel-2" aria-labelledby="tab-2" data-tab-panel="2">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="报价编码">
+                    <option value="quoteCode">报价编码</option>
+                  </select>
+                  <textarea placeholder="每行一个报价编码" rows="3" spellcheck="false" aria-label="报价编码批量输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl range-input" role="group" aria-label="创建时间">
+                      <select aria-label="创建时间">
+                        <option>创建时间</option>
+                        <option>报价有效期</option>
+                      </select>
+                      <input type="text" placeholder="请选择时间" aria-label="请选择时间" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="运输类型">
+                        <option value="">运输类型</option>
+                        <option>港车运输</option>
+                        <option>国内专车</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="请输入或选择提货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="请输入或选择卸货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="封关口岸" data-filterable="sealPort" placeholder="请输入或选择封关口岸" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="过关口岸">
+                        <option value="">过关口岸</option>
+                        <option>港珠澳</option>
+                        <option>深圳湾</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="query-action-cell">
+                    <button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ops-section" data-ops-group>
+            <a href="专车报价新增.html" class="ops-action is-selected">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              </span>
+              新增报价
+            </a>
+            <button type="button" class="ops-action" data-open-import-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              </span>
+              报价导入
+            </button>
+            <button type="button" class="ops-action" data-open-confirm-quote-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </span>
+              报价确认
+            </button>
+            <button type="button" class="ops-action" data-open-delete-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              </span>
+              删除报价
+            </button>
+          </div>
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选" /></th>
+                    <th>序号</th>
+                    <th>操作</th>
+                    <th>报价编码</th>
+                    <th>承运商</th>
+                    <th>运输类型</th>
+                    <th>始发地</th>
+                    <th>目的地</th>
+                    <th>车型</th>
+                    <th>运输时效(H)</th>
+                    <th>发车时间</th>
+                    <th>到达时间</th>
+                    <th>封关口岸</th>
+                    <th>过关口岸</th>
+                    <th>运输价格（本币/车）</th>
+                    <th>报关费（本币/车）</th>
+                    <th>备注</th>
+                    <th>报价有效期</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>修改人</th>
+                    <th>修改时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>1</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323010" class="op-link">BJ20260323010</a></td>
+                    <td>G0001：承运商01</td>
+                    <td>港车运输</td>
+                    <td>常平</td>
+                    <td>青衣</td>
+                    <td>中港吨车</td>
+                    <td>24</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>东莞长安</td>
+                    <td>港珠澳</td>
+                    <td>HKD 9000.00</td>
+                    <td>HKD 300.00</td>
+                    <td class="col-remark">待确认</td>
+                    <td>2026/01/01~2026/04/30</td>
+                    <td>王芳</td>
+                    <td>2026-03-23 09:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-24 08:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>2</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323011" class="op-link">BJ20260323011</a></td>
+                    <td>G0002：承运商02</td>
+                    <td>港车运输</td>
+                    <td>肇庆</td>
+                    <td>葵涌</td>
+                    <td>中港柜车</td>
+                    <td>12</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>东莞凤岗</td>
+                    <td>深圳湾</td>
+                    <td>HKD 5200.00</td>
+                    <td>HKD 280.00</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/10</td>
+                    <td>李华</td>
+                    <td>2026-03-24 10:00</td>
+                    <td>李华</td>
+                    <td>2026-03-25 09:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>3</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323012" class="op-link">BJ20260323012</a></td>
+                    <td>G0003：承运商03</td>
+                    <td>港车运输</td>
+                    <td>麻涌</td>
+                    <td>机场</td>
+                    <td>中港吨车</td>
+                    <td>28</td>
+                    <td>2026-03-26 08:00</td>
+                    <td>2026-03-26 18:00</td>
+                    <td>深圳龙岗</td>
+                    <td>港珠澳</td>
+                    <td>HKD 1800.00</td>
+                    <td>HKD 0</td>
+                    <td class="col-remark">省内</td>
+                    <td>2026/01/01~2026/04/30</td>
+                    <td>周敏</td>
+                    <td>2026-03-22 11:00</td>
+                    <td>周敏</td>
+                    <td>2026-03-23 09:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>4</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323013" class="op-link">BJ20260323013</a></td>
+                    <td>G0004：承运商04</td>
+                    <td>国内专车</td>
+                    <td>常平</td>
+                    <td>深圳机场</td>
+                    <td>7.6</td>
+                    <td>16</td>
+                    <td>2026-03-27 07:30</td>
+                    <td>2026-03-28 12:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 7600.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/20</td>
+                    <td>张明</td>
+                    <td>2026-03-25 08:00</td>
+                    <td>张明</td>
+                    <td>2026-03-26 08:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>5</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323014" class="op-link">BJ20260323014</a></td>
+                    <td>G0005：承运商05</td>
+                    <td>国内专车</td>
+                    <td>花都</td>
+                    <td>广州机场</td>
+                    <td>9.6</td>
+                    <td>8</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 6400.00</td>
+                    <td>—</td>
+                    <td class="col-remark">待确认</td>
+                    <td>2026/01/01~2026/06/01</td>
+                    <td>孙丽</td>
+                    <td>2026-03-20 11:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-21 10:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>6</td>
+                    <td><a href="#" class="op-link">修改</a></td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323015" class="op-link">BJ20260323015</a></td>
+                    <td>G0006：承运商06</td>
+                    <td>国内专车</td>
+                    <td>麻涌</td>
+                    <td>东莞</td>
+                    <td>12.5</td>
+                    <td>6</td>
+                    <td>2026-03-29 06:00</td>
+                    <td>2026-03-29 14:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 2900.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/25</td>
+                    <td>郑凯</td>
+                    <td>2026-03-27 14:00</td>
+                    <td>郑凯</td>
+                    <td>2026-03-28 08:30</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" role="tabpanel" id="tab-panel-3" aria-labelledby="tab-3" data-tab-panel="3">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="报价编码">
+                    <option value="quoteCode">报价编码</option>
+                  </select>
+                  <textarea placeholder="每行一个报价编码" rows="3" spellcheck="false" aria-label="报价编码批量输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl range-input" role="group" aria-label="创建时间">
+                      <select aria-label="创建时间">
+                        <option>创建时间</option>
+                        <option>报价有效期</option>
+                      </select>
+                      <input type="text" placeholder="请选择时间" aria-label="请选择时间" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="运输类型">
+                        <option value="">运输类型</option>
+                        <option>港车运输</option>
+                        <option>国内专车</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="请输入或选择提货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="请输入或选择卸货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="封关口岸" data-filterable="sealPort" placeholder="请输入或选择封关口岸" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="过关口岸">
+                        <option value="">过关口岸</option>
+                        <option>港珠澳</option>
+                        <option>深圳湾</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="query-action-cell">
+                    <button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ops-section" data-ops-group>
+            <button type="button" class="ops-action is-selected" data-open-approve-modal>
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              </span>
+              报价审批
+            </button>
+          </div>
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选" /></th>
+                    <th>序号</th>
+                    <th>报价编码</th>
+                    <th>当前审批人</th>
+                    <th>承运商</th>
+                    <th>运输类型</th>
+                    <th>始发地</th>
+                    <th>目的地</th>
+                    <th>车型</th>
+                    <th>运输时效(H)</th>
+                    <th>发车时间</th>
+                    <th>到达时间</th>
+                    <th>封关口岸</th>
+                    <th>过关口岸</th>
+                    <th>运输价格（本币/车）</th>
+                    <th>报关费（本币/车）</th>
+                    <th>备注</th>
+                    <th>报价有效期</th>
+                    <th>一级审批</th>
+                    <th>二级审批</th>
+                    <th>三级审批</th>
+                    <th>确认人</th>
+                    <th>确认时间</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>修改人</th>
+                    <th>修改时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>1</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323020" class="op-link">BJ20260323020</a></td>
+                    <td>张明</td>
+                    <td>G0001：承运商01</td>
+                    <td>港车运输</td>
+                    <td>常平</td>
+                    <td>青衣</td>
+                    <td>中港吨车</td>
+                    <td>24</td>
+                    <td>2026-03-24 08:30</td>
+                    <td>2026-03-25 18:00</td>
+                    <td>东莞长安</td>
+                    <td>港珠澳</td>
+                    <td>HKD 9000.00</td>
+                    <td>HKD 300.00</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/30</td>
+                    <td>张明-审批中-等待终审</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-23 09:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-24 08:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>2</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323021" class="op-link">BJ20260323021</a></td>
+                    <td>李华</td>
+                    <td>G0002：承运商02</td>
+                    <td>港车运输</td>
+                    <td>肇庆</td>
+                    <td>葵涌</td>
+                    <td>中港柜车</td>
+                    <td>12</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>东莞凤岗</td>
+                    <td>深圳湾</td>
+                    <td>HKD 5100.00</td>
+                    <td>HKD 260.00</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/12</td>
+                    <td>张明-审批通过-初审通过</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-24 09:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-25 10:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>3</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323022" class="op-link">BJ20260323022</a></td>
+                    <td>周敏</td>
+                    <td>G0003：承运商03</td>
+                    <td>港车运输</td>
+                    <td>麻涌</td>
+                    <td>机场</td>
+                    <td>中港吨车</td>
+                    <td>28</td>
+                    <td>2026-03-26 06:00</td>
+                    <td>2026-03-27 20:00</td>
+                    <td>深圳龙岗</td>
+                    <td>港珠澳</td>
+                    <td>HKD 5600.00</td>
+                    <td>HKD 0</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/01</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>周敏</td>
+                    <td>2026-03-22 10:00</td>
+                    <td>周敏</td>
+                    <td>2026-03-25 09:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>4</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323023" class="op-link">BJ20260323023</a></td>
+                    <td>张明</td>
+                    <td>G0004：承运商04</td>
+                    <td>国内专车</td>
+                    <td>常平</td>
+                    <td>深圳机场</td>
+                    <td>7.6</td>
+                    <td>16</td>
+                    <td>2026-03-27 08:00</td>
+                    <td>2026-03-28 14:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 7800.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/28</td>
+                    <td>李华-审批中-补充材料</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>赵强</td>
+                    <td>2026-03-23 09:00</td>
+                    <td>赵强</td>
+                    <td>2026-03-24 08:30</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>5</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323024" class="op-link">BJ20260323024</a></td>
+                    <td>陈总</td>
+                    <td>G0005：承运商05</td>
+                    <td>国内专车</td>
+                    <td>花都</td>
+                    <td>广州机场</td>
+                    <td>9.6</td>
+                    <td>8</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 6500.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/06/01</td>
+                    <td>张明-审批通过-一级通过</td>
+                    <td>吴斌-审批通过-二级通过</td>
+                    <td>—</td>
+                    <td>吴斌</td>
+                    <td>2026-03-28 09:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-20 11:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-21 10:00</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>6</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323025" class="op-link">BJ20260323025</a></td>
+                    <td>郑凯</td>
+                    <td>G0006：承运商06</td>
+                    <td>国内专车</td>
+                    <td>麻涌</td>
+                    <td>东莞</td>
+                    <td>12.5</td>
+                    <td>6</td>
+                    <td>2026-03-29 07:00</td>
+                    <td>2026-03-29 15:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 3100.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/22</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>郑凯</td>
+                    <td>2026-03-27 14:00</td>
+                    <td>郑凯</td>
+                    <td>2026-03-28 08:30</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" role="tabpanel" id="tab-panel-4" aria-labelledby="tab-4" data-tab-panel="4">
+          <div class="query-section">
+            <div class="quote-query">
+              <div class="quote-query-bulk">
+                <div class="bulk-field">
+                  <select class="bulk-select" aria-label="报价编码">
+                    <option value="quoteCode">报价编码</option>
+                  </select>
+                  <textarea placeholder="每行一个报价编码" rows="3" spellcheck="false" aria-label="报价编码批量输入"></textarea>
+                </div>
+              </div>
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl range-input" role="group" aria-label="创建时间">
+                      <select aria-label="创建时间">
+                        <option>创建时间</option>
+                        <option>报价有效期</option>
+                      </select>
+                      <input type="text" placeholder="请选择时间" aria-label="请选择时间" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="运输类型">
+                        <option value="">运输类型</option>
+                        <option>港车运输</option>
+                        <option>国内专车</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="提货地" data-filterable="pickup" placeholder="请输入或选择提货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="卸货地" data-filterable="dropoff" placeholder="请输入或选择卸货地" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <input type="text" class="filterable-input" aria-label="封关口岸" data-filterable="sealPort" placeholder="请输入或选择封关口岸" autocomplete="off" />
+                      <div class="filterable-menu" hidden></div>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                      <select aria-label="过关口岸">
+                        <option value="">过关口岸</option>
+                        <option>港珠澳</option>
+                        <option>深圳湾</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="query-action-cell">
+                    <button type="button" class="btn-query"><span class="qi" aria-hidden="true">🔍</span>查询</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>报价编码</th>
+                    <th>承运商</th>
+                    <th>运输类型</th>
+                    <th>始发地</th>
+                    <th>目的地</th>
+                    <th>车型</th>
+                    <th>运输时效(H)</th>
+                    <th>发车时间</th>
+                    <th>到达时间</th>
+                    <th>封关口岸</th>
+                    <th>过关口岸</th>
+                    <th>运输价格(本币/车)</th>
+                    <th>报关费(本币/车)</th>
+                    <th>备注</th>
+                    <th>报价有效期</th>
+                    <th>状态</th>
+                    <th>一级审批</th>
+                    <th>二级审批</th>
+                    <th>三级审批</th>
+                    <th>确认人</th>
+                    <th>确认时间</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>修改人</th>
+                    <th>修改时间</th>
+                    <th>作废人</th>
+                    <th>作废时间</th>
+                    <th>作废原因</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323099" class="op-link">BJ20260323099</a></td>
+                    <td>G0001：承运商01</td>
+                    <td>港车运输</td>
+                    <td>常平</td>
+                    <td>青衣</td>
+                    <td>中港吨车</td>
+                    <td>24</td>
+                    <td>2026-03-20 08:30</td>
+                    <td>2026-03-21 18:00</td>
+                    <td>东莞长安</td>
+                    <td>港珠澳</td>
+                    <td>HKD 9000.00</td>
+                    <td>HKD 300.00</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/30</td>
+                    <td>已作废</td>
+                    <td>张明-审批通过-价格合理</td>
+                    <td>李华-审批通过-同意执行</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>李经理</td>
+                    <td>2026-03-19 10:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-18 09:00</td>
+                    <td>王芳</td>
+                    <td>2026-03-19 11:00</td>
+                    <td>赵强</td>
+                    <td>2026-03-25 14:00</td>
+                    <td>客户取消</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323098" class="op-link">BJ20260323098</a></td>
+                    <td>G0002：承运商02</td>
+                    <td>港车运输</td>
+                    <td>肇庆</td>
+                    <td>葵涌</td>
+                    <td>中港吨车</td>
+                    <td>12</td>
+                    <td>2026-03-18 09:00</td>
+                    <td>2026-03-18 21:00</td>
+                    <td>东莞凤岗</td>
+                    <td>深圳湾</td>
+                    <td>HKD 4200.00</td>
+                    <td>HKD 180.00</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/05/08</td>
+                    <td>已失效</td>
+                    <td>刘洋-审批通过-初审通过</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-17 10:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-16 09:00</td>
+                    <td>刘洋</td>
+                    <td>2026-03-17 11:00</td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323097" class="op-link">BJ20260323097</a></td>
+                    <td>G0003：承运商03</td>
+                    <td>港车运输</td>
+                    <td>麻涌</td>
+                    <td>机场</td>
+                    <td>中港吨车</td>
+                    <td>28</td>
+                    <td>2026-02-10 06:00</td>
+                    <td>2026-02-11 20:00</td>
+                    <td>深圳龙岗</td>
+                    <td>港珠澳</td>
+                    <td>HKD 5300.00</td>
+                    <td>HKD 0</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/04/01</td>
+                    <td>已生效</td>
+                    <td>周敏-审批通过-条款OK</td>
+                    <td>吴斌-审批通过-已确认</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>周敏</td>
+                    <td>2026-02-08 08:00</td>
+                    <td>周敏</td>
+                    <td>2026-02-05 10:00</td>
+                    <td>周敏</td>
+                    <td>2026-02-09 09:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323096" class="op-link">BJ20260323096</a></td>
+                    <td>G0004：承运商04</td>
+                    <td>国内专车</td>
+                    <td>常平</td>
+                    <td>深圳机场</td>
+                    <td>7.6</td>
+                    <td>16</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 1100.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/03/31</td>
+                    <td>已作废</td>
+                    <td>张明-审批通过-无异议</td>
+                    <td>钱工-审批驳回-价格偏高</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-10 09:00</td>
+                    <td>孙丽</td>
+                    <td>2026-03-12 10:00</td>
+                    <td>钱工</td>
+                    <td>2026-03-15 16:00</td>
+                    <td>价格争议</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323095" class="op-link">BJ20260323095</a></td>
+                    <td>G0005：承运商05</td>
+                    <td>国内专车</td>
+                    <td>花都</td>
+                    <td>广州机场</td>
+                    <td>9.6</td>
+                    <td>8</td>
+                    <td>2026-01-15 08:30</td>
+                    <td>2026-01-16 18:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 8800.00</td>
+                    <td>—</td>
+                    <td class="col-remark">—</td>
+                    <td>2026/01/01~2026/03/01</td>
+                    <td>已失效</td>
+                    <td>陈总-审批通过-同意执行</td>
+                    <td>孙丽-审批通过-复议维持</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>吴斌</td>
+                    <td>2026-01-14 11:00</td>
+                    <td>吴斌</td>
+                    <td>2026-01-12 09:00</td>
+                    <td>吴斌</td>
+                    <td>2026-01-13 15:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td><a href="专车报价详情.html?quoteCode=BJ20260323094" class="op-link">BJ20260323094</a></td>
+                    <td>G0006：承运商06</td>
+                    <td>国内专车</td>
+                    <td>麻涌</td>
+                    <td>东莞</td>
+                    <td>12.5</td>
+                    <td>6</td>
+                    <td>2026-03-01 07:00</td>
+                    <td>2026-03-01 15:00</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>CNY 2600.00</td>
+                    <td>—</td>
+                    <td class="col-remark">同城</td>
+                    <td>2026/01/01~2026/04/10</td>
+                    <td>已生效</td>
+                    <td>郑凯-审批通过-最终确认</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统-审批通过-自动补齐</td>
+                    <td>系统</td>
+                    <td>2026-03-30 10:00</td>
+                    <td>郑凯</td>
+                    <td>2026-02-28 10:00</td>
+                    <td>郑凯</td>
+                    <td>2026-02-27 08:00</td>
+                    <td>郑凯</td>
+                    <td>2026-02-28 09:30</td>
+                    <td>—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="overtimeFeeModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime" role="dialog" aria-modal="true" aria-labelledby="overtimeFeeModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="overtimeFeeModalTitle">卸货超时费</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-overtime-modal>×</button>
+      </div>
+      <div class="modal-body modal-body--overtime">
+        <button type="button" class="overtime-add-btn" data-open-overtime-add-modal>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z" />
+          </svg>
+          新增卸货超时费
+        </button>
+        <div class="overtime-table-wrap">
+          <table class="overtime-fee-table">
+            <thead>
+              <tr>
+                <th>操作</th>
+                <th>运输类型</th>
+                <th>到仓时间</th>
+                <th>卸货完成时间</th>
+                <th>价格(元)</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>修改人</th>
+                <th>修改时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-overtime-edit-modal data-overtime-row="1">修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-overtime-delete-modal>删除</a>
+                </td>
+                <td>港车运输</td>
+                <td>当天12点前到仓</td>
+                <td>当天24点前完成卸货</td>
+                <td>0</td>
+                <td>王芳</td>
+                <td>2026-03-20 09:15</td>
+                <td>王芳</td>
+                <td>2026-03-22 14:30</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-overtime-edit-modal data-overtime-row="2">修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-overtime-delete-modal>删除</a>
+                </td>
+                <td>国内专车</td>
+                <td>当天12点前到仓</td>
+                <td>第二天12点前完成卸货</td>
+                <td>20%</td>
+                <td>李华</td>
+                <td>2026-03-18 11:20</td>
+                <td>赵强</td>
+                <td>2026-03-25 16:05</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="multiPointFeeModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime" role="dialog" aria-modal="true" aria-labelledby="multiPointFeeModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="multiPointFeeModalTitle">多点提/卸货费</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-multi-point-modal>×</button>
+      </div>
+      <div class="modal-body modal-body--overtime">
+        <button type="button" class="overtime-add-btn" data-open-multi-point-add-modal>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z" />
+          </svg>
+          新增
+        </button>
+        <div class="overtime-table-wrap">
+          <table class="overtime-fee-table">
+            <thead>
+              <tr>
+                <th>操作</th>
+                <th>运输类型</th>
+                <th>提货/卸货</th>
+                <th>车型</th>
+                <th>计费规则</th>
+                <th>价格(元/个)</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>修改人</th>
+                <th>修改时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-multi-point-edit-modal>修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-multi-point-delete-modal>删除</a>
+                </td>
+                <td>国内专车</td>
+                <td>提货</td>
+                <td>4.2</td>
+                <td>同区多点提货</td>
+                <td>200</td>
+                <td>王芳</td>
+                <td>2026-03-10 10:00</td>
+                <td>王芳</td>
+                <td>2026-03-12 15:20</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-multi-point-edit-modal>修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-multi-point-delete-modal>删除</a>
+                </td>
+                <td>国内专车</td>
+                <td>提货</td>
+                <td>4.2</td>
+                <td>跨区多点提货</td>
+                <td>300</td>
+                <td>李华</td>
+                <td>2026-03-11 09:30</td>
+                <td>赵强</td>
+                <td>2026-03-18 11:00</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-multi-point-edit-modal>修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-multi-point-delete-modal>删除</a>
+                </td>
+                <td>国内专车</td>
+                <td>卸货</td>
+                <td>4.2</td>
+                <td>跨区多点卸货</td>
+                <td>150</td>
+                <td>钱工</td>
+                <td>2026-03-15 16:00</td>
+                <td>钱工</td>
+                <td>2026-03-20 10:25</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-multi-point-edit-modal>修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-multi-point-delete-modal>删除</a>
+                </td>
+                <td>港车运输</td>
+                <td>提货</td>
+                <td>中港吨车</td>
+                <td>同仓不同园区多点提货</td>
+                <td>50</td>
+                <td>周敏</td>
+                <td>2026-03-08 14:00</td>
+                <td>周敏</td>
+                <td>2026-03-09 16:45</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="#" class="op-link" data-open-multi-point-edit-modal>修改</a><span class="op-sep">|</span><a href="#" class="op-link" data-open-multi-point-delete-modal>删除</a>
+                </td>
+                <td>港车运输</td>
+                <td>卸货</td>
+                <td>中港柜车</td>
+                <td>同区多点卸货</td>
+                <td>100</td>
+                <td>郑凯</td>
+                <td>2026-03-05 08:50</td>
+                <td>孙丽</td>
+                <td>2026-03-14 13:10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="multiPointFeeAddModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime-add modal-dialog--multi-point-add" role="dialog" aria-modal="true" aria-labelledby="multiPointFeeAddModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="multiPointFeeAddModalTitle">多点提/卸货费新增</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-multi-point-add-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="overtime-add-form">
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointAddTransport"><span class="modal-required">*</span>运输类型</label>
+              <select class="modal-select" id="multiPointAddTransport" aria-label="运输类型">
+                <option value="">请选择运输类型</option>
+                <option>港车运输</option>
+                <option>国内专车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="multiPointAddPickup"><span class="modal-required">*</span>提货/卸货</label>
+              <select class="modal-select" id="multiPointAddPickup" aria-label="提货/卸货">
+                <option value="">请选择提货/卸货</option>
+                <option>提货</option>
+                <option>卸货</option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointAddVehicle"><span class="modal-required">*</span>车型</label>
+              <select class="modal-select" id="multiPointAddVehicle" aria-label="车型">
+                <option value="">请选择车型</option>
+                <option>4.2</option>
+                <option>6.8</option>
+                <option>7.6</option>
+                <option>9.6</option>
+                <option>中港吨车</option>
+                <option>中港柜车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="multiPointAddRule"><span class="modal-required">*</span>计费规则</label>
+              <select class="modal-select" id="multiPointAddRule" aria-label="计费规则">
+                <option value="">请选择计费规则</option>
+                <option>同区多点提货</option>
+                <option>跨区多点提货</option>
+                <option>同仓不同园区多点提货</option>
+                <option>同区多点卸货</option>
+                <option>跨区多点卸货</option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointAddPrice"><span class="modal-required">*</span>价格</label>
+              <div class="overtime-price-ctl multi-point-price-ctl">
+                <input type="text" id="multiPointAddPrice" value="" inputmode="decimal" placeholder="" aria-label="价格" />
+                <span class="overtime-price-suffix multi-point-price-suffix" aria-hidden="true">元/个</span>
+              </div>
+            </div>
+            <div aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-multi-point-add-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-multi-point-add-modal>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="multiPointFeeEditModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime-add modal-dialog--multi-point-add" role="dialog" aria-modal="true" aria-labelledby="multiPointFeeEditModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="multiPointFeeEditModalTitle">修改多点提/卸货费</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-multi-point-edit-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="overtime-add-form">
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointEditTransport"><span class="modal-required">*</span>运输类型</label>
+              <select class="modal-select" id="multiPointEditTransport" aria-label="运输类型">
+                <option value="">请选择运输类型</option>
+                <option>港车运输</option>
+                <option>国内专车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="multiPointEditPickup"><span class="modal-required">*</span>提货/卸货</label>
+              <select class="modal-select" id="multiPointEditPickup" aria-label="提货/卸货">
+                <option value="">请选择提货/卸货</option>
+                <option>提货</option>
+                <option>卸货</option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointEditVehicle"><span class="modal-required">*</span>车型</label>
+              <select class="modal-select" id="multiPointEditVehicle" aria-label="车型">
+                <option value="">请选择车型</option>
+                <option>4.2</option>
+                <option>6.8</option>
+                <option>7.6</option>
+                <option>9.6</option>
+                <option>中港吨车</option>
+                <option>中港柜车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="multiPointEditRule"><span class="modal-required">*</span>计费规则</label>
+              <select class="modal-select" id="multiPointEditRule" aria-label="计费规则">
+                <option value="">请选择计费规则</option>
+                <option>同区多点提货</option>
+                <option>跨区多点提货</option>
+                <option>同仓不同园区多点提货</option>
+                <option>同区多点卸货</option>
+                <option>跨区多点卸货</option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="multiPointEditPrice"><span class="modal-required">*</span>价格</label>
+              <div class="overtime-price-ctl multi-point-price-ctl">
+                <input type="text" id="multiPointEditPrice" value="" inputmode="decimal" placeholder="" aria-label="价格" />
+                <span class="overtime-price-suffix multi-point-price-suffix" aria-hidden="true">元/个</span>
+              </div>
+            </div>
+            <div aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-multi-point-edit-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-multi-point-edit-modal>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="overtimeFeeAddModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime-add" role="dialog" aria-modal="true" aria-labelledby="overtimeFeeAddModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="overtimeFeeAddModalTitle">新增卸货超时费</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-overtime-add-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="overtime-add-form">
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="overtimeTransportType"><span class="modal-required">*</span>运输类型</label>
+              <select class="modal-select" id="overtimeTransportType" aria-label="运输类型">
+                <option value="">请选择运输类型</option>
+                <option>港车运输</option>
+                <option>国内专车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="overtimePrice"><span class="modal-required">*</span>价格(元)</label>
+              <div class="overtime-price-ctl">
+                <input type="text" id="overtimePrice" value="15" inputmode="decimal" aria-label="价格" />
+                <span class="overtime-price-suffix" aria-hidden="true">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="overtime-add-row">
+            <span class="overtime-add-label"><span class="modal-required">*</span>到仓时间</span>
+            <div class="overtime-time-3" role="group" aria-label="到仓时间">
+              <select class="modal-select" aria-label="到仓日期">
+                <option selected>当天</option>
+                <option>第二天</option>
+              </select>
+              <select class="modal-select" aria-label="到仓时刻">
+                <option selected>12:00</option>
+                <option>18:00</option>
+                <option>24:00</option>
+              </select>
+              <select class="modal-select" aria-label="到仓补充">
+                <option value="" selected></option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row">
+            <span class="overtime-add-label"><span class="modal-required">*</span>卸货完成时间</span>
+            <div class="overtime-time-3" role="group" aria-label="卸货完成时间">
+              <select class="modal-select" aria-label="卸货日期">
+                <option>当天</option>
+                <option selected>第二天</option>
+              </select>
+              <select class="modal-select" aria-label="卸货时刻">
+                <option selected>12:00</option>
+                <option>18:00</option>
+                <option>24:00</option>
+              </select>
+              <select class="modal-select" aria-label="卸货补充">
+                <option value="" selected></option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-overtime-add-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--overtime-save" data-close-overtime-add-modal>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="overtimeFeeEditModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--overtime-add" role="dialog" aria-modal="true" aria-labelledby="overtimeFeeEditModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="overtimeFeeEditModalTitle">修改卸货超时费</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-overtime-edit-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="overtime-add-form">
+          <div class="overtime-add-row--2col">
+            <div class="overtime-add-field">
+              <label for="overtimeEditTransportType"><span class="modal-required">*</span>运输类型</label>
+              <select class="modal-select" id="overtimeEditTransportType" aria-label="运输类型">
+                <option value="">请选择运输类型</option>
+                <option>港车运输</option>
+                <option>国内专车</option>
+              </select>
+            </div>
+            <div class="overtime-add-field">
+              <label for="overtimeEditPrice"><span class="modal-required">*</span>价格(元)</label>
+              <div class="overtime-price-ctl">
+                <input type="text" id="overtimeEditPrice" value="0" inputmode="decimal" aria-label="价格" />
+                <span class="overtime-price-suffix" aria-hidden="true">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="overtime-add-row">
+            <span class="overtime-add-label"><span class="modal-required">*</span>到仓时间</span>
+            <div class="overtime-time-3 overtime-edit-arrive" role="group" aria-label="到仓时间">
+              <select class="modal-select" aria-label="到仓日期">
+                <option>当天</option>
+                <option>第二天</option>
+              </select>
+              <select class="modal-select" aria-label="到仓时刻">
+                <option>12:00</option>
+                <option>18:00</option>
+                <option>24:00</option>
+              </select>
+              <select class="modal-select" aria-label="到仓补充">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
+          <div class="overtime-add-row">
+            <span class="overtime-add-label"><span class="modal-required">*</span>卸货完成时间</span>
+            <div class="overtime-time-3 overtime-edit-unload" role="group" aria-label="卸货完成时间">
+              <select class="modal-select" aria-label="卸货日期">
+                <option>当天</option>
+                <option>第二天</option>
+              </select>
+              <select class="modal-select" aria-label="卸货时刻">
+                <option>12:00</option>
+                <option>18:00</option>
+                <option>24:00</option>
+              </select>
+              <select class="modal-select" aria-label="卸货补充">
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-overtime-edit-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--overtime-save" data-close-overtime-edit-modal>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="overtimeDeleteConfirmModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="overtimeDeleteConfirmModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="overtimeDeleteConfirmModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-overtime-delete-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">您确认要删除当前卸货超时费吗？</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-overtime-delete-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-overtime-delete-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="multiPointDeleteConfirmModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="multiPointDeleteConfirmModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="multiPointDeleteConfirmModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-multi-point-delete-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">您确认删除当前多点提/卸货费吗？</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-multi-point-delete-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-multi-point-delete-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="approveModal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="approveModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="approveModalTitle">报价审批</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-approve-modal>x</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-form">
+          <div class="modal-field">
+            <label class="modal-label" for="approveOpinion"><span class="modal-required">*</span>审批意见</label>
+            <select class="modal-select" id="approveOpinion" aria-label="审批意见">
+              <option value="">请选择</option>
+              <option>审批通过</option>
+              <option>审批不通过</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label class="modal-label" for="approveRemark"><span class="modal-required">*</span>审批备注</label>
+            <textarea class="modal-textarea" id="approveRemark" aria-label="审批备注" placeholder="请输入审批备注"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-approve-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-approve-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="deleteQuoteModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="deleteQuoteModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="deleteQuoteModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-delete-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">你确认要删除勾选的报价吗？</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-delete-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-delete-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="voidQuoteModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="voidQuoteModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="voidQuoteModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-void-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">您确认要作废勾选的报价数据吗！</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-void-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-void-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="confirmQuoteModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="confirmQuoteModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="confirmQuoteModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-confirm-quote-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">您确认要对勾选的报价进行确认吗？</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-confirm-quote-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" data-close-confirm-quote-modal>确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="importQuoteModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--import" role="dialog" aria-modal="true" aria-labelledby="importQuoteModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="importQuoteModalTitle">报价导入</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-import-modal>×</button>
+      </div>
+      <div class="modal-body modal-body--import">
+        <a href="#" class="import-template-link" download>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+          </svg>
+          下载模板
+        </a>
+        <label class="import-drop-outer" id="importDropZone">
+          <span class="import-drop-inner">
+            <span class="import-drop-title">点击或拖拽Excel文件到此区域上传</span>
+            <span class="import-drop-sub">支持 .xlsx, .xls 格式，最大 10MB</span>
+          </span>
+          <input type="file" class="import-file-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="选择 Excel 文件" />
+        </label>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-import-modal>关闭</button>
+        <button type="button" class="modal-btn modal-btn--import-submit" data-close-import-modal>导入</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var tabBtns = document.querySelectorAll(".tabs-bar .tab-btn");
+      var panels = document.querySelectorAll(".tab-panel");
+
+      function activateTab(id) {
+        tabBtns.forEach(function (btn) {
+          var on = btn.getAttribute("data-tab") === id;
+          btn.classList.toggle("is-active", on);
+          btn.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panels.forEach(function (panel) {
+          var on = panel.getAttribute("data-tab-panel") === id;
+          panel.classList.toggle("is-active", on);
+        });
+      }
+
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          activateTab(btn.getAttribute("data-tab"));
+        });
+      });
+
+      activateTab("1");
+    })();
+
+    (function () {
+      function syncPressed(actions) {
+        actions.forEach(function (b) {
+          b.setAttribute("aria-pressed", b.classList.contains("is-selected") ? "true" : "false");
+        });
+      }
+      document.querySelectorAll(".ops-section[data-ops-group]").forEach(function (section) {
+        var actions = section.querySelectorAll(".ops-action");
+        if (!actions.length) return;
+        if (!section.querySelector(".ops-action.is-selected")) {
+          actions[0].classList.add("is-selected");
+        }
+        syncPressed(actions);
+        actions.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            actions.forEach(function (b) {
+              b.classList.remove("is-selected");
+            });
+            btn.classList.add("is-selected");
+            syncPressed(actions);
+          });
+        });
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("approveModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-approve-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-approve-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var panel = btn.closest(".tab-panel");
+          var scope = panel || document;
+          var checked = scope.querySelectorAll(".data-table tbody input[type='checkbox']:checked");
+          if (!checked.length) {
+            window.alert("请勾选需要审批的报价数据！");
+            return;
+          }
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("deleteQuoteModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-delete-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-delete-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var panel = btn.closest(".tab-panel");
+          var scope = panel || document;
+          var checked = scope.querySelectorAll(".data-table tbody input[type='checkbox']:checked");
+          if (!checked.length) {
+            window.alert("请先勾选报价数据！");
+            return;
+          }
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("voidQuoteModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-void-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-void-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var panel = btn.closest(".tab-panel");
+          var scope = panel || document;
+          var checked = scope.querySelectorAll(".data-table tbody input[type='checkbox']:checked");
+          if (!checked.length) {
+            window.alert("请勾选需要作废的报价数据！");
+            return;
+          }
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("confirmQuoteModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-confirm-quote-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-confirm-quote-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var panel = btn.closest(".tab-panel");
+          var scope = panel || document;
+          var checked = scope.querySelectorAll(".data-table tbody input[type='checkbox']:checked");
+          if (!checked.length) {
+            window.alert("请勾选需要确认的报价数据！");
+            return;
+          }
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("importQuoteModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-import-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-import-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+
+      var dropZone = modal.querySelector("#importDropZone");
+      if (dropZone) {
+        dropZone.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dropZone.classList.add("is-dragover");
+        });
+        dropZone.addEventListener("dragleave", function (e) {
+          if (!dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove("is-dragover");
+          }
+        });
+        dropZone.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dropZone.classList.remove("is-dragover");
+        });
+      }
+    })();
+
+    (function () {
+      var modal = document.getElementById("overtimeFeeModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-overtime-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-overtime-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("multiPointFeeModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-multi-point-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-multi-point-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("multiPointFeeAddModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-multi-point-add-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-multi-point-add-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("multiPointFeeEditModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-multi-point-edit-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-multi-point-edit-modal]");
+      var transport = document.getElementById("multiPointEditTransport");
+      var pickup = document.getElementById("multiPointEditPickup");
+      var vehicle = document.getElementById("multiPointEditVehicle");
+      var rule = document.getElementById("multiPointEditRule");
+      var priceInput = document.getElementById("multiPointEditPrice");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      function setSelectByText(sel, text) {
+        if (!sel) return;
+        var opts = sel.options;
+        for (var i = 0; i < opts.length; i++) {
+          if (opts[i].text === text || opts[i].value === text) {
+            sel.selectedIndex = i;
+            return;
+          }
+        }
+      }
+
+      function fillFormFromRow(tr) {
+        if (!tr || !transport || !pickup || !vehicle || !rule || !priceInput) return;
+        var tds = tr.querySelectorAll("td");
+        if (tds.length < 6) return;
+        setSelectByText(transport, (tds[1].textContent || "").trim());
+        setSelectByText(pickup, (tds[2].textContent || "").trim());
+        setSelectByText(vehicle, (tds[3].textContent || "").trim());
+        setSelectByText(rule, (tds[4].textContent || "").trim());
+        priceInput.value = (tds[5].textContent || "").trim();
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          var tr = btn.closest("tr");
+          fillFormFromRow(tr);
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("overtimeFeeAddModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-overtime-add-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-overtime-add-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("overtimeFeeEditModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-overtime-edit-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-overtime-edit-modal]");
+      var transport = document.getElementById("overtimeEditTransportType");
+      var priceInput = document.getElementById("overtimeEditPrice");
+      var arriveSelects = modal.querySelectorAll(".overtime-edit-arrive .modal-select");
+      var unloadSelects = modal.querySelectorAll(".overtime-edit-unload .modal-select");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      function setSelectByText(sel, text) {
+        if (!sel) return;
+        var opts = sel.options;
+        for (var i = 0; i < opts.length; i++) {
+          if (opts[i].text === text || opts[i].value === text) {
+            sel.selectedIndex = i;
+            return;
+          }
+        }
+      }
+
+      function setEditFormRow(row) {
+        if (!transport || !priceInput || arriveSelects.length < 3 || unloadSelects.length < 3) return;
+        if (row === "2") {
+          setSelectByText(transport, "国内专车");
+          priceInput.value = "20";
+          setSelectByText(arriveSelects[0], "当天");
+          setSelectByText(arriveSelects[1], "12:00");
+          arriveSelects[2].selectedIndex = 0;
+          setSelectByText(unloadSelects[0], "第二天");
+          setSelectByText(unloadSelects[1], "12:00");
+          unloadSelects[2].selectedIndex = 0;
+        } else {
+          setSelectByText(transport, "港车运输");
+          priceInput.value = "0";
+          setSelectByText(arriveSelects[0], "当天");
+          setSelectByText(arriveSelects[1], "12:00");
+          arriveSelects[2].selectedIndex = 0;
+          setSelectByText(unloadSelects[0], "当天");
+          setSelectByText(unloadSelects[1], "24:00");
+          unloadSelects[2].selectedIndex = 0;
+        }
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          setEditFormRow(btn.getAttribute("data-overtime-row"));
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("overtimeDeleteConfirmModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-overtime-delete-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-overtime-delete-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var modal = document.getElementById("multiPointDeleteConfirmModal");
+      if (!modal) return;
+
+      var openBtns = document.querySelectorAll("[data-open-multi-point-delete-modal]");
+      var closeBtns = modal.querySelectorAll("[data-close-multi-point-delete-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtns.forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          setModalOpen(true);
+        });
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+    })();
+
+    (function () {
+      var optionMap = {
+        pickup: ["常平", "肇庆", "麻涌", "花都"],
+        dropoff: ["青衣", "葵涌", "机场", "深圳机场", "广州机场", "东莞"],
+        carrier: [
+          "G0001：承运商01",
+          "G0002：承运商02",
+          "G0003：承运商03",
+          "G0004：承运商04",
+          "G0005：承运商05",
+          "G0006：承运商06"
+        ],
+        sealPort: ["东莞长安", "深圳龙岗", "东莞凤岗"]
+      };
+
+      var controls = document.querySelectorAll("input[data-filterable]");
+      if (!controls.length) return;
+
+      function closeMenu(menu) {
+        menu.classList.remove("is-open");
+        menu.hidden = true;
+        menu.innerHTML = "";
+      }
+
+      function closeAllMenus() {
+        document.querySelectorAll(".filterable-menu").forEach(function (menu) {
+          closeMenu(menu);
+        });
+      }
+
+      function renderMenu(input) {
+        var key = input.getAttribute("data-filterable");
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+
+        var keyword = input.value.trim().toLowerCase();
+        var options = (optionMap[key] || []).filter(function (item) {
+          return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+        });
+
+        if (!options.length) {
+          menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+        } else {
+          menu.innerHTML = options
+            .map(function (item) {
+              return '<div class="filterable-option" data-value="' + item + '">' + item + "</div>";
+            })
+            .join("");
+        }
+
+        menu.hidden = false;
+        menu.classList.add("is-open");
+
+        menu.querySelectorAll(".filterable-option").forEach(function (option) {
+          option.addEventListener("mousedown", function (event) {
+            event.preventDefault();
+            input.value = option.getAttribute("data-value") || "";
+            closeMenu(menu);
+          });
+        });
+      }
+
+      controls.forEach(function (input) {
+        input.addEventListener("focus", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("input", function () {
+          closeAllMenus();
+          renderMenu(input);
+        });
+
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            var menu = input.parentElement.querySelector(".filterable-menu");
+            if (menu) closeMenu(menu);
+          }
+        });
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".q-ctl")) {
+          closeAllMenus();
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = "vanbon_quote_detail_row_v1";
+      var DETAIL_URL = "专车报价详情.html";
+
+      function normHeader(s) {
+        return String(s || "")
+          .trim()
+          .replace(/\u3000/g, "")
+          .replace(/（/g, "(")
+          .replace(/）/g, ")")
+          .replace(/\s/g, "");
+      }
+
+      function headerNormMap(table) {
+        var trh = table.querySelector("thead tr");
+        if (!trh) return {};
+        var map = {};
+        var ths = trh.querySelectorAll("th");
+        for (var i = 0; i < ths.length; i++) {
+          var key = normHeader((ths[i].textContent || "").trim());
+          if (key) map[key] = i;
+        }
+        return map;
+      }
+
+      function colIndex(map, name) {
+        var nk = normHeader(name);
+        if (Object.prototype.hasOwnProperty.call(map, nk)) return map[nk];
+        var nk2 = nk.replace(/[()]/g, "");
+        for (var k in map) {
+          if (k.replace(/[()]/g, "") === nk2) return map[k];
+        }
+        return -1;
+      }
+
+      function getCellText(tr, idx) {
+        if (idx < 0 || !tr.cells[idx]) return "";
+        return (tr.cells[idx].textContent || "").replace(/\s+/g, " ").trim();
+      }
+
+      function parsePriceStr(s) {
+        s = (s || "").trim();
+        if (!s || s === "—" || s === "-") return { amount: "", unit: "CNY/车" };
+        var m = s.match(/^(HKD|CNY)\s*([\d,]+(?:\.\d+)?)/i);
+        if (m) return { amount: m[2].replace(/,/g, ""), unit: m[1].toUpperCase() + "/车" };
+        return { amount: s, unit: "CNY/车" };
+      }
+
+      function parseValidity(s) {
+        s = (s || "").trim();
+        var m = s.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})\s*[~～]\s*(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+        if (!m) return { eff: "", exp: "" };
+        return { eff: m[1] + "-" + m[2] + "-" + m[3], exp: m[4] + "-" + m[5] + "-" + m[6] };
+      }
+
+      function toHHmm(s) {
+        s = (s || "").trim();
+        if (!s || s === "—" || s === "-") return "";
+        var m = s.match(/\d{4}-\d{2}-\d{2}\s+(\d{2}:\d{2})/);
+        if (m) return m[1];
+        if (/^\d{1,2}:\d{2}$/.test(s)) return s;
+        return s;
+      }
+
+      var COPY_STORAGE_KEY = "vanbon_quote_copy_prefill_v1";
+      var ADD_QUOTE_URL = "专车报价新增.html";
+      var EDIT_STORAGE_KEY = "vanbon_quote_edit_prefill_v1";
+      var EDIT_QUOTE_URL = "专车报价修改.html";
+
+      function buildEditPayload(tr, table) {
+        var p = buildPayload(tr, table);
+        return {
+          quoteCode: p.quoteCode || "",
+          carrier: p.carrier || "",
+          transportType: p.transportType || "",
+          pickup: p.pickup || "",
+          dropoff: p.dropoff || "",
+          vehicle: p.vehicle || "",
+          duration: (p.duration || "").toString().trim(),
+          departureTime: p.departureTime || "",
+          arrivalTime: p.arrivalTime || "",
+          sealPort: !p.sealPort || p.sealPort === "—" ? "" : p.sealPort,
+          borderPort: !p.borderPort || p.borderPort === "—" ? "" : p.borderPort,
+          priceAmount: p.priceAmount || "",
+          priceUnit: p.priceUnit || "",
+          customsAmount: p.customsAmount || "",
+          customsUnit: p.customsUnit || "",
+          remark: !p.remark || p.remark === "—" ? "" : p.remark,
+          effectiveDate: p.effectiveDate || "",
+          expiryDate: p.expiryDate || "",
+        };
+      }
+
+      function buildCopyPayload(tr, table) {
+        var p = buildPayload(tr, table);
+        return {
+          carrier: p.carrier || "",
+          transportType: p.transportType || "",
+          pickup: p.pickup || "",
+          dropoff: p.dropoff || "",
+          vehicle: p.vehicle || "",
+          duration: (p.duration || "").toString().trim(),
+          departureTime: p.departureTime || "",
+          arrivalTime: p.arrivalTime || "",
+          sealPort: !p.sealPort || p.sealPort === "—" ? "" : p.sealPort,
+          borderPort: !p.borderPort || p.borderPort === "—" ? "" : p.borderPort,
+        };
+      }
+
+      function buildPayload(tr, table) {
+        var map = headerNormMap(table);
+        function G(name) {
+          return getCellText(tr, colIndex(map, name));
+        }
+
+        var pr = parsePriceStr(G("运输价格（本币/车）"));
+        var cu = parsePriceStr(G("报关费（本币/车）"));
+        var pv = parseValidity(G("报价有效期"));
+
+        var panel = table.closest(".tab-panel");
+        var sourceTab = panel && panel.getAttribute("data-tab-panel") ? String(panel.getAttribute("data-tab-panel")).trim() : "";
+
+        return {
+          quoteCode: G("报价编码"),
+          carrier: G("承运商"),
+          transportType: G("运输类型"),
+          pickup: G("始发地"),
+          dropoff: G("目的地"),
+          vehicle: G("车型"),
+          duration: G("运输时效(H)"),
+          departureTime: toHHmm(G("发车时间")),
+          arrivalTime: toHHmm(G("到达时间")),
+          sealPort: G("封关口岸"),
+          borderPort: G("过关口岸"),
+          priceAmount: pr.amount,
+          priceUnit: pr.unit,
+          customsAmount: cu.amount,
+          customsUnit: cu.unit,
+          remark: G("备注"),
+          effectiveDate: pv.eff,
+          expiryDate: pv.exp,
+          approvals: [G("一级审批"), G("二级审批"), G("三级审批")],
+          sourceTab: sourceTab,
+          creator: G("创建人"),
+          createTime: G("创建时间"),
+          confirmer: G("确认人"),
+          confirmTime: G("确认时间"),
+          currentApprover: G("当前审批人"),
+        };
+      }
+
+      document.addEventListener(
+        "click",
+        function (e) {
+          var modLink = e.target.closest("a.op-link");
+          if (modLink && (modLink.textContent || "").replace(/\s/g, "") === "修改") {
+            if (
+              modLink.hasAttribute("data-open-overtime-edit-modal") ||
+              modLink.hasAttribute("data-open-multi-point-edit-modal")
+            ) {
+              return;
+            }
+            var trMod = modLink.closest("table.data-table tbody tr");
+            var tableMod = trMod && trMod.closest("table.data-table");
+            if (trMod && tableMod) {
+              var editPayload = buildEditPayload(trMod, tableMod);
+              if (!editPayload.quoteCode) {
+                e.preventDefault();
+                return;
+              }
+              try {
+                sessionStorage.setItem(EDIT_STORAGE_KEY, JSON.stringify(editPayload));
+              } catch (err) {
+                return;
+              }
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              window.location.href = EDIT_QUOTE_URL;
+            } else {
+              e.preventDefault();
+            }
+            return;
+          }
+
+          var copyLink = e.target.closest("a.op-link");
+          if (copyLink && (copyLink.textContent || "").replace(/\s/g, "") === "复制") {
+            var trCopy = copyLink.closest("table.data-table tbody tr");
+            var tableCopy = trCopy && trCopy.closest("table.data-table");
+            if (trCopy && tableCopy) {
+              var copyPayload = buildCopyPayload(trCopy, tableCopy);
+              try {
+                sessionStorage.setItem(COPY_STORAGE_KEY, JSON.stringify(copyPayload));
+              } catch (err) {
+                return;
+              }
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              window.location.href = ADD_QUOTE_URL;
+            }
+            e.preventDefault();
+            return;
+          }
+
+          var tr = e.target.closest("table.data-table tbody tr");
+          if (!tr) return;
+
+          if (e.target.closest('input[type="checkbox"]')) return;
+
+          var clickedA = e.target.closest("a");
+          if (clickedA) {
+            var h = (clickedA.getAttribute("href") || "").trim();
+            if (h === "#" || h === "" || h.indexOf("javascript:") === 0) return;
+            if (h.indexOf("专车报价详情") < 0) return;
+          }
+
+          var table = tr.closest("table");
+          if (!table || !table.classList.contains("data-table")) return;
+
+          var payload = buildPayload(tr, table);
+          if (!payload.quoteCode) return;
+
+          try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          } catch (err) {
+            return;
+          }
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          window.location.href = DETAIL_URL;
+        },
+        true
+      );
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,4474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>创建城际要车 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --required: #d63b3b;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 0;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-sizing: border-box;
+      padding: 12px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    /* 页面标题栏见 ../../common/prototype-shell.css */
+
+    .detail-block {
+      margin-bottom: 22px;
+    }
+
+    .section-card {
+      background: #fff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 20px;
+      row-gap: 4px;
+      align-items: start;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      column-gap: 12px;
+      min-height: 44px;
+      align-items: center;
+    }
+
+    .field--span-2 {
+      grid-column: span 2;
+    }
+
+    .field--span-4 {
+      grid-column: 1 / -1;
+    }
+
+    .car-info-grid {
+      row-gap: 6px;
+    }
+
+    .car-info-grid .field {
+      min-height: 40px;
+    }
+
+    .car-info-grid .field-label {
+      width: 88px;
+    }
+
+    .car-info-grid .radio-group {
+      gap: 8px 22px;
+      min-height: 28px;
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .car-info-grid .field-control--note {
+      align-items: stretch;
+    }
+
+    .car-info-grid .field-control--note input {
+      width: 100%;
+    }
+
+    .car-info-grid .field--full-row {
+      grid-column: 1 / -1;
+    }
+
+    .is-hidden {
+      display: none !important;
+    }
+
+    .field-label {
+      text-align: right;
+      color: #353b48;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .field-control {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    .field-control .filterable-ctl {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #8a8f98;
+      background: #fff;
+      padding: 0 10px;
+      font-size: 15px;
+      color: #2f3542;
+      outline: none;
+      border-radius: 2px;
+      font-family: inherit;
+    }
+
+    input,
+    select {
+      height: 36px;
+    }
+
+    input.filterable-input {
+      padding-right: 28px;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+    }
+
+    .filterable-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      z-index: 50;
+      display: none;
+    }
+
+    .filterable-menu.is-open {
+      display: block;
+    }
+
+    .filterable-option {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #4f5664;
+      cursor: pointer;
+      line-height: 1.4;
+      background: #fff;
+    }
+
+    .filterable-option:hover,
+    .filterable-option.is-active {
+      background: #f4f7ff;
+      color: #2f3542;
+    }
+
+    .filterable-empty {
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #9aa1ad;
+    }
+
+    textarea {
+      min-height: 64px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      resize: vertical;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      align-items: center;
+      min-height: 36px;
+    }
+
+    .radio-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #353b48;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .radio-item input[type="radio"] {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+    }
+
+    .ops-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 4px;
+      min-height: 35px;
+      padding: 0 0 8px;
+      box-sizing: border-box;
+      background: #fff;
+      border: none;
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0;
+      padding: 0 10px;
+      height: 35px;
+      border: 1px solid var(--purple);
+      border-radius: 2px;
+      outline: none;
+      background: var(--purple);
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    .ops-action.is-selected {
+      background: var(--purple);
+      border-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action .ops-ico {
+      display: inline-flex;
+      flex-shrink: 0;
+      color: #fff;
+      opacity: 1;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      overflow-x: auto;
+      background: #fff;
+    }
+
+    .data-table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--line);
+      padding: 9px 8px;
+      text-align: left;
+      white-space: nowrap;
+      color: #4f5664;
+    }
+
+    .data-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .table-wrap--pickup .data-table td {
+      text-align: center;
+    }
+
+    .table-wrap--center .data-table td {
+      text-align: center;
+    }
+
+    .table-checkbox {
+      width: 12px;
+      height: 12px;
+      vertical-align: middle;
+    }
+
+    .sort-arrows {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -2px;
+    }
+
+    .sort-arrows .arrow-up,
+    .sort-arrows .arrow-down {
+      color: #8f949d;
+      cursor: default;
+      user-select: none;
+    }
+
+    .sort-arrows .arrow-up.is-active,
+    .sort-arrows .arrow-down.is-active {
+      color: var(--purple);
+      cursor: pointer;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    .toolbar-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-inline input {
+      width: 200px;
+      height: 35px;
+      border: 1px solid #d7dbe3;
+      border-radius: 0;
+      font-size: 13px;
+      color: #2f3542;
+    }
+
+    .table-wrap--bill .data-table td {
+      text-align: center;
+    }
+
+    .toolbar-inline .ops-action,
+    .toolbar-inline .btn-query {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 35px;
+      padding: 0 10px;
+      border: 1px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .toolbar-inline .ops-action:hover,
+    .toolbar-inline .btn-query:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    .toolbar-inline .ops-action .ops-ico,
+    .toolbar-inline .btn-query .ops-ico {
+      color: #fff;
+      opacity: 1;
+    }
+
+    .toolbar-inline .ops-action .ops-ico svg,
+    .toolbar-inline .btn-query .ops-ico svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== 装卸单号：箱号导入（同专车报价列表“报价导入”弹框样式） ===== */
+    .modal-dialog {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    /* 仅覆盖箱号导入弹框的遮罩层表现，避免影响现有 modal（本页其它弹框使用 .modal 结构） */
+    #boxImportModal.modal-mask {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 1000;
+    }
+
+    #boxImportModal.modal-mask.is-open {
+      display: flex;
+    }
+
+    .modal-dialog.modal-dialog--import {
+      max-width: 560px;
+      width: calc(100% - 32px);
+      border-radius: 8px;
+    }
+
+    .modal-dialog--import .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-dialog--import .modal-close {
+      width: 36px;
+      height: 36px;
+      font-size: 26px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      cursor: pointer;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-dialog--import .modal-close:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .modal-dialog--import .modal-body--import {
+      padding: 12px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-dialog--import .import-template-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--purple);
+      font-size: 14px;
+      text-decoration: none;
+      width: fit-content;
+    }
+
+    .modal-dialog--import .import-template-link:hover {
+      text-decoration: underline;
+    }
+
+    .modal-dialog--import .import-template-link svg {
+      flex-shrink: 0;
+      color: var(--purple);
+    }
+
+    .modal-dialog--import .import-drop-outer {
+      position: relative;
+      display: block;
+      border: 2px dashed var(--purple);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      background: #faf8fc;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .modal-dialog--import .import-drop-outer:hover,
+    .modal-dialog--import .import-drop-outer.is-dragover {
+      background: #f3eefb;
+      border-color: #6b4ab8;
+    }
+
+    .modal-dialog--import .import-file-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 0;
+    }
+
+    .modal-dialog--import .import-drop-inner {
+      border: 1px dashed var(--purple);
+      border-radius: 6px;
+      min-height: 172px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .modal-dialog--import .import-drop-title {
+      color: var(--purple);
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .modal-dialog--import .import-drop-sub {
+      color: #909399;
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .modal-dialog--import .modal-foot {
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-dialog--import .modal-foot .modal-btn {
+      min-height: 40px;
+      height: 40px;
+      padding: 0 18px;
+      border-radius: 6px;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #374151;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .modal-dialog--import .modal-foot .modal-btn:hover {
+      background: #f8fafc;
+    }
+
+    .modal-btn--import-submit {
+      border: 1px solid var(--purple) !important;
+      background: var(--purple) !important;
+      color: #fff !important;
+    }
+
+    .modal-btn--import-submit:hover {
+      filter: brightness(1.06);
+    }
+
+    /* ===== 装卸单号：新增装货数据弹框 ===== */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 64px 20px 20px;
+      z-index: 999;
+    }
+
+    .modal-mask.is-open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(980px, 96vw);
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(220, 223, 230, 0.9);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303848;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+      color: #374151;
+    }
+
+    .modal-body {
+      padding: 14px 16px 6px;
+    }
+
+    .modal-toolbar-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-bottom: 10px;
+    }
+
+    .modal-toolbar-box input[type="text"] {
+      width: 200px;
+      height: 35px;
+    }
+
+    .modal-toolbar-box select {
+      min-width: 110px;
+      height: 35px;
+      padding: 0 8px;
+      border: 1px solid #d7dbe3;
+      border-radius: 0;
+      font-size: 13px;
+      font-family: inherit;
+      color: #2f3542;
+      background: #fff;
+    }
+
+    .modal-table-wrap {
+      border: 1px solid var(--line);
+      overflow-x: auto;
+      background: #fff;
+    }
+
+    .modal-table-wrap--box-list {
+      border: 1px solid var(--line);
+      overflow: auto;
+      background: #fff;
+      max-height: min(420px, 55vh);
+    }
+
+    .modal-table--box-list {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 860px;
+      font-size: 12px;
+    }
+
+    .modal-table--box-list th,
+    .modal-table--box-list td {
+      border: 1px solid var(--line);
+      padding: 8px 8px;
+      text-align: center;
+      white-space: nowrap;
+      color: #4f5664;
+    }
+
+    .modal-table--box-list th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .modal-table--box-list .col-wrap {
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .modal-table--box-list tr[data-filtered="0"] {
+      display: none;
+    }
+
+    #confirmUnloadBoxDelModal.modal-mask {
+      z-index: 1000;
+    }
+
+    /* 装卸箱号：添加箱号（叠在装卸箱号弹框之上） */
+    #addUnloadBoxNoModal.modal-mask {
+      z-index: 1000;
+    }
+
+    .modal--add-unload-box {
+      width: min(520px, 92vw);
+    }
+
+    .add-unload-box-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 4px 0 8px;
+    }
+
+    .add-unload-box-label {
+      flex-shrink: 0;
+      padding-top: 8px;
+      font-size: 14px;
+      color: #303848;
+      white-space: nowrap;
+    }
+
+    .add-unload-box-label .req-star {
+      color: #ef4444;
+      margin-right: 2px;
+    }
+
+    .add-unload-box-textarea {
+      flex: 1;
+      min-width: 0;
+      min-height: 140px;
+      padding: 8px 10px;
+      border: 1px solid #cfd5df;
+      border-radius: 2px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      color: #2f3542;
+      box-sizing: border-box;
+    }
+
+    .add-unload-box-textarea:focus {
+      outline: none;
+      border-color: #9ca3af;
+    }
+
+    #addUnloadBoxNoModal .modal-foot {
+      border-top: 1px solid var(--line);
+    }
+
+    #addUnloadBoxNoModal .btn-primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    #addUnloadBoxNoModal .btn-primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    .modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 760px;
+      font-size: 12px;
+    }
+
+    .modal-table th,
+    .modal-table td {
+      border: 1px solid var(--line);
+      padding: 8px 8px;
+      text-align: center;
+      white-space: nowrap;
+      color: #4f5664;
+    }
+
+    .modal-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .modal-table input,
+    .modal-table select {
+      height: 34px;
+      border: 1px solid #8a8f98;
+      border-radius: 2px;
+      font-size: 13px;
+      padding: 0 8px;
+    }
+
+    .modal-opcell {
+      width: 44px;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #7d5bc9;
+    }
+
+    .icon-btn:hover {
+      background: #f5f3ff;
+      color: #6f4fc0;
+    }
+
+    .icon-btn.icon-danger {
+      color: #a855f7;
+    }
+
+    .icon-btn.icon-danger:hover {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+
+    .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      background: #fff;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #374151;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+    }
+
+    .btn-primary {
+      border-color: #4f7cff;
+      background: #4f7cff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #3f6ef2;
+      border-color: #3f6ef2;
+    }
+
+    /* ===== 修改装/卸货地址弹框：紫色确认按钮 + 底部分隔线 ===== */
+    #editPickupAddressModal .btn-primary,
+    #editUnloadingAddressModal .btn-primary,
+    #editUnloadingAddressAddModal .btn-primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    #editPickupAddressModal .btn-primary:hover,
+    #editUnloadingAddressModal .btn-primary:hover,
+    #editUnloadingAddressAddModal .btn-primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    #editPickupAddressModal .modal-foot,
+    #editUnloadingAddressModal .modal-foot,
+    #editUnloadingAddressAddModal .modal-foot {
+      border-top: 1px solid var(--line);
+    }
+
+    /* ===== 地址簿选择弹框 ===== */
+    .abk-modal {
+      width: min(1180px, 96vw);
+    }
+
+    .abk-modal .modal-head {
+      padding: 12px 16px;
+    }
+
+    .abk-modal .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .abk-body {
+      padding: 12px 16px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .abk-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .abk-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .abk-label {
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .abk-toolbar input {
+      width: 180px;
+      height: 34px;
+      border: 1px solid #d7dbe3;
+      border-radius: 2px;
+      font-size: 13px;
+      padding: 0 10px;
+    }
+
+    .abk-search-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--purple);
+      background: var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .abk-search-btn:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    .abk-search-btn svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .abk-table-wrap {
+      border: 1px solid var(--line);
+      background: #fff;
+      overflow: auto;
+      max-height: 360px;
+    }
+
+    .abk-table {
+      width: 100%;
+      min-width: 1060px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+    }
+
+    .abk-table th,
+    .abk-table td {
+      border: 1px solid var(--line);
+      padding: 8px 8px;
+      white-space: nowrap;
+      color: #4f5664;
+      text-align: center;
+    }
+
+    .abk-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .abk-row.is-active td {
+      background: #f4f7ff;
+    }
+
+    .abk-ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .abk-foot {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+    }
+
+    .abk-btn {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #374151;
+      font-family: inherit;
+    }
+
+    .abk-btn:hover {
+      background: #f8fafc;
+    }
+
+    .abk-btn--primary {
+      border-color: var(--purple);
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .abk-btn--primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    /* ===== 装卸单号：删除确认弹框 ===== */
+    .confirm-modal {
+      width: min(360px, 92vw);
+    }
+
+    .confirm-body {
+      padding: 18px 16px 8px;
+      font-size: 14px;
+      color: #4f5664;
+      line-height: 1.7;
+    }
+
+    .confirm-foot {
+      padding: 10px 16px 16px;
+      justify-content: flex-end;
+    }
+
+    .confirm-modal .modal-head {
+      border-bottom: none;
+    }
+
+    .confirm-modal .btn-primary {
+      border-color: var(--purple);
+      background: var(--purple);
+    }
+
+    .confirm-modal .btn-primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+
+    /* ===== 装卸单号：修改弹框 ===== */
+    .edit-modal {
+      width: min(760px, 96vw);
+    }
+
+    .edit-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 18px;
+      row-gap: 12px;
+      padding: 6px 0 0;
+    }
+
+    .edit-field.edit-field--span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .edit-field {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      align-items: center;
+      column-gap: 12px;
+      min-height: 40px;
+    }
+
+    .edit-label {
+      text-align: right;
+      color: #353b48;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .edit-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 2px;
+    }
+
+    .edit-control {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .edit-control input[readonly] {
+      background: #f5f6f8;
+      border-color: #d1d5db;
+      color: #374151;
+    }
+
+    .photo-uploader {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+    }
+
+    .photo-add {
+      width: 34px;
+      height: 34px;
+      border: 1px dashed #7d5bc9;
+      background: #f5f3ff;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6f4fc0;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .photo-add:hover {
+      filter: brightness(1.03);
+    }
+
+    @media (max-width: 700px) {
+      .edit-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+      }
+
+      .field--span-2,
+      .field--span-4 {
+        grid-column: auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "要车",
+      sidebarActiveL1: "城际运输管理",
+      sidebarActiveL2: "创建城际要车",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+
+    <div class="main-content">
+      <div class="page">
+        <div class="page-head">
+          <div class="header">
+            <div class="header-title">编辑城际要车</div>
+            <div class="header-actions">
+              <a class="header-link" href="城际要车详情.html">取消</a>
+              <a class="header-link" href="城际要车详情.html">保存</a>
+            </div>
+          </div>
+        </div>
+
+        <section class="detail-block">
+          <h2 class="block-title erp-section-title">用车信息</h2>
+          <div class="section-card">
+            <div class="form-grid car-info-grid">
+              <div class="field field--span-4">
+                <div class="field-label required">运输类型</div>
+                <div class="field-control">
+                  <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="transportType" value="港车运输" checked />港车运输</label>
+                    <label class="radio-item"><input type="radio" name="transportType" value="国内专车" />国内专车</label>
+                    <label class="radio-item"><input type="radio" name="transportType" value="国内空运" />国内空运</label>
+                    <label class="radio-item"><input type="radio" name="transportType" value="国内拼车" />国内拼车</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field field--span-4 field--full-row">
+                <div class="field-label required">承运方</div>
+                <div class="field-control">
+                  <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="carrierType" value="合作承运商" checked />合作承运商</label>
+                    <label class="radio-item"><input type="radio" name="carrierType" value="临时承运商" />临时承运商</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field field--span-4 field--full-row">
+                <div class="field-label required">线路类型</div>
+                <div class="field-control">
+                  <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="routeType" value="固定线路" checked />固定线路</label>
+                    <label class="radio-item"><input type="radio" name="routeType" value="临时线路" />临时线路</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field field--span-4 field--full-row" id="vehicleTypeField">
+                <div class="field-label required">需求车型</div>
+                <div class="field-control">
+                  <div class="radio-group" id="vehicleTypeGroup">
+                    <label class="radio-item"><input type="radio" name="vehicleType" checked />中港吨车</label>
+                    <label class="radio-item"><input type="radio" name="vehicleType" />中港柜车</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label required">用车时间</div>
+                <div class="field-control">
+                  <input type="datetime-local" id="useCarTime" aria-label="用车时间" placeholder="请选择用车日期时间" step="60" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required" id="carrierFieldLabel">承运商</div>
+                <div class="field-control" id="carrierFieldControl">
+                  <div class="filterable-ctl">
+                    <input type="text" class="filterable-input" id="carrierInput" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" />
+                    <div class="filterable-menu" hidden></div>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">用车客户</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+              <div class="field" id="plateOrFlightField">
+                <div class="field-label" id="plateOrFlightLabel">车牌号</div>
+                <div class="field-control" id="plateOrFlightControl"><input type="text" id="plateOrFlightInput" placeholder="" /></div>
+              </div>
+
+              <div class="field" id="cnDriverField">
+                <div class="field-label">国内司机</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+              <div class="field" id="phoneField1">
+                <div class="field-label">联系电话</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+              <div class="field" id="idCardField">
+                <div class="field-label">身份证</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+              <div class="field" id="hkDriverField">
+                <div class="field-label">香港司机</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+
+              <div class="field" id="hkPhoneField">
+                <div class="field-label">联系电话</div>
+                <div class="field-control"><input type="text" placeholder="" /></div>
+              </div>
+              <div class="field field--span-2" id="carRemarkField">
+                <div class="field-label">用车备注</div>
+                <div class="field-control field-control--note"><input type="text" placeholder="" /></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title erp-section-title">装货地址</h2>
+          <div class="ops-section">
+            <button type="button" class="ops-action is-selected" id="pickupAddressAddBtn">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              </span>
+              添加
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v14H4zM6 7v10h12V7zm2 2h8v2H8zm0 4h5v2H8z"/></svg>
+              </span>
+              地址簿选择
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/></svg>
+              </span>
+              作废
+            </button>
+          </div>
+          <div class="table-wrap table-wrap--pickup">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:24px;"><input type="checkbox" class="table-checkbox" aria-label="全选" /></th>
+                  <th style="width:64px;">操作</th>
+                  <th style="width:52px;">装货顺序</th>
+                  <th style="width:96px;">装货点名称</th>
+                  <th style="width:210px;">装货地址</th>
+                  <th style="width:92px;">所属提货分区</th>
+                  <th style="width:92px;">所属提货地</th>
+                  <th style="width:96px;">备注</th>
+                  <th style="width:88px;">联系人</th>
+                  <th style="width:118px;">联系电话</th>
+                  <th style="width:96px;">到场时间</th>
+                  <th style="width:96px;">离场时间</th>
+                  <th style="width:96px;">打卡照片</th>
+                  <th style="width:88px;">是否作废</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-pickup-edit">修改</a> | <a href="#" class="op-link js-pickup-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up">↑</span><span class="arrow-down is-active">↓</span></div></td><td>拼多多南沙嘉诚仓</td><td class="col-wrap">广东省广州市南沙区骏马大道马克工业区</td><td>一区</td><td>南沙</td><td></td><td>张三</td><td>13467835836</td><td>2024-06-18 18:00</td><td>2024-06-18 19:00</td><td><a href="#" class="op-link js-view-photo">查看</a></td><td>否</td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-pickup-edit">修改</a> | <a href="#" class="op-link js-pickup-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up is-active">↑</span><span class="arrow-down is-active">↓</span></div></td><td>拼多多麻大提货点</td><td class="col-wrap">广东省广州市南沙区保税大道跨境工业区</td><td>一区</td><td>肇庆</td><td></td><td>丰印</td><td>13467835836</td><td></td><td></td><td><a href="#" class="op-link js-view-photo">查看</a></td><td>否</td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-pickup-edit">修改</a> | <a href="#" class="op-link js-pickup-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up is-active">↑</span><span class="arrow-down">↓</span></div></td><td>拼多多佛山提货点</td><td class="col-wrap">广东省广州市南沙区保税大道跨境工业区</td><td>二区</td><td>佛山</td><td></td><td>王五</td><td>13467835836</td><td></td><td></td><td><a href="#" class="op-link js-view-photo">查看</a></td><td>是</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="detail-block" id="customsYardSection">
+          <h2 class="block-title erp-section-title">封关场</h2>
+          <div class="table-wrap table-wrap--center">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>场地</th>
+                  <th>打卡场站</th>
+                  <th>实际打卡场站</th>
+                  <th>到场时间</th>
+                  <th>离场时间</th>
+                  <th>打卡照片</th>
+                  <th>查验开始时间</th>
+                  <th>查验结束时间</th>
+                  <th>查扣包裹数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>大陆封关场</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                <tr><td>过香港关</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title erp-section-title">卸货地址</h2>
+          <div class="ops-section">
+            <button type="button" class="ops-action is-selected" id="unloadingAddressAddBtn">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              </span>
+              添加
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v14H4zM6 7v10h12V7zm2 2h8v2H8zm0 4h5v2H8z"/></svg>
+              </span>
+              地址簿选择
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/></svg>
+              </span>
+              作废
+            </button>
+          </div>
+          <div class="table-wrap table-wrap--pickup">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:24px;"><input type="checkbox" class="table-checkbox" aria-label="全选" /></th>
+                  <th style="width:64px;">操作</th>
+                  <th style="width:52px;">卸货顺序</th>
+                  <th style="width:96px;">卸货点名称</th>
+                  <th style="width:210px;">卸货地址</th>
+                  <th style="width:96px;">所属卸货地</th>
+                  <th style="width:110px;">规定到达时间</th>
+                  <th style="width:96px;">备注</th>
+                  <th style="width:88px;">联系人</th>
+                  <th style="width:118px;">联系电话</th>
+                  <th style="width:96px;">到货时间</th>
+                  <th style="width:96px;">离货时间</th>
+                  <th style="width:96px;">打卡照片</th>
+                  <th style="width:88px;">是否作废</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-unloading-edit">修改</a> | <a href="#" class="op-link js-unloading-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up">↑</span><span class="arrow-down is-active">↓</span></div></td><td>香港集货仓A1</td><td class="col-wrap">香港特别行政区荃湾区德士古道1号</td><td>荃湾</td><td></td><td></td><td>张三</td><td>13467835836</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-unloading-edit">修改</a> | <a href="#" class="op-link js-unloading-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up is-active">↑</span><span class="arrow-down is-active">↓</span></div></td><td>香港打板仓1</td><td class="col-wrap">香港特别行政区荃湾区德士古道1号</td><td>荃湾</td><td></td><td></td><td>李四</td><td>13467835836</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-unloading-edit">修改</a> | <a href="#" class="op-link js-unloading-del">删除</a></td><td><div class="sort-arrows"><span class="arrow-up is-active">↑</span><span class="arrow-down">↓</span></div></td><td>香港打板仓2</td><td class="col-wrap">香港特别行政区荃湾区德士古道1号</td><td>荃湾</td><td></td><td></td><td>王五</td><td>13467835836</td><td></td><td></td><td></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title erp-section-title">装卸单号</h2>
+          <div class="toolbar-inline">
+            <input type="text" placeholder="装货点" aria-label="装货点" />
+            <input type="text" placeholder="卸货点" aria-label="卸货点" />
+            <input type="text" placeholder="提单号" aria-label="提单号" />
+            <button type="button" class="btn-query">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a6 6 0 104.472 10.001l4.763 4.764 1.414-1.414-4.764-4.763A6 6 0 0010 4m0 2a4 4 0 110 8 4 4 0 010-8"/></svg>
+              </span>
+              查询
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              </span>
+              新增装货数据
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 12h10v2H7zm0-4h14v2H7zm0 8h6v2H7zM3 6h2v12H3z"/></svg>
+              </span>
+              关联卸货点
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l4 4h-3v6h-2V7H8zm-7 9h14v7H5z"/></svg>
+              </span>
+              导入箱号
+            </button>
+            <button type="button" class="ops-action">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/></svg>
+              </span>
+              作废
+            </button>
+          </div>
+          <div class="table-wrap table-wrap--bill">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:24px;"><input type="checkbox" class="table-checkbox" aria-label="全选" /></th>
+                  <th style="width:72px;">操作</th>
+                  <th style="width:120px;">提单号</th>
+                  <th style="width:120px;">入仓号</th>
+                  <th style="width:120px;">出库单号</th>
+                  <th style="width:120px;">出库计划号</th>
+                  <th style="width:90px;">航班日期</th>
+                  <th style="width:120px;">实配单号</th>
+                  <th style="width:100px;">计费方数(cbm)</th>
+                  <th style="width:100px;">实际方数(cbm)</th>
+                  <th style="width:90px;">重量(kg)</th>
+                  <th style="width:70px;">箱数</th>
+                  <th style="width:78px;">是否作废</th>
+                  <th style="width:92px;">装货点</th>
+                  <th style="width:92px;">卸货点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-bill-edit">修改</a> | <a href="#" class="op-link js-bill-del">删除</a></td><td>176-998103395</td><td></td><td>SZOW250730000051</td><td>26041010YW</td><td>2025-08-13</td><td>160-09045912、804-22302232</td><td>12</td><td>12</td><td>1200.00</td><td><a href="#" class="op-link js-open-box-modal" data-bill-no="176-998103395" data-pickup="常平台" data-delivery="香港集货仓2" title="查看箱号明细">45</a></td><td>否</td><td>常平台</td><td>香港集货仓2</td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-bill-edit">修改</a> | <a href="#" class="op-link js-bill-del">删除</a></td><td>065-49572305</td><td>065-49572305</td><td></td><td></td><td>2025-08-14</td><td>065-46978960</td><td>12</td><td>12</td><td>1200.00</td><td><a href="#" class="op-link js-open-box-modal" data-bill-no="065-49572305" data-pickup="南沙仓" data-delivery="香港集货仓1" title="查看箱号明细">45</a></td><td>否</td><td>南沙仓</td><td>香港集货仓1</td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-bill-edit">修改</a> | <a href="#" class="op-link js-bill-del">删除</a></td><td>160-98834190</td><td></td><td>SZOW250730000032</td><td>26041217YW</td><td>2025-08-15</td><td></td><td>12</td><td>12</td><td>1200.00</td><td><a href="#" class="op-link js-open-box-modal" data-bill-no="160-98834190" data-pickup="常平台" data-delivery="香港集货仓1" title="查看箱号明细">45</a></td><td>否</td><td>常平台</td><td>香港集货仓1</td></tr>
+                <tr><td><input type="checkbox" class="table-checkbox" /></td><td><a href="#" class="op-link js-bill-edit">修改</a> | <a href="#" class="op-link js-bill-del">删除</a></td><td>180-50359304</td><td></td><td></td><td></td><td>2025-08-16</td><td></td><td>12</td><td></td><td></td><td></td><td>是</td><td>南沙仓</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title erp-section-title">附件信息</h2>
+          <div class="ops-section">
+            <button type="button" class="ops-action is-selected" id="attachmentUploadBtn">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l4 4h-3v6h-2V7H8zm-7 9h14v7H5z"/></svg>
+              </span>
+              上传文件
+            </button>
+            <input type="file" id="attachmentUploadInput" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true" />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" style="min-width:720px;">
+              <thead>
+                <tr>
+                  <th style="width:72px;">操作</th>
+                  <th>文件名称</th>
+                  <th style="width:160px;">上传时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><a href="#" class="op-link">下载 | 删除</a></td><td>921-48639021_2025-07-28 航班待调.xlsx</td><td>2026-07-28 15:15</td></tr>
+                <tr><td><a href="#" class="op-link">下载 | 删除</a></td><td>921-48639021_2025-07-28.xlsx</td><td>2025-07-28 15:15</td></tr>
+                <tr><td><a href="#" class="op-link">下载 | 删除</a></td><td>921-48639021_2025-07-28 深圳保税仓清单.xlsx</td><td>2025-07-28 15:15</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增装货数据弹框 -->
+  <div class="modal-mask" id="loadingDataModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="添加装货数据">
+      <div class="modal-head">
+        <div class="modal-title">添加装货数据</div>
+        <button type="button" class="modal-close" id="loadingDataModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-table-wrap">
+          <table class="modal-table" aria-label="装货数据表">
+            <thead>
+              <tr>
+                <th style="width:180px;">提单号</th>
+                <th style="width:160px;">计划方数</th>
+                <th style="width:160px;">航班日期</th>
+                <th>装货点</th>
+                <th class="modal-opcell" style="width:44px;">
+                  <button type="button" class="icon-btn" id="loadingDataRowAdd" aria-label="新增一行">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/>
+                    </svg>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="loadingDataTbody">
+              <tr>
+                <td><input type="text" placeholder="" aria-label="提单号" /></td>
+                <td><input type="text" placeholder="" aria-label="计划方数" /></td>
+                <td><input type="text" placeholder="" aria-label="航班日期" /></td>
+                <td>
+                  <select aria-label="装货点">
+                    <option value="" selected>请选择装货点</option>
+                    <option>常平台</option>
+                    <option>南沙仓</option>
+                    <option>拼多多闸口港混仓</option>
+                  </select>
+                </td>
+                <td class="modal-opcell">
+                  <button type="button" class="icon-btn icon-danger js-row-del" aria-label="删除此行">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                      <path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="text" placeholder="" aria-label="提单号" /></td>
+                <td><input type="text" placeholder="" aria-label="计划方数" /></td>
+                <td><input type="text" placeholder="" aria-label="航班日期" /></td>
+                <td>
+                  <select aria-label="装货点">
+                    <option value="" selected>请选择装货点</option>
+                    <option>常平台</option>
+                    <option>南沙仓</option>
+                    <option>拼多多闸口港混仓</option>
+                  </select>
+                </td>
+                <td class="modal-opcell">
+                  <button type="button" class="icon-btn icon-danger js-row-del" aria-label="删除此行">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                      <path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="loadingDataModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="loadingDataModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改装卸单号弹框 -->
+  <div class="modal-mask" id="editBillModal" aria-hidden="true">
+    <div class="modal edit-modal" role="dialog" aria-modal="true" aria-label="修改装卸单号">
+      <div class="modal-head">
+        <div class="modal-title">修改装卸单单号</div>
+        <button type="button" class="modal-close" id="editBillModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-form-grid" aria-label="修改装卸单号表单">
+          <div class="edit-field">
+            <div class="edit-label required">提单号</div>
+            <div class="edit-control"><input type="text" id="editBillNo" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">装货点</div>
+            <div class="edit-control">
+              <select id="editLoadingPoint" aria-label="装货点">
+                <option value="">请选择</option>
+                <option>常平台</option>
+                <option>南沙仓</option>
+                <option>拼多多闸口港混仓</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">计划方数</div>
+            <div class="edit-control"><input type="text" id="editPlanCbm" placeholder="" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">实际方数</div>
+            <div class="edit-control"><input type="text" id="editActualCbm" placeholder="" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">重量(kg)</div>
+            <div class="edit-control"><input type="text" id="editWeight" placeholder="" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">箱数</div>
+            <div class="edit-control"><input type="text" id="editBoxes" placeholder="" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">航班日期</div>
+            <div class="edit-control"><input type="text" id="editFlightDate" placeholder="" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">是否作废</div>
+            <div class="edit-control">
+              <select id="editVoid" aria-label="是否作废">
+                <option>否</option>
+                <option>是</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="editBillModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="editBillModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加装货地址弹框（与城际要车详情一致：点名称/地址/备注同宽，无分区/提货地） -->
+  <div class="modal-mask" id="editPickupAddressAddModal" aria-hidden="true">
+    <div class="modal edit-modal" role="dialog" aria-modal="true" aria-label="添加装货地址">
+      <div class="modal-head">
+        <div class="modal-title" id="editPickupAddressAddModalTitle">添加装货地址</div>
+        <button type="button" class="modal-close" id="editPickupAddressAddModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-form-grid" id="editPickupAddressAddFormGrid" aria-label="添加装货地址表单">
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">装货点名称</div>
+            <div class="edit-control"><input type="text" id="editPickupAddPointName" /></div>
+          </div>
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">装货地址</div>
+            <div class="edit-control"><input type="text" id="editPickupAddAddress" /></div>
+          </div>
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label">备注信息</div>
+            <div class="edit-control"><input type="text" id="editPickupAddRemark" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label required">联系人</div>
+            <div class="edit-control"><input type="text" id="editPickupAddContact" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">联系电话</div>
+            <div class="edit-control"><input type="text" id="editPickupAddPhone" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="editPickupAddressAddModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="editPickupAddressAddModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改装货地址弹框（与城际要车详情一致） -->
+  <div class="modal-mask" id="editPickupAddressModal" aria-hidden="true">
+    <div class="modal edit-modal" role="dialog" aria-modal="true" aria-label="修改装货地址">
+      <div class="modal-head">
+        <div class="modal-title">修改装货地址</div>
+        <button type="button" class="modal-close" id="editPickupAddressModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-form-grid" aria-label="修改装货地址表单">
+          <div class="edit-field">
+            <div class="edit-label required">装货点名称</div>
+            <div class="edit-control"><input type="text" id="editPickupPointName" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">所属提货分区</div>
+            <div class="edit-control">
+              <select id="editPickupZone" aria-label="所属提货分区">
+                <option value="" selected></option>
+                <option value="一区">一区</option>
+                <option value="二区">二区</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">装货地址</div>
+            <div class="edit-control"><input type="text" id="editPickupAddress" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label required">所属提货地</div>
+            <div class="edit-control">
+              <select id="editPickupPlace" aria-label="所属提货地">
+                <option value="" selected></option>
+                <option value="南沙">南沙</option>
+                <option value="肇庆">肇庆</option>
+                <option value="佛山">佛山</option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">备注信息</div>
+            <div class="edit-control"><input type="text" id="editPickupRemark" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label required">联系人</div>
+            <div class="edit-control"><input type="text" id="editPickupContact" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">联系电话</div>
+            <div class="edit-control"><input type="text" id="editPickupPhone" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">到场时间</div>
+            <div class="edit-control"><input type="datetime-local" id="editPickupArriveTime" step="60" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">离场时间</div>
+            <div class="edit-control"><input type="datetime-local" id="editPickupDepartTime" step="60" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">到场照片</div>
+            <div class="edit-control">
+              <div class="photo-uploader">
+                <div class="photo-add" role="button" tabindex="0" aria-label="添加到场照片">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">离场照片</div>
+            <div class="edit-control">
+              <div class="photo-uploader">
+                <div class="photo-add" role="button" tabindex="0" aria-label="添加离场照片">+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="editPickupAddressModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="editPickupAddressModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加卸货地址弹框（与装货添加布局一致，无提货地/分区；点名称与备注与地址同宽） -->
+  <div class="modal-mask" id="editUnloadingAddressAddModal" aria-hidden="true">
+    <div class="modal edit-modal" role="dialog" aria-modal="true" aria-label="添加卸货地址">
+      <div class="modal-head">
+        <div class="modal-title" id="editUnloadingAddressAddModalTitle">添加卸货地址</div>
+        <button type="button" class="modal-close" id="editUnloadingAddressAddModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-form-grid" id="editUnloadingAddressAddFormGrid" aria-label="添加卸货地址表单">
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">卸货点名称</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddPointName" /></div>
+          </div>
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">卸货地址</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddAddress" /></div>
+          </div>
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label">备注信息</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddRemark" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">联系人</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddContact" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">联系电话</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddPhone" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="editUnloadingAddressAddModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="editUnloadingAddressAddModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改卸货地址弹框 -->
+  <div class="modal-mask" id="editUnloadingAddressModal" aria-hidden="true">
+    <div class="modal edit-modal" role="dialog" aria-modal="true" aria-label="修改卸货地址">
+      <div class="modal-head">
+        <div class="modal-title">修改卸货地址</div>
+        <button type="button" class="modal-close" id="editUnloadingAddressModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="edit-form-grid" aria-label="修改卸货地址表单">
+          <div class="edit-field">
+            <div class="edit-label required">卸货点名称</div>
+            <div class="edit-control"><input type="text" id="editUnloadingPointName" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">所属卸货地</div>
+            <div class="edit-control">
+              <select id="editUnloadingPlace" aria-label="所属卸货地">
+                <option value="" selected></option>
+                <option value="荃湾">荃湾</option>
+                <option value="葵涌">葵涌</option>
+                <option value="荃湾/葵涌">荃湾/葵涌</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label required">卸货地址</div>
+            <div class="edit-control"><input type="text" id="editUnloadingAddress" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label required">联系人</div>
+            <div class="edit-control"><input type="text" id="editUnloadingContact" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label required">联系电话</div>
+            <div class="edit-control"><input type="text" id="editUnloadingPhone" /></div>
+          </div>
+
+          <div class="edit-field edit-field--span-2">
+            <div class="edit-label">备注信息</div>
+            <div class="edit-control"><input type="text" id="editUnloadingRemark" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">到场时间</div>
+            <div class="edit-control"><input type="datetime-local" id="editUnloadingArriveTime" step="60" /></div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">离场时间</div>
+            <div class="edit-control"><input type="datetime-local" id="editUnloadingDepartTime" step="60" /></div>
+          </div>
+
+          <div class="edit-field">
+            <div class="edit-label">到场照片</div>
+            <div class="edit-control">
+              <div class="photo-uploader">
+                <div class="photo-add" role="button" tabindex="0" aria-label="添加到场照片">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-label">离场照片</div>
+            <div class="edit-control">
+              <div class="photo-uploader">
+                <div class="photo-add" role="button" tabindex="0" aria-label="添加离场照片">+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="editUnloadingAddressModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="editUnloadingAddressModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹框 -->
+  <div class="modal-mask" id="confirmBillDelModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmBillDelModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmBillDelModalMsg">你确认要删除当前提单号吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmBillDelModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmBillDelModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹框（装货地址） -->
+  <div class="modal-mask" id="confirmPickupDelModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmPickupDelModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmPickupDelModalMsg">你确认要删除当前装货地址吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmPickupDelModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmPickupDelModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 作废确认弹框（装货地址） -->
+  <div class="modal-mask" id="confirmPickupVoidModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmPickupVoidModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmPickupVoidModalMsg">你确认要作废当前装货地址吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmPickupVoidModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmPickupVoidModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹框（卸货地址） -->
+  <div class="modal-mask" id="confirmUnloadingDelModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmUnloadingDelModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmUnloadingDelModalMsg">你确认要删除当前卸货地址吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmUnloadingDelModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmUnloadingDelModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 作废确认弹框（卸货地址） -->
+  <div class="modal-mask" id="confirmUnloadingVoidModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmUnloadingVoidModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmUnloadingVoidModalMsg">你确认要作废当前卸货地址吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmUnloadingVoidModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmUnloadingVoidModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 作废确认弹框（装卸单号） -->
+  <div class="modal-mask" id="confirmBillVoidModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" id="confirmBillVoidModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmBillVoidModalMsg">你确认要作废当前提单号吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmBillVoidModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmBillVoidModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 装卸单号：箱数 -> 装卸箱号（同城际要车详情） -->
+  <div class="modal-mask" id="unloadBoxNoModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="unloadBoxNoModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="unloadBoxNoModalTitle">装卸箱号</div>
+        <button type="button" class="modal-close" id="unloadBoxNoModalCloseX" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-toolbar-box toolbar-inline">
+          <input type="text" id="unloadBoxNoModalSearch" placeholder="箱号" aria-label="箱号筛选" />
+          <button type="button" class="btn-query" id="unloadBoxNoModalBtnQuery">
+            <span class="ops-ico" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a6 6 0 104.472 10.001l4.763 4.764 1.414-1.414-4.764-4.763A6 6 0 0010 4m0 2a4 4 0 110 8 4 4 0 010-8"/></svg>
+            </span>
+            查询
+          </button>
+          <button type="button" class="ops-action" id="unloadBoxNoModalBtnAddBox">
+            <span class="ops-ico" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </span>
+            添加箱号
+          </button>
+          <button type="button" class="ops-action" id="unloadBoxNoModalBtnDel">
+            <span class="ops-ico" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/></svg>
+            </span>
+            删除箱号
+          </button>
+        </div>
+        <div class="modal-table-wrap modal-table-wrap--box-list">
+          <table class="modal-table--box-list" aria-label="装卸箱号列表">
+            <thead>
+              <tr>
+                <th style="width:40px;"><input type="checkbox" class="table-checkbox" id="unloadBoxNoModalSelectAll" aria-label="全选" /></th>
+                <th style="width:56px;">序号</th>
+                <th style="width:160px;">箱号</th>
+                <th style="width:72px;">cbm</th>
+                <th style="width:88px;">重量(kg)</th>
+                <th style="width:120px;">提单号</th>
+                <th style="width:96px;">装货点</th>
+                <th style="width:96px;">卸货点</th>
+              </tr>
+            </thead>
+            <tbody id="unloadBoxNoModalTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 装卸箱号：添加箱号 -->
+  <div class="modal-mask" id="addUnloadBoxNoModal" aria-hidden="true">
+    <div class="modal modal--add-unload-box" role="dialog" aria-modal="true" aria-labelledby="addUnloadBoxNoModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="addUnloadBoxNoModalTitle">添加箱号</div>
+        <button type="button" class="modal-close" id="addUnloadBoxNoModalCloseX" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="add-unload-box-field">
+          <label class="add-unload-box-label" for="addUnloadBoxNoTextarea"><span class="req-star" aria-hidden="true">*</span>箱号</label>
+          <textarea id="addUnloadBoxNoTextarea" class="add-unload-box-textarea" rows="6" placeholder="支持多行，每行一个箱号" aria-required="true"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="addUnloadBoxNoModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="addUnloadBoxNoModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 装卸箱号：删除勾选确认 -->
+  <div class="modal-mask" id="confirmUnloadBoxDelModal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmUnloadBoxDelModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="confirmUnloadBoxDelModalTitle">提示</div>
+        <button type="button" class="modal-close" id="confirmUnloadBoxDelModalCloseX" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="confirmUnloadBoxDelModalMsg">您要确认删除勾选的箱号吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" id="confirmUnloadBoxDelModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmUnloadBoxDelModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关联卸货点弹框 -->
+  <div class="modal-mask" id="linkUnloadingPointModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="关联卸货点">
+      <div class="modal-head">
+        <div class="modal-title">关联卸货点</div>
+        <button type="button" class="modal-close" id="linkUnloadingPointModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-table-wrap">
+          <table class="modal-table" aria-label="关联卸货点表">
+            <thead>
+              <tr>
+                <th style="width:160px;">提单号</th>
+                <th style="width:110px;">体积(cbm)</th>
+                <th style="width:110px;">重量(kg)</th>
+                <th style="width:90px;">箱数</th>
+                <th style="width:160px;">入仓号</th>
+                <th>卸货点</th>
+                <th style="width:80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="linkUnloadingPointTbody">
+              <tr>
+                <td>065-49572305</td>
+                <td>15.00</td>
+                <td>1400</td>
+                <td>45</td>
+                <td><input type="text" aria-label="入仓号" /></td>
+                <td>
+                  <select aria-label="卸货点">
+                    <option value="" selected></option>
+                    <option>香港集货仓A1</option>
+                    <option>香港打板仓1</option>
+                    <option>香港打板仓2</option>
+                  </select>
+                </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>180-50359304</td>
+                <td>15.00</td>
+                <td>1400</td>
+                <td>45</td>
+                <td><input type="text" aria-label="入仓号" /></td>
+                <td>
+                  <select aria-label="卸货点">
+                    <option value="" selected></option>
+                    <option>香港集货仓A1</option>
+                    <option>香港打板仓1</option>
+                    <option>香港打板仓2</option>
+                  </select>
+                </td>
+                <td><a href="#" class="op-link js-same-above">同上</a></td>
+              </tr>
+              <tr>
+                <td>160-98834190</td>
+                <td>15.00</td>
+                <td>1400</td>
+                <td>45</td>
+                <td><input type="text" aria-label="入仓号" /></td>
+                <td>
+                  <select aria-label="卸货点">
+                    <option value="" selected></option>
+                    <option>香港集货仓A1</option>
+                    <option>香港打板仓1</option>
+                    <option>香港打板仓2</option>
+                  </select>
+                </td>
+                <td><a href="#" class="op-link js-same-above">同上</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="linkUnloadingPointModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="linkUnloadingPointModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 箱号导入弹框（同专车报价列表“报价导入”弹框） -->
+  <div class="modal-mask" id="boxImportModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--import" role="dialog" aria-modal="true" aria-labelledby="boxImportModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="boxImportModalTitle">箱号导入</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-box-import-modal>×</button>
+      </div>
+      <div class="modal-body modal-body--import">
+        <a href="#" class="import-template-link" download>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+          </svg>
+          下载模板
+        </a>
+        <label class="import-drop-outer" id="boxImportDropZone">
+          <span class="import-drop-inner">
+            <span class="import-drop-title">点击或拖拽Excel文件到此区域上传</span>
+            <span class="import-drop-sub">支持 .xlsx, .xls 格式，最大 10MB</span>
+          </span>
+          <input type="file" class="import-file-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="选择 Excel 文件" />
+        </label>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-box-import-modal>关闭</button>
+        <button type="button" class="modal-btn modal-btn--import-submit" data-close-box-import-modal>导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 地址簿选择弹框 -->
+  <div class="modal-mask" id="addressBookModal" aria-hidden="true">
+    <div class="modal abk-modal" role="dialog" aria-modal="true" aria-label="地址簿">
+      <div class="modal-head">
+        <div class="modal-title">地址簿</div>
+        <button type="button" class="modal-close" id="addressBookModalClose" aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="abk-body">
+        <div class="abk-toolbar" aria-label="地址簿查询">
+          <div class="abk-field">
+            <div class="abk-label">名称</div>
+            <input type="text" id="abkKeywordName" aria-label="名称" />
+          </div>
+          <div class="abk-field">
+            <div class="abk-label">地址</div>
+            <input type="text" id="abkKeywordAddr" aria-label="地址" />
+          </div>
+          <div class="abk-field">
+            <div class="abk-label">联系人</div>
+            <input type="text" id="abkKeywordContact" aria-label="联系人" />
+          </div>
+          <button type="button" class="abk-search-btn" id="abkSearchBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 4a6 6 0 104.472 10.001l4.763 4.764 1.414-1.414-4.764-4.763A6 6 0 0010 4m0 2a4 4 0 110 8 4 4 0 010-8"/></svg>
+            查询
+          </button>
+        </div>
+
+        <div class="abk-table-wrap">
+          <table class="abk-table" aria-label="地址簿列表">
+            <thead>
+              <tr>
+                <th style="width:34px;"><input type="checkbox" class="table-checkbox" id="abkCheckAll" aria-label="全选" /></th>
+                <th style="width:60px;">序号</th>
+                <th style="width:140px;">名称</th>
+                <th style="width:90px;">联系人</th>
+                <th style="width:110px;">联系电话</th>
+                <th>地址</th>
+                <th style="width:120px;">备注信息</th>
+                <th style="width:90px;">创建人</th>
+              </tr>
+            </thead>
+            <tbody id="abkTbody">
+              <tr class="abk-row" data-name="拼多多南沙仓" data-contact="李小姐01" data-phone="19926487879" data-address="广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居" data-remark="" data-owner="张三">
+                <td style="text-align:center;"><input type="checkbox" class="table-checkbox abk-row-check" aria-label="选择" /></td>
+                <td style="text-align:center;">01</td>
+                <td class="abk-ellipsis">拼多多南沙仓</td>
+                <td style="text-align:center;">李小姐01</td>
+                <td style="text-align:center;">19926487879</td>
+                <td class="abk-ellipsis">广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居</td>
+                <td class="abk-ellipsis"></td>
+                <td style="text-align:center;">张三</td>
+              </tr>
+              <tr class="abk-row" data-name="香港集货仓01" data-contact="李小姐02" data-phone="19926487879" data-address="广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居" data-remark="" data-owner="张三">
+                <td style="text-align:center;"><input type="checkbox" class="table-checkbox abk-row-check" aria-label="选择" /></td>
+                <td style="text-align:center;">02</td>
+                <td class="abk-ellipsis">香港集货仓01</td>
+                <td style="text-align:center;">李小姐02</td>
+                <td style="text-align:center;">19926487879</td>
+                <td class="abk-ellipsis">广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居</td>
+                <td class="abk-ellipsis"></td>
+                <td style="text-align:center;">张三</td>
+              </tr>
+              <tr class="abk-row" data-name="香港打板仓01" data-contact="李小姐03" data-phone="19926487879" data-address="广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居" data-remark="" data-owner="张三">
+                <td style="text-align:center;"><input type="checkbox" class="table-checkbox abk-row-check" aria-label="选择" /></td>
+                <td style="text-align:center;">03</td>
+                <td class="abk-ellipsis">香港打板仓01</td>
+                <td style="text-align:center;">李小姐03</td>
+                <td style="text-align:center;">19926487879</td>
+                <td class="abk-ellipsis">广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居</td>
+                <td class="abk-ellipsis"></td>
+                <td style="text-align:center;">张三</td>
+              </tr>
+              <tr class="abk-row" data-name="香港打板仓02" data-contact="李小姐04" data-phone="19926487879" data-address="广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居" data-remark="" data-owner="张三">
+                <td style="text-align:center;"><input type="checkbox" class="table-checkbox abk-row-check" aria-label="选择" /></td>
+                <td style="text-align:center;">04</td>
+                <td class="abk-ellipsis">香港打板仓02</td>
+                <td style="text-align:center;">李小姐04</td>
+                <td style="text-align:center;">19926487879</td>
+                <td class="abk-ellipsis">广东省深圳市宝安区西乡街道固戍社区沙边新村东区103号豪和居</td>
+                <td class="abk-ellipsis"></td>
+                <td style="text-align:center;">张三</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="abk-foot">
+        <button type="button" class="abk-btn" id="addressBookModalCancel">取消</button>
+        <button type="button" class="abk-btn abk-btn--primary" id="addressBookModalOk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var transportInputs = document.querySelectorAll('input[name="transportType"]');
+      var carrierTypeInputs = document.querySelectorAll('input[name="carrierType"]');
+      var routeTypeInputs = document.querySelectorAll('input[name="routeType"]');
+      var vehicleTypeGroup = document.getElementById('vehicleTypeGroup');
+      var vehicleTypeField = document.getElementById('vehicleTypeField');
+      var carrierFieldLabel = document.getElementById('carrierFieldLabel');
+      var carrierFieldControl = document.getElementById('carrierFieldControl');
+      var idCardField = document.getElementById('idCardField');
+      var hkDriverField = document.getElementById('hkDriverField');
+      var hkPhoneField = document.getElementById('hkPhoneField');
+      var carRemarkField = document.getElementById('carRemarkField');
+      var cnDriverField = document.getElementById('cnDriverField');
+      var phoneField1 = document.getElementById('phoneField1');
+      var plateOrFlightField = document.getElementById('plateOrFlightField');
+      var plateOrFlightLabel = document.getElementById('plateOrFlightLabel');
+      var plateOrFlightControl = document.getElementById('plateOrFlightControl');
+      var customsYardSection = document.getElementById('customsYardSection');
+      var pickupAddressAddBtn = document.getElementById("pickupAddressAddBtn");
+      var unloadingAddressAddBtn = document.getElementById("unloadingAddressAddBtn");
+
+      if (!transportInputs.length || !vehicleTypeGroup) return;
+
+      var carrierOptions = [
+        "G01183:深圳市广宏达物流有限公司",
+        "G00968:深圳市恒峰国际货运代理有限公司",
+        "JIAHONG:深圳市嘉鸿国际货运代理有限公司",
+        "LIANYUAN:深圳市联远供应链管理有限公司",
+        "G01164:深圳市锦升物流有限公司",
+        "G01181:上海川速物流有限公司"
+      ];
+
+      var vehicleOptionsMap = {
+        "港车运输": ["中港吨车", "中港柜车"],
+        "国内专车": ["4.2米", "7.6米", "9.6米", "12.5米", "16.5米", "17.5米"],
+        "国内空运": ["早班机", "中班机"],
+        "国内拼车": []
+      };
+
+      function renderVehicleOptions(type) {
+        var list = vehicleOptionsMap[type] || [];
+        vehicleTypeGroup.innerHTML = "";
+        if (!list.length) {
+          var empty = document.createElement("span");
+          empty.className = "radio-item";
+          empty.textContent = "—";
+          vehicleTypeGroup.appendChild(empty);
+          return;
+        }
+        list.forEach(function (text, index) {
+          var label = document.createElement("label");
+          label.className = "radio-item";
+          var input = document.createElement("input");
+          input.type = "radio";
+          input.name = "vehicleType";
+          input.checked = index === 0;
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(text));
+          vehicleTypeGroup.appendChild(label);
+        });
+      }
+
+      function getSelectedCarrierType() {
+        var checked = document.querySelector('input[name="carrierType"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function renderCarrierField() {
+        if (!carrierFieldControl || !carrierFieldLabel) return;
+        var carrierType = getSelectedCarrierType();
+        var isPartnerCarrier = carrierType === "合作承运商";
+        carrierFieldLabel.classList.toggle("required", isPartnerCarrier);
+        if (isPartnerCarrier) {
+          carrierFieldControl.innerHTML = '<div class="filterable-ctl"><input type="text" class="filterable-input" id="carrierInput" aria-label="承运商" data-filterable="carrier" placeholder="请输入或选择承运商" autocomplete="off" /><div class="filterable-menu" hidden></div></div>';
+        } else {
+          carrierFieldControl.innerHTML = '<input type="text" id="carrierInput" aria-label="承运商" placeholder="请输入承运商" autocomplete="off" />';
+        }
+        bindCarrierFilterable();
+      }
+
+      function bindCarrierFilterable() {
+        var input = document.getElementById("carrierInput");
+        if (!input || input.getAttribute("data-filterable") !== "carrier") return;
+        var menu = input.parentElement.querySelector(".filterable-menu");
+        if (!menu) return;
+
+        function closeMenu() {
+          menu.classList.remove("is-open");
+          menu.hidden = true;
+          menu.innerHTML = "";
+        }
+
+        function renderMenu() {
+          var keyword = String(input.value || "").trim().toLowerCase();
+          var options = carrierOptions.filter(function (item) {
+            return !keyword || item.toLowerCase().indexOf(keyword) > -1;
+          });
+          if (!options.length) {
+            menu.innerHTML = '<div class="filterable-empty">无匹配项</div>';
+          } else {
+            menu.innerHTML = options.map(function (item) {
+              return '<div class="filterable-option" data-value="' + item + '">' + item + '</div>';
+            }).join("");
+          }
+          menu.hidden = false;
+          menu.classList.add("is-open");
+          menu.querySelectorAll(".filterable-option").forEach(function (option) {
+            option.addEventListener("mousedown", function (event) {
+              event.preventDefault();
+              input.value = option.getAttribute("data-value") || "";
+              closeMenu();
+            });
+          });
+        }
+
+        input.addEventListener("focus", renderMenu);
+        input.addEventListener("input", renderMenu);
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") closeMenu();
+        });
+        document.addEventListener("click", function (event) {
+          if (!event.target.closest(".filterable-ctl")) closeMenu();
+        });
+      }
+
+      function renderPlateOrFlight(type) {
+        if (!plateOrFlightLabel || !plateOrFlightControl) return;
+        if (type === "国内空运") {
+          plateOrFlightLabel.textContent = "航班";
+          plateOrFlightLabel.classList.add("required");
+          plateOrFlightControl.innerHTML = '<select id="plateOrFlightInput" aria-label="航班"><option>早班机</option><option>中班机</option></select>';
+          return;
+        }
+        plateOrFlightLabel.textContent = "车牌号";
+        plateOrFlightLabel.classList.remove("required");
+        plateOrFlightControl.innerHTML = '<input type="text" id="plateOrFlightInput" placeholder="" />';
+      }
+
+      function toggleDomesticSpecialFields(type) {
+        var isDomesticSpecial = type === "国内专车";
+        var isDomesticAir = type === "国内空运";
+        var isDomesticCarpool = type === "国内拼车";
+        if (vehicleTypeField) vehicleTypeField.classList.toggle("is-hidden", isDomesticAir || isDomesticCarpool);
+        if (plateOrFlightField) plateOrFlightField.classList.toggle("is-hidden", isDomesticCarpool);
+        if (cnDriverField) cnDriverField.classList.toggle("is-hidden", isDomesticAir || isDomesticCarpool);
+        if (phoneField1) phoneField1.classList.toggle("is-hidden", isDomesticAir || isDomesticCarpool);
+        if (idCardField) idCardField.classList.toggle("is-hidden", isDomesticSpecial || isDomesticAir || isDomesticCarpool);
+        if (hkDriverField) hkDriverField.classList.toggle("is-hidden", isDomesticSpecial || isDomesticAir || isDomesticCarpool);
+        if (hkPhoneField) hkPhoneField.classList.toggle("is-hidden", isDomesticSpecial || isDomesticAir || isDomesticCarpool);
+        if (carRemarkField) {
+          // 备注宽度不要超过“用车时间 + 承运商”两格的合计宽度
+          // 因此“国内空运”不再铺满整行，保持两列宽度即可
+          carRemarkField.classList.toggle("field--span-2", !isDomesticCarpool);
+          carRemarkField.classList.remove("field--span-4");
+          if (isDomesticCarpool) {
+            carRemarkField.classList.remove("field--span-2");
+          }
+        }
+      }
+
+      function getSelectedTransportType() {
+        var checked = document.querySelector('input[name="transportType"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function applyTransportType() {
+        var type = getSelectedTransportType();
+        renderVehicleOptions(type);
+        renderPlateOrFlight(type);
+        toggleDomesticSpecialFields(type);
+        if (customsYardSection) customsYardSection.classList.toggle("is-hidden", type !== "港车运输");
+      }
+
+      function getSelectedRouteType() {
+        var checked = document.querySelector('input[name="routeType"]:checked');
+        return checked ? (checked.value || "") : "";
+      }
+
+      function applyRouteType() {
+        var routeType = getSelectedRouteType();
+        var isFixed = routeType === "固定线路";
+        if (pickupAddressAddBtn) pickupAddressAddBtn.classList.toggle("is-hidden", isFixed);
+        if (unloadingAddressAddBtn) unloadingAddressAddBtn.classList.toggle("is-hidden", isFixed);
+      }
+
+      transportInputs.forEach(function (input) {
+        input.addEventListener("change", applyTransportType);
+      });
+
+      carrierTypeInputs.forEach(function (input) {
+        input.addEventListener("change", renderCarrierField);
+      });
+
+      routeTypeInputs.forEach(function (input) {
+        input.addEventListener("change", applyRouteType);
+      });
+
+      function applyCopyPayloadFromList() {
+        var KEY = "ERP_INTERCITY_CAR_REQUEST_COPY";
+        var raw;
+        try {
+          raw = sessionStorage.getItem(KEY);
+        } catch (err) {
+          return false;
+        }
+        if (!raw) return false;
+        var data;
+        try {
+          data = JSON.parse(raw);
+        } catch (err) {
+          return false;
+        }
+        try {
+          sessionStorage.removeItem(KEY);
+        } catch (err) {}
+
+        function setRadioChecked(name, value) {
+          if (!value || value === "—") return;
+          document.querySelectorAll('input[type="radio"][name="' + name + '"]').forEach(function (inp) {
+            if (inp.value === value) inp.checked = true;
+          });
+        }
+
+        function selectVehicleByText(text) {
+          if (!text || text === "—" || !vehicleTypeGroup) return;
+          var want = String(text).trim();
+          vehicleTypeGroup.querySelectorAll("label.radio-item").forEach(function (lab) {
+            if ((lab.textContent || "").trim() === want) {
+              var inp = lab.querySelector('input[type="radio"]');
+              if (inp) inp.checked = true;
+            }
+          });
+        }
+
+        if (data.transportType) setRadioChecked("transportType", data.transportType);
+        applyTransportType();
+
+        if (data.carrierType) setRadioChecked("carrierType", data.carrierType);
+        renderCarrierField();
+
+        if (data.lineType) setRadioChecked("routeType", data.lineType);
+        applyRouteType();
+
+        if (data.vehicleType) selectVehicleByText(data.vehicleType);
+
+        var carrierEl = document.getElementById("carrierInput");
+        if (carrierEl && data.carrierName && data.carrierName !== "—") {
+          carrierEl.value = data.carrierName;
+        }
+
+        var useCarEl = document.getElementById("useCarTime");
+        if (useCarEl && data.useCarTime && String(data.useCarTime).trim() && data.useCarTime !== "—") {
+          var um = String(data.useCarTime).trim().match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}):(\d{2})/);
+          if (um) useCarEl.value = um[1] + "T" + um[2] + ":" + um[3];
+        }
+        var plateEl = document.getElementById("plateOrFlightInput");
+        if (plateEl && data.plateNo && String(data.plateNo).trim() && data.plateNo !== "—") {
+          plateEl.value = data.plateNo;
+        }
+        function setInputBySelector(sel, val) {
+          if (val == null || val === "" || val === "—") return;
+          var el = document.querySelector(sel);
+          if (el) el.value = String(val);
+        }
+        setInputBySelector("#cnDriverField .field-control input", data.cnDriver);
+        setInputBySelector("#phoneField1 .field-control input", data.cnDriverPhone);
+        setInputBySelector("#idCardField .field-control input", data.idCard);
+        setInputBySelector("#hkDriverField .field-control input", data.hkDriver);
+        setInputBySelector("#hkPhoneField .field-control input", data.hkDriverPhone);
+        setInputBySelector("#carRemarkField .field-control input", data.remark);
+        var customerInp = document.querySelector(".car-info-grid > .field:nth-child(7) .field-control input");
+        if (customerInp && data.customer && String(data.customer).trim() && data.customer !== "—") {
+          customerInp.value = data.customer;
+        }
+        return true;
+      }
+
+      if (!applyCopyPayloadFromList()) {
+        renderCarrierField();
+        applyTransportType();
+        applyRouteType();
+      }
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var openBtn = Array.prototype.slice.call(document.querySelectorAll(".toolbar-inline .ops-action")).find(function (b) {
+        return (b.textContent || "").replace(/\s+/g, "").indexOf("导入箱号") > -1;
+      });
+      var modal = document.getElementById("boxImportModal");
+      if (!openBtn || !modal) return;
+
+      var closeBtns = modal.querySelectorAll("[data-close-box-import-modal]");
+
+      function setModalOpen(open) {
+        modal.classList.toggle("is-open", open);
+        modal.setAttribute("aria-hidden", open ? "false" : "true");
+      }
+
+      openBtn.addEventListener("click", function () {
+        setModalOpen(true);
+      });
+
+      closeBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setModalOpen(false);
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          setModalOpen(false);
+        }
+      });
+
+      var dropZone = modal.querySelector("#boxImportDropZone");
+      if (dropZone) {
+        dropZone.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dropZone.classList.add("is-dragover");
+        });
+        dropZone.addEventListener("dragleave", function (e) {
+          if (!dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove("is-dragover");
+          }
+        });
+        dropZone.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dropZone.classList.remove("is-dragover");
+        });
+      }
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var addBtn = Array.prototype.slice.call(document.querySelectorAll(".toolbar-inline .ops-action")).find(function (btn) {
+        return (btn.textContent || "").replace(/\s+/g, "").indexOf("新增装货数据") > -1;
+      });
+      var mask = document.getElementById("loadingDataModal");
+      var closeBtn = document.getElementById("loadingDataModalClose");
+      var cancelBtn = document.getElementById("loadingDataModalCancel");
+      var okBtn = document.getElementById("loadingDataModalOk");
+      var addRowBtn = document.getElementById("loadingDataRowAdd");
+      var tbody = document.getElementById("loadingDataTbody");
+
+      if (!addBtn || !mask || !tbody) return;
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+      }
+
+      function buildRow() {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td><input type="text" placeholder="" aria-label="提单号" /></td>' +
+          '<td><input type="text" placeholder="" aria-label="计划方数" /></td>' +
+          '<td><input type="text" placeholder="" aria-label="航班日期" /></td>' +
+          '<td>' +
+          '  <select aria-label="装货点">' +
+          '    <option value="" selected>请选择装货点</option>' +
+          '    <option>常平台</option>' +
+          '    <option>南沙仓</option>' +
+          '    <option>拼多多闸口港混仓</option>' +
+          '  </select>' +
+          '</td>' +
+          '<td class="modal-opcell">' +
+          '  <button type="button" class="icon-btn icon-danger js-row-del" aria-label="删除此行">' +
+          '    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">' +
+          '      <path d="M7 4h10l1 2h4v2H2V6h4zm1 5h2v8H8zm6 0h2v8h-2z"/>' +
+          '    </svg>' +
+          '  </button>' +
+          '</td>';
+        return tr;
+      }
+
+      addBtn.addEventListener("click", openModal);
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) okBtn.addEventListener("click", closeModal);
+
+      if (addRowBtn) {
+        addRowBtn.addEventListener("click", function () {
+          tbody.appendChild(buildRow());
+        });
+      }
+
+      tbody.addEventListener("click", function (event) {
+        var del = event.target.closest && event.target.closest(".js-row-del");
+        if (!del) return;
+        var row = del.closest("tr");
+        if (!row) return;
+        if (tbody.querySelectorAll("tr").length <= 1) return;
+        row.remove();
+      });
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var btn = Array.prototype.slice.call(document.querySelectorAll(".toolbar-inline .ops-action")).find(function (b) {
+        return (b.textContent || "").replace(/\s+/g, "").indexOf("关联卸货点") > -1;
+      });
+      var mask = document.getElementById("linkUnloadingPointModal");
+      var closeBtn = document.getElementById("linkUnloadingPointModalClose");
+      var cancelBtn = document.getElementById("linkUnloadingPointModalCancel");
+      var okBtn = document.getElementById("linkUnloadingPointModalOk");
+      var tbody = document.getElementById("linkUnloadingPointTbody");
+
+      if (!btn || !mask || !tbody) return;
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+      }
+
+      function getRowInput(row) {
+        return row ? row.querySelector('input[aria-label="入仓号"]') : null;
+      }
+
+      function getRowSelect(row) {
+        return row ? row.querySelector('select[aria-label="卸货点"]') : null;
+      }
+
+      btn.addEventListener("click", openModal);
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) okBtn.addEventListener("click", closeModal);
+
+      tbody.addEventListener("click", function (event) {
+        var same = event.target.closest && event.target.closest(".js-same-above");
+        if (!same) return;
+        event.preventDefault();
+        var row = same.closest("tr");
+        if (!row) return;
+        var prev = row.previousElementSibling;
+        if (!prev) return;
+
+        var prevInput = getRowInput(prev);
+        var prevSelect = getRowSelect(prev);
+        var curInput = getRowInput(row);
+        var curSelect = getRowSelect(row);
+        if (curInput && prevInput) curInput.value = prevInput.value || "";
+        if (curSelect && prevSelect) curSelect.value = prevSelect.value || "";
+      });
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var billSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("装卸单号") > -1;
+      });
+      var billTable = billSection ? billSection.parentElement.querySelector(".table-wrap--bill table.data-table") : null;
+      var voidBtn = billSection
+        ? Array.prototype.slice.call(billSection.parentElement.querySelectorAll(".toolbar-inline .ops-action")).find(function (b) {
+            return (b.textContent || "").replace(/\s+/g, "") === "作废";
+          })
+        : null;
+
+      var delMask = document.getElementById("confirmBillDelModal");
+      var delCloseBtn = document.getElementById("confirmBillDelModalClose");
+      var delCancelBtn = document.getElementById("confirmBillDelModalCancel");
+      var delOkBtn = document.getElementById("confirmBillDelModalOk");
+      var delMsg = document.getElementById("confirmBillDelModalMsg");
+
+      var voidMask = document.getElementById("confirmBillVoidModal");
+      var voidCloseBtn = document.getElementById("confirmBillVoidModalClose");
+      var voidCancelBtn = document.getElementById("confirmBillVoidModalCancel");
+      var voidOkBtn = document.getElementById("confirmBillVoidModalOk");
+
+      var mask = document.getElementById("editBillModal");
+      var closeBtn = document.getElementById("editBillModalClose");
+      var cancelBtn = document.getElementById("editBillModalCancel");
+      var okBtn = document.getElementById("editBillModalOk");
+
+      var ctl = {
+        billNo: document.getElementById("editBillNo"),
+        loadingPoint: document.getElementById("editLoadingPoint"),
+        planCbm: document.getElementById("editPlanCbm"),
+        actualCbm: document.getElementById("editActualCbm"),
+        weight: document.getElementById("editWeight"),
+        boxes: document.getElementById("editBoxes"),
+        flightDate: document.getElementById("editFlightDate"),
+        isVoid: document.getElementById("editVoid"),
+      };
+
+      if (!billTable || !mask || !ctl.billNo) return;
+
+      var currentRow = null;
+      var delRow = null;
+      var voidRows = [];
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+        currentRow = null;
+      }
+
+      function openDelModal(row) {
+        if (!delMask) return;
+        delRow = row || null;
+        var billNo = row ? getCellText(row, 2) : "";
+        if (delMsg) {
+          delMsg.textContent = "你确认要删除当前提单号" + (billNo ? ("（" + billNo + "）") : "") + "吗？";
+        }
+        delMask.classList.add("is-open");
+        delMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeDelModal() {
+        if (!delMask) return;
+        delMask.classList.remove("is-open");
+        delMask.setAttribute("aria-hidden", "true");
+        delRow = null;
+      }
+
+      function openVoidModal(rows) {
+        if (!voidMask) return;
+        voidRows = Array.isArray(rows) ? rows : [];
+        voidMask.classList.add("is-open");
+        voidMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeVoidModal() {
+        if (!voidMask) return;
+        voidMask.classList.remove("is-open");
+        voidMask.setAttribute("aria-hidden", "true");
+        voidRows = [];
+      }
+
+      function getCellText(row, idx) {
+        var td = row && row.children ? row.children[idx] : null;
+        return td ? (td.textContent || "").trim() : "";
+      }
+
+      function getCheckedBillRows() {
+        var tbody = billTable.tBodies && billTable.tBodies[0] ? billTable.tBodies[0] : null;
+        if (!tbody) return [];
+        var checks = Array.prototype.slice.call(tbody.querySelectorAll('input.table-checkbox[type="checkbox"]'));
+        return checks
+          .filter(function (ck) {
+            return ck && ck.checked;
+          })
+          .map(function (ck) {
+            return ck.closest("tr");
+          })
+          .filter(Boolean);
+      }
+
+      function markRowVoided(row) {
+        // 列序：0选框 1操作 2提单号 ... 12是否作废
+        if (!row || !row.children || row.children.length < 13) return;
+        row.children[12].textContent = "是";
+        var ck = row.querySelector('input.table-checkbox[type="checkbox"]');
+        if (ck) ck.checked = false;
+      }
+
+      function setSelectValue(selectEl, value) {
+        if (!selectEl) return;
+        var v = (value || "").trim();
+        var options = Array.prototype.slice.call(selectEl.options || []);
+        var matched = options.find(function (opt) {
+          return (opt.textContent || "").trim() === v || String(opt.value || "").trim() === v;
+        });
+        if (matched) {
+          selectEl.value = matched.value;
+        } else {
+          selectEl.value = options[0] ? options[0].value : "";
+        }
+      }
+
+      function fillFromRow(row) {
+        // 列序：0选框 1操作 2提单号 3入仓号 4出库单号 5出库计划号 6航班日期 7实配单号 8计费方数 9实际方数 10重量 11箱数 12是否作废 13装货点 14卸货点
+        ctl.billNo.value = getCellText(row, 2);
+        ctl.flightDate.value = getCellText(row, 6);
+        ctl.planCbm.value = getCellText(row, 8);
+        ctl.actualCbm.value = getCellText(row, 9);
+        ctl.weight.value = getCellText(row, 10);
+        ctl.boxes.value = getCellText(row, 11);
+        setSelectValue(ctl.isVoid, getCellText(row, 12) || "否");
+        setSelectValue(ctl.loadingPoint, getCellText(row, 13));
+      }
+
+      function setBoxCellText(row, text) {
+        var td = row && row.children ? row.children[11] : null;
+        if (!td) return;
+        var v = (text || "").trim();
+        var a = td.querySelector("a.js-open-box-modal");
+        if (a) {
+          a.textContent = v;
+          if (ctl.billNo && ctl.billNo.value) a.setAttribute("data-bill-no", ctl.billNo.value.trim());
+          var lp = row.children[13] ? (row.children[13].textContent || "").trim() : "";
+          var dp = row.children[14] ? (row.children[14].textContent || "").trim() : "";
+          if (lp) a.setAttribute("data-pickup", lp);
+          if (dp) a.setAttribute("data-delivery", dp);
+        } else {
+          td.textContent = v;
+        }
+      }
+
+      function applyToRow(row) {
+        if (!row || !row.children) return;
+        row.children[2].textContent = (ctl.billNo.value || "").trim();
+        row.children[6].textContent = (ctl.flightDate.value || "").trim();
+        row.children[8].textContent = (ctl.planCbm.value || "").trim();
+        row.children[9].textContent = (ctl.actualCbm.value || "").trim();
+        row.children[10].textContent = (ctl.weight.value || "").trim();
+        setBoxCellText(row, ctl.boxes.value || "");
+        row.children[12].textContent = (ctl.isVoid.value || "").trim();
+        row.children[13].textContent = (ctl.loadingPoint.value || "").trim();
+      }
+
+      billTable.addEventListener("click", function (event) {
+        var editLink = event.target.closest && event.target.closest("a.js-bill-edit");
+        var delLink = event.target.closest && event.target.closest("a.js-bill-del");
+        if (!editLink && !delLink) return;
+        event.preventDefault();
+        var row = (editLink || delLink).closest("tr");
+        if (!row) return;
+        if (delLink) {
+          openDelModal(row);
+          return;
+        }
+        currentRow = row;
+        fillFromRow(row);
+        openModal();
+      });
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          if (currentRow) applyToRow(currentRow);
+          closeModal();
+        });
+      }
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      if (delCloseBtn) delCloseBtn.addEventListener("click", closeDelModal);
+      if (delCancelBtn) delCancelBtn.addEventListener("click", closeDelModal);
+      if (delOkBtn) {
+        delOkBtn.addEventListener("click", function () {
+          if (delRow) delRow.remove();
+          closeDelModal();
+        });
+      }
+
+      if (delMask) {
+        delMask.addEventListener("click", function (event) {
+          if (event.target === delMask) closeDelModal();
+        });
+      }
+
+      if (voidBtn) {
+        voidBtn.addEventListener("click", function () {
+          var rows = getCheckedBillRows();
+          if (!rows.length) {
+            window.alert("请勾选需要作废的数据");
+            return;
+          }
+          openVoidModal(rows);
+        });
+      }
+
+      if (voidCloseBtn) voidCloseBtn.addEventListener("click", closeVoidModal);
+      if (voidCancelBtn) voidCancelBtn.addEventListener("click", closeVoidModal);
+      if (voidOkBtn) {
+        voidOkBtn.addEventListener("click", function () {
+          (voidRows || []).forEach(markRowVoided);
+          closeVoidModal();
+        });
+      }
+
+      if (voidMask) {
+        voidMask.addEventListener("click", function (event) {
+          if (event.target === voidMask) closeVoidModal();
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (voidMask && voidMask.classList.contains("is-open")) {
+          closeVoidModal();
+          return;
+        }
+        if (delMask && delMask.classList.contains("is-open")) {
+          closeDelModal();
+          return;
+        }
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      function normalizeText(s) {
+        return String(s == null ? "" : s).trim();
+      }
+
+      function mountUnloadBoxNoModal() {
+        var mask = document.getElementById("unloadBoxNoModal");
+        var tbody = document.getElementById("unloadBoxNoModalTbody");
+        var searchInput = document.getElementById("unloadBoxNoModalSearch");
+        var selAll = document.getElementById("unloadBoxNoModalSelectAll");
+        if (!mask || !tbody) return;
+
+        var currentBillNo = "";
+        var currentPickup = "";
+        var currentDelivery = "";
+        var addMask = document.getElementById("addUnloadBoxNoModal");
+        var addTextarea = document.getElementById("addUnloadBoxNoTextarea");
+        var addCloseX = document.getElementById("addUnloadBoxNoModalCloseX");
+        var addCancel = document.getElementById("addUnloadBoxNoModalCancel");
+        var addOk = document.getElementById("addUnloadBoxNoModalOk");
+        var btnAddBox = document.getElementById("unloadBoxNoModalBtnAddBox");
+
+        function padNum(num, len) {
+          var s = String(num);
+          while (s.length < len) s = "0" + s;
+          return s;
+        }
+
+        function blForBill(billNo) {
+          if (billNo === "065-49572305") return "065-00408715";
+          if (billNo === "160-98834190") return "160-00408715";
+          return "000-00408715";
+        }
+
+        function escHtml(s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function mockRows(billNo, pickup, delivery) {
+          var bl = blForBill(billNo);
+          var pu = pickup || "";
+          var del = delivery || "";
+          var weights = ["19.62", "24.67", "23.34", "21.10", "22.88", "20.01", "25.40", "18.90"];
+          var boxes = ["00063", "00203", "00311", "00455", "00512", "00620", "00733", "00888", "00912", "01024", "01130", "01244", "01355", "01466", "01577", "01688", "01799", "01810"];
+          return boxes.map(function (suf, i) {
+            return {
+              box: "SZCW260401" + suf,
+              cbm: "0.12",
+              kg: weights[i % weights.length],
+              bl: bl,
+              pickup: pu,
+              delivery: del
+            };
+          });
+        }
+
+        function renumberRows() {
+          var n = 1;
+          tbody.querySelectorAll("tr").forEach(function (tr) {
+            if (tr.getAttribute("data-filtered") === "0") return;
+            var seq = tr.querySelector(".js-box-seq");
+            if (seq) seq.textContent = padNum(n, 2);
+            n++;
+          });
+        }
+
+        function applyFilter() {
+          var q = normalizeText(searchInput ? searchInput.value : "").toLowerCase();
+          tbody.querySelectorAll("tr").forEach(function (tr) {
+            var box = (tr.getAttribute("data-box") || "").toLowerCase();
+            var show = !q || box.indexOf(q) !== -1;
+            tr.setAttribute("data-filtered", show ? "1" : "0");
+          });
+          if (selAll) selAll.checked = false;
+          renumberRows();
+        }
+
+        function renderForBill(billNo, pickup, delivery) {
+          currentBillNo = billNo || "";
+          currentPickup = pickup || "";
+          currentDelivery = delivery || "";
+          tbody.innerHTML = "";
+          mockRows(billNo, pickup, delivery).forEach(function (row, idx) {
+            var tr = document.createElement("tr");
+            tr.setAttribute("data-box", row.box);
+            tr.setAttribute("data-filtered", "1");
+            tr.innerHTML =
+              '<td><input type="checkbox" class="table-checkbox js-box-row-cb" aria-label="选择" /></td>' +
+              '<td class="js-box-seq">' + padNum(idx + 1, 2) + "</td>" +
+              "<td>" + escHtml(row.box) + "</td>" +
+              "<td>" + escHtml(row.cbm) + "</td>" +
+              "<td>" + escHtml(row.kg) + "</td>" +
+              "<td>" + escHtml(row.bl) + "</td>" +
+              '<td class="col-wrap">' + escHtml(row.pickup) + "</td>" +
+              '<td class="col-wrap">' + escHtml(row.delivery) + "</td>";
+            tbody.appendChild(tr);
+          });
+          if (searchInput) searchInput.value = "";
+          if (selAll) selAll.checked = false;
+          applyFilter();
+        }
+
+        function setOpen(open) {
+          mask.classList.toggle("is-open", !!open);
+          mask.setAttribute("aria-hidden", open ? "false" : "true");
+        }
+
+        function closeModal() {
+          setOpen(false);
+          if (addMask) {
+            addMask.classList.remove("is-open");
+            addMask.setAttribute("aria-hidden", "true");
+          }
+        }
+
+        document.addEventListener("click", function (e) {
+          var opener = e.target && e.target.closest ? e.target.closest(".js-open-box-modal") : null;
+          if (!opener) return;
+          e.preventDefault();
+          var billNo = opener.getAttribute("data-bill-no") || "";
+          var pickup = opener.getAttribute("data-pickup") || "";
+          var delivery = opener.getAttribute("data-delivery") || "";
+          renderForBill(billNo, pickup, delivery);
+          setOpen(true);
+        });
+
+        var unloadBoxCloseX = document.getElementById("unloadBoxNoModalCloseX");
+        if (unloadBoxCloseX) unloadBoxCloseX.addEventListener("click", closeModal);
+
+        mask.addEventListener("click", function (e) {
+          if (e.target === mask) closeModal();
+        });
+
+        var btnQ = document.getElementById("unloadBoxNoModalBtnQuery");
+        if (btnQ) btnQ.addEventListener("click", applyFilter);
+        if (searchInput) {
+          searchInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              applyFilter();
+            }
+          });
+        }
+
+        function parseBoxLines(text) {
+          var lines = String(text || "").split(/\r?\n/);
+          var out = [];
+          var seen = {};
+          lines.forEach(function (line) {
+            var t = normalizeText(line);
+            if (!t) return;
+            var key = t.toLowerCase();
+            if (seen[key]) return;
+            seen[key] = true;
+            out.push(t);
+          });
+          return out;
+        }
+
+        function appendBoxesFromInput(boxList) {
+          var bl = blForBill(currentBillNo);
+          var pu = currentPickup || "";
+          var del = currentDelivery || "";
+          var existing = {};
+          tbody.querySelectorAll("tr").forEach(function (tr) {
+            var b = tr.getAttribute("data-box");
+            if (b) existing[b.toLowerCase()] = true;
+          });
+          boxList.forEach(function (box) {
+            if (existing[box.toLowerCase()]) return;
+            existing[box.toLowerCase()] = true;
+            var tr = document.createElement("tr");
+            tr.setAttribute("data-box", box);
+            tr.setAttribute("data-filtered", "1");
+            tr.innerHTML =
+              '<td><input type="checkbox" class="table-checkbox js-box-row-cb" aria-label="选择" /></td>' +
+              '<td class="js-box-seq"></td>' +
+              "<td>" + escHtml(box) + "</td>" +
+              "<td>—</td>" +
+              "<td>—</td>" +
+              "<td>" + escHtml(bl) + "</td>" +
+              '<td class="col-wrap">' + escHtml(pu) + "</td>" +
+              '<td class="col-wrap">' + escHtml(del) + "</td>";
+            tbody.appendChild(tr);
+          });
+          if (selAll) selAll.checked = false;
+          renumberRows();
+          applyFilter();
+        }
+
+        function setAddOpen(open) {
+          if (!addMask) return;
+          addMask.classList.toggle("is-open", !!open);
+          addMask.setAttribute("aria-hidden", open ? "false" : "true");
+        }
+
+        function closeAddModal() {
+          setAddOpen(false);
+        }
+
+        function openAddModal() {
+          if (addTextarea) addTextarea.value = "";
+          setAddOpen(true);
+          if (addTextarea) {
+            window.setTimeout(function () {
+              addTextarea.focus();
+            }, 0);
+          }
+        }
+
+        if (btnAddBox) {
+          btnAddBox.addEventListener("click", function () {
+            openAddModal();
+          });
+        }
+        if (addCloseX) addCloseX.addEventListener("click", closeAddModal);
+        if (addCancel) addCancel.addEventListener("click", closeAddModal);
+        if (addOk) {
+          addOk.addEventListener("click", function () {
+            var list = parseBoxLines(addTextarea ? addTextarea.value : "");
+            if (list.length === 0) {
+              window.alert("请填写箱号！");
+              return;
+            }
+            appendBoxesFromInput(list);
+            closeAddModal();
+          });
+        }
+        if (addMask) {
+          addMask.addEventListener("click", function (e) {
+            if (e.target === addMask) closeAddModal();
+          });
+        }
+
+        var confirmMask = document.getElementById("confirmUnloadBoxDelModal");
+        var confirmCloseX = document.getElementById("confirmUnloadBoxDelModalCloseX");
+        var confirmCancel = document.getElementById("confirmUnloadBoxDelModalCancel");
+        var confirmOk = document.getElementById("confirmUnloadBoxDelModalOk");
+
+        function countVisibleCheckedRows() {
+          var n = 0;
+          tbody.querySelectorAll("tr").forEach(function (tr) {
+            if (tr.getAttribute("data-filtered") === "0") return;
+            var cb = tr.querySelector(".js-box-row-cb");
+            if (cb && cb.checked) n++;
+          });
+          return n;
+        }
+
+        function removeVisibleCheckedRows() {
+          tbody.querySelectorAll("tr").forEach(function (tr) {
+            if (tr.getAttribute("data-filtered") === "0") return;
+            var cb = tr.querySelector(".js-box-row-cb");
+            if (cb && cb.checked) tr.remove();
+          });
+          if (selAll) selAll.checked = false;
+          renumberRows();
+        }
+
+        function setConfirmOpen(open) {
+          if (!confirmMask) return;
+          confirmMask.classList.toggle("is-open", !!open);
+          confirmMask.setAttribute("aria-hidden", open ? "false" : "true");
+        }
+
+        function closeConfirmDel() {
+          setConfirmOpen(false);
+        }
+
+        var btnDel = document.getElementById("unloadBoxNoModalBtnDel");
+        if (btnDel) {
+          btnDel.addEventListener("click", function () {
+            if (countVisibleCheckedRows() === 0) {
+              window.alert("请勾选需要删除的箱号！");
+              return;
+            }
+            setConfirmOpen(true);
+          });
+        }
+
+        if (confirmCloseX) confirmCloseX.addEventListener("click", closeConfirmDel);
+        if (confirmCancel) confirmCancel.addEventListener("click", closeConfirmDel);
+        if (confirmOk) {
+          confirmOk.addEventListener("click", function () {
+            removeVisibleCheckedRows();
+            closeConfirmDel();
+          });
+        }
+        if (confirmMask) {
+          confirmMask.addEventListener("click", function (e) {
+            if (e.target === confirmMask) closeConfirmDel();
+          });
+        }
+
+        if (selAll) {
+          selAll.addEventListener("change", function () {
+            var checked = selAll.checked;
+            tbody.querySelectorAll("tr").forEach(function (tr) {
+              if (tr.getAttribute("data-filtered") === "0") return;
+              var cb = tr.querySelector(".js-box-row-cb");
+              if (cb) cb.checked = checked;
+            });
+          });
+        }
+      }
+
+      mountUnloadBoxNoModal();
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var pickupSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("装货地址") > -1;
+      });
+      var pickupTable = pickupSection ? pickupSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+      var voidBtn = pickupSection
+        ? Array.prototype.slice.call(pickupSection.parentElement.querySelectorAll(".ops-section .ops-action")).find(function (b) {
+            return (b.textContent || "").replace(/\s+/g, "") === "作废";
+          })
+        : null;
+
+      var delMask = document.getElementById("confirmPickupDelModal");
+      var delCloseBtn = document.getElementById("confirmPickupDelModalClose");
+      var delCancelBtn = document.getElementById("confirmPickupDelModalCancel");
+      var delOkBtn = document.getElementById("confirmPickupDelModalOk");
+      var delMsg = document.getElementById("confirmPickupDelModalMsg");
+
+      var voidMask = document.getElementById("confirmPickupVoidModal");
+      var voidCloseBtn = document.getElementById("confirmPickupVoidModalClose");
+      var voidCancelBtn = document.getElementById("confirmPickupVoidModalCancel");
+      var voidOkBtn = document.getElementById("confirmPickupVoidModalOk");
+      var voidMsg = document.getElementById("confirmPickupVoidModalMsg");
+
+      if (!pickupTable || !delMask) return;
+
+      var delRow = null;
+      var voidRows = [];
+
+      function getCellText(row, idx) {
+        var td = row && row.children ? row.children[idx] : null;
+        return td ? (td.textContent || "").trim() : "";
+      }
+
+      function openDelModal(row) {
+        delRow = row || null;
+        var pointName = row ? getCellText(row, 3) : "";
+        if (delMsg) {
+          delMsg.textContent = "你确认要删除当前装货地址" + (pointName ? ("（" + pointName + "）") : "") + "吗？";
+        }
+        delMask.classList.add("is-open");
+        delMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeDelModal() {
+        delMask.classList.remove("is-open");
+        delMask.setAttribute("aria-hidden", "true");
+        delRow = null;
+      }
+
+      function getCheckedPickupRows() {
+        var tbody = pickupTable.tBodies && pickupTable.tBodies[0] ? pickupTable.tBodies[0] : null;
+        if (!tbody) return [];
+        var checks = Array.prototype.slice.call(tbody.querySelectorAll('input.table-checkbox[type="checkbox"]'));
+        return checks
+          .filter(function (ck) {
+            return ck && ck.checked;
+          })
+          .map(function (ck) {
+            return ck.closest("tr");
+          })
+          .filter(Boolean);
+      }
+
+      function openVoidModal(rows) {
+        if (!voidMask) return;
+        voidRows = Array.isArray(rows) ? rows : [];
+        var pointName = voidRows.length === 1 ? getCellText(voidRows[0], 3) : "";
+        if (voidMsg) {
+          voidMsg.textContent = "你确认要作废当前装货地址" + (pointName ? ("（" + pointName + "）") : "") + "吗？";
+        }
+        voidMask.classList.add("is-open");
+        voidMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeVoidModal() {
+        if (!voidMask) return;
+        voidMask.classList.remove("is-open");
+        voidMask.setAttribute("aria-hidden", "true");
+        voidRows = [];
+      }
+
+      function markRowVoided(row) {
+        // 列序末两列：12打卡照片、13是否作废（与城际要车详情装货表一致）
+        if (!row || !row.children || row.children.length < 14) return;
+        row.children[13].textContent = "是";
+        var ck = row.querySelector('input.table-checkbox[type="checkbox"]');
+        if (ck) ck.checked = false;
+      }
+
+      pickupTable.addEventListener("click", function (event) {
+        var delLink = event.target.closest && event.target.closest("a.js-pickup-del");
+        if (!delLink) return;
+        event.preventDefault();
+        var row = delLink.closest("tr");
+        if (!row) return;
+        openDelModal(row);
+      });
+
+      if (delCloseBtn) delCloseBtn.addEventListener("click", closeDelModal);
+      if (delCancelBtn) delCancelBtn.addEventListener("click", closeDelModal);
+      if (delOkBtn) {
+        delOkBtn.addEventListener("click", function () {
+          if (delRow) delRow.remove();
+          closeDelModal();
+        });
+      }
+
+      delMask.addEventListener("click", function (event) {
+        if (event.target === delMask) closeDelModal();
+      });
+
+      if (voidBtn) {
+        voidBtn.addEventListener("click", function () {
+          var rows = getCheckedPickupRows();
+          if (!rows.length) {
+            window.alert("请勾选需要作废的数据！");
+            return;
+          }
+          openVoidModal(rows);
+        });
+      }
+
+      if (voidCloseBtn) voidCloseBtn.addEventListener("click", closeVoidModal);
+      if (voidCancelBtn) voidCancelBtn.addEventListener("click", closeVoidModal);
+      if (voidOkBtn) {
+        voidOkBtn.addEventListener("click", function () {
+          (voidRows || []).forEach(markRowVoided);
+          closeVoidModal();
+        });
+      }
+
+      if (voidMask) {
+        voidMask.addEventListener("click", function (event) {
+          if (event.target === voidMask) closeVoidModal();
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (voidMask && voidMask.classList.contains("is-open")) {
+          closeVoidModal();
+          return;
+        }
+        if (delMask.classList.contains("is-open")) closeDelModal();
+      });
+    })();
+  </script>
+
+  <!-- 装货地址：点击「修改」打开 editPickupAddressModal，datetime-local 与表格互转（与城际要车详情一致） -->
+  <script>
+    (function () {
+      var pickupSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("装货地址") > -1;
+      });
+      var pickupTable = pickupSection ? pickupSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+
+      var mask = document.getElementById("editPickupAddressModal");
+      var closeBtn = document.getElementById("editPickupAddressModalClose");
+      var cancelBtn = document.getElementById("editPickupAddressModalCancel");
+      var okBtn = document.getElementById("editPickupAddressModalOk");
+
+      var ctl = {
+        pointName: document.getElementById("editPickupPointName"),
+        zone: document.getElementById("editPickupZone"),
+        place: document.getElementById("editPickupPlace"),
+        address: document.getElementById("editPickupAddress"),
+        remark: document.getElementById("editPickupRemark"),
+        contact: document.getElementById("editPickupContact"),
+        phone: document.getElementById("editPickupPhone"),
+        arriveTime: document.getElementById("editPickupArriveTime"),
+        departTime: document.getElementById("editPickupDepartTime"),
+      };
+
+      if (!pickupTable || !mask || !ctl.pointName) return;
+
+      var currentRow = null;
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+        currentRow = null;
+      }
+
+      function getCellText(row, idx) {
+        var td = row && row.children ? row.children[idx] : null;
+        return td ? (td.textContent || "").trim() : "";
+      }
+
+      function toDatetimeLocalValue(text) {
+        var v = (text || "").trim();
+        if (!v) return "";
+        if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(v)) return v.replace(/\s+/, "T");
+        return v;
+      }
+
+      function toTableDatetimeText(value) {
+        var v = (value || "").trim();
+        if (!v) return "";
+        return v.replace("T", " ");
+      }
+
+      function ensureSelectOption(selectEl, text) {
+        if (!selectEl || !selectEl.options) return;
+        var v = (text || "").trim();
+        if (!v) return;
+        var exists = Array.prototype.slice.call(selectEl.options).some(function (opt) {
+          return (opt && String(opt.value || "").trim()) === v;
+        });
+        if (exists) return;
+        var opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      }
+
+      function fillFromRow(row) {
+        ctl.pointName.value = getCellText(row, 3);
+        ctl.address.value = getCellText(row, 4);
+        var zoneText = getCellText(row, 5);
+        ensureSelectOption(ctl.zone, zoneText);
+        ctl.zone.value = zoneText;
+        var placeText = getCellText(row, 6);
+        ensureSelectOption(ctl.place, placeText);
+        ctl.place.value = placeText;
+        ctl.remark.value = getCellText(row, 7);
+        ctl.contact.value = getCellText(row, 8);
+        ctl.phone.value = getCellText(row, 9);
+        ctl.arriveTime.value = toDatetimeLocalValue(getCellText(row, 10));
+        ctl.departTime.value = toDatetimeLocalValue(getCellText(row, 11));
+      }
+
+      function applyToRow(row) {
+        if (!row || !row.children || row.children.length < 14) return;
+        row.children[3].textContent = (ctl.pointName.value || "").trim();
+        row.children[4].textContent = (ctl.address.value || "").trim();
+        row.children[5].textContent = (ctl.zone.value || "").trim();
+        row.children[6].textContent = (ctl.place.value || "").trim();
+        row.children[7].textContent = (ctl.remark.value || "").trim();
+        row.children[8].textContent = (ctl.contact.value || "").trim();
+        row.children[9].textContent = (ctl.phone.value || "").trim();
+        row.children[10].textContent = toTableDatetimeText(ctl.arriveTime.value);
+        row.children[11].textContent = toTableDatetimeText(ctl.departTime.value);
+      }
+
+      pickupTable.addEventListener("click", function (event) {
+        var editLink = event.target.closest && event.target.closest("a.js-pickup-edit");
+        if (!editLink) return;
+        event.preventDefault();
+        var row = editLink.closest("tr");
+        if (!row) return;
+        currentRow = row;
+        fillFromRow(row);
+        openModal();
+      });
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          if (currentRow) applyToRow(currentRow);
+          closeModal();
+        });
+      }
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <!-- 装货地址：「添加」打开新增弹窗（与城际要车详情一致） -->
+  <script>
+    (function () {
+      var pickupSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("装货地址") > -1;
+      });
+      var pickupTable = pickupSection ? pickupSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+
+      var mask = document.getElementById("editPickupAddressAddModal");
+      var pickupAddressAddBtn = document.getElementById("pickupAddressAddBtn");
+      var closeBtn = document.getElementById("editPickupAddressAddModalClose");
+      var cancelBtn = document.getElementById("editPickupAddressAddModalCancel");
+      var okBtn = document.getElementById("editPickupAddressAddModalOk");
+
+      var ctl = {
+        pointName: document.getElementById("editPickupAddPointName"),
+        address: document.getElementById("editPickupAddAddress"),
+        remark: document.getElementById("editPickupAddRemark"),
+        contact: document.getElementById("editPickupAddContact"),
+        phone: document.getElementById("editPickupAddPhone"),
+      };
+
+      if (!pickupTable || !mask || !ctl.pointName) return;
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+      }
+
+      function clearForm() {
+        ctl.pointName.value = "";
+        ctl.address.value = "";
+        ctl.remark.value = "";
+        ctl.contact.value = "";
+        ctl.phone.value = "";
+      }
+
+      function createBlankPickupRow() {
+        var tbody = pickupTable.tBodies && pickupTable.tBodies[0];
+        if (!tbody || !tbody.rows.length) return null;
+        var row = tbody.rows[0].cloneNode(true);
+        var cb = row.querySelector('input.table-checkbox[type="checkbox"]');
+        if (cb) cb.checked = false;
+        var c;
+        for (c = 3; c < row.children.length && c <= 11; c++) {
+          row.children[c].textContent = "";
+        }
+        if (row.children[12]) {
+          row.children[12].innerHTML = '<a href="#" class="op-link js-view-photo">查看</a>';
+        }
+        if (row.children[13]) {
+          row.children[13].textContent = "否";
+        }
+        return row;
+      }
+
+      function applyToRow(row) {
+        if (!row || !row.children || row.children.length < 14) return;
+        row.children[3].textContent = (ctl.pointName.value || "").trim();
+        row.children[4].textContent = (ctl.address.value || "").trim();
+        row.children[5].textContent = "";
+        row.children[6].textContent = "";
+        row.children[7].textContent = (ctl.remark.value || "").trim();
+        row.children[8].textContent = (ctl.contact.value || "").trim();
+        row.children[9].textContent = (ctl.phone.value || "").trim();
+        row.children[10].textContent = "";
+        row.children[11].textContent = "";
+        if (row.children[12]) {
+          row.children[12].innerHTML = '<a href="#" class="op-link js-view-photo">查看</a>';
+        }
+        if (row.children[13]) {
+          row.children[13].textContent = "否";
+        }
+      }
+
+      if (pickupAddressAddBtn) {
+        pickupAddressAddBtn.addEventListener("click", function () {
+          clearForm();
+          openModal();
+        });
+      }
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          var newRow = createBlankPickupRow();
+          if (newRow) {
+            var tbody = pickupTable.tBodies && pickupTable.tBodies[0];
+            if (tbody) {
+              tbody.appendChild(newRow);
+              applyToRow(newRow);
+            }
+          }
+          closeModal();
+        });
+      }
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var unloadingSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("卸货地址") > -1;
+      });
+      var unloadingTable = unloadingSection ? unloadingSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+
+      var addMask = document.getElementById("editUnloadingAddressAddModal");
+      var addCloseBtn = document.getElementById("editUnloadingAddressAddModalClose");
+      var addCancelBtn = document.getElementById("editUnloadingAddressAddModalCancel");
+      var addOkBtn = document.getElementById("editUnloadingAddressAddModalOk");
+      var unloadingAddressAddBtn = document.getElementById("unloadingAddressAddBtn");
+
+      var addCtl = {
+        pointName: document.getElementById("editUnloadingAddPointName"),
+        address: document.getElementById("editUnloadingAddAddress"),
+        remark: document.getElementById("editUnloadingAddRemark"),
+        contact: document.getElementById("editUnloadingAddContact"),
+        phone: document.getElementById("editUnloadingAddPhone"),
+      };
+
+      if (!unloadingTable || !addMask || !addCtl.pointName) return;
+
+      function openAddModal() {
+        addMask.classList.add("is-open");
+        addMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeAddModal() {
+        addMask.classList.remove("is-open");
+        addMask.setAttribute("aria-hidden", "true");
+      }
+
+      function clearAddForm() {
+        addCtl.pointName.value = "";
+        addCtl.address.value = "";
+        addCtl.remark.value = "";
+        addCtl.contact.value = "";
+        addCtl.phone.value = "";
+      }
+
+      function createBlankUnloadingRow() {
+        var tbody = unloadingTable.tBodies && unloadingTable.tBodies[0];
+        if (!tbody || !tbody.rows.length) return null;
+        var row = tbody.rows[0].cloneNode(true);
+        var cb = row.querySelector('input.table-checkbox[type="checkbox"]');
+        if (cb) cb.checked = false;
+        for (var c = 3; c < row.children.length && c <= 13; c++) {
+          row.children[c].textContent = "";
+        }
+        return row;
+      }
+
+      function applyAddToRow(row) {
+        if (!row || !row.children || row.children.length < 14) return;
+        // 0选框 1操作 2卸货顺序 3卸货点名称 4卸货地址 5所属卸货地 6规定到达时间 7备注 8联系人 9联系电话 …
+        row.children[3].textContent = (addCtl.pointName.value || "").trim();
+        row.children[4].textContent = (addCtl.address.value || "").trim();
+        row.children[5].textContent = "";
+        row.children[6].textContent = "";
+        row.children[7].textContent = (addCtl.remark.value || "").trim();
+        row.children[8].textContent = (addCtl.contact.value || "").trim();
+        row.children[9].textContent = (addCtl.phone.value || "").trim();
+      }
+
+      if (unloadingAddressAddBtn) {
+        unloadingAddressAddBtn.addEventListener("click", function () {
+          clearAddForm();
+          openAddModal();
+        });
+      }
+
+      if (addCloseBtn) addCloseBtn.addEventListener("click", closeAddModal);
+      if (addCancelBtn) addCancelBtn.addEventListener("click", closeAddModal);
+      if (addOkBtn) {
+        addOkBtn.addEventListener("click", function () {
+          var newRow = createBlankUnloadingRow();
+          if (newRow) {
+            var tbody = unloadingTable.tBodies && unloadingTable.tBodies[0];
+            if (tbody) {
+              tbody.appendChild(newRow);
+              applyAddToRow(newRow);
+            }
+          }
+          closeAddModal();
+        });
+      }
+
+      addMask.addEventListener("click", function (event) {
+        if (event.target === addMask) closeAddModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!addMask.classList.contains("is-open")) return;
+        closeAddModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var unloadingSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("卸货地址") > -1;
+      });
+      var unloadingTable = unloadingSection ? unloadingSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+      var voidBtn = unloadingSection
+        ? Array.prototype.slice.call(unloadingSection.parentElement.querySelectorAll(".ops-section .ops-action")).find(function (b) {
+            return (b.textContent || "").replace(/\s+/g, "") === "作废";
+          })
+        : null;
+
+      var delMask = document.getElementById("confirmUnloadingDelModal");
+      var delCloseBtn = document.getElementById("confirmUnloadingDelModalClose");
+      var delCancelBtn = document.getElementById("confirmUnloadingDelModalCancel");
+      var delOkBtn = document.getElementById("confirmUnloadingDelModalOk");
+      var delMsg = document.getElementById("confirmUnloadingDelModalMsg");
+
+      var voidMask = document.getElementById("confirmUnloadingVoidModal");
+      var voidCloseBtn = document.getElementById("confirmUnloadingVoidModalClose");
+      var voidCancelBtn = document.getElementById("confirmUnloadingVoidModalCancel");
+      var voidOkBtn = document.getElementById("confirmUnloadingVoidModalOk");
+      var voidMsg = document.getElementById("confirmUnloadingVoidModalMsg");
+
+      if (!unloadingTable || !delMask) return;
+
+      var delRow = null;
+      var voidRows = [];
+
+      function getCellText(row, idx) {
+        var td = row && row.children ? row.children[idx] : null;
+        return td ? (td.textContent || "").trim() : "";
+      }
+
+      function openDelModal(row) {
+        delRow = row || null;
+        var pointName = row ? getCellText(row, 3) : "";
+        if (delMsg) {
+          delMsg.textContent = "你确认要删除当前卸货地址" + (pointName ? ("（" + pointName + "）") : "") + "吗？";
+        }
+        delMask.classList.add("is-open");
+        delMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeDelModal() {
+        delMask.classList.remove("is-open");
+        delMask.setAttribute("aria-hidden", "true");
+        delRow = null;
+      }
+
+      function getCheckedUnloadingRows() {
+        var tbody = unloadingTable.tBodies && unloadingTable.tBodies[0] ? unloadingTable.tBodies[0] : null;
+        if (!tbody) return [];
+        var checks = Array.prototype.slice.call(tbody.querySelectorAll('input.table-checkbox[type="checkbox"]'));
+        return checks
+          .filter(function (ck) {
+            return ck && ck.checked;
+          })
+          .map(function (ck) {
+            return ck.closest("tr");
+          })
+          .filter(Boolean);
+      }
+
+      function openVoidModal(rows) {
+        if (!voidMask) return;
+        voidRows = Array.isArray(rows) ? rows : [];
+        var pointName = voidRows.length === 1 ? getCellText(voidRows[0], 3) : "";
+        if (voidMsg) {
+          voidMsg.textContent = "你确认要作废当前卸货地址" + (pointName ? ("（" + pointName + "）") : "") + "吗？";
+        }
+        voidMask.classList.add("is-open");
+        voidMask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeVoidModal() {
+        if (!voidMask) return;
+        voidMask.classList.remove("is-open");
+        voidMask.setAttribute("aria-hidden", "true");
+        voidRows = [];
+      }
+
+      function markRowVoided(row) {
+        // 列序：0选框 1操作 2卸货顺序 3卸货点名称 ... 13是否作废
+        if (!row || !row.children || row.children.length < 14) return;
+        row.children[13].textContent = "是";
+        var ck = row.querySelector('input.table-checkbox[type="checkbox"]');
+        if (ck) ck.checked = false;
+      }
+
+      unloadingTable.addEventListener("click", function (event) {
+        var delLink = event.target.closest && event.target.closest("a.js-unloading-del");
+        if (!delLink) return;
+        event.preventDefault();
+        var row = delLink.closest("tr");
+        if (!row) return;
+        openDelModal(row);
+      });
+
+      if (delCloseBtn) delCloseBtn.addEventListener("click", closeDelModal);
+      if (delCancelBtn) delCancelBtn.addEventListener("click", closeDelModal);
+      if (delOkBtn) {
+        delOkBtn.addEventListener("click", function () {
+          if (delRow) delRow.remove();
+          closeDelModal();
+        });
+      }
+
+      delMask.addEventListener("click", function (event) {
+        if (event.target === delMask) closeDelModal();
+      });
+
+      if (voidBtn) {
+        voidBtn.addEventListener("click", function () {
+          var rows = getCheckedUnloadingRows();
+          if (!rows.length) {
+            window.alert("请勾选需要作废的数据！");
+            return;
+          }
+          openVoidModal(rows);
+        });
+      }
+
+      if (voidCloseBtn) voidCloseBtn.addEventListener("click", closeVoidModal);
+      if (voidCancelBtn) voidCancelBtn.addEventListener("click", closeVoidModal);
+      if (voidOkBtn) {
+        voidOkBtn.addEventListener("click", function () {
+          (voidRows || []).forEach(markRowVoided);
+          closeVoidModal();
+        });
+      }
+
+      if (voidMask) {
+        voidMask.addEventListener("click", function (event) {
+          if (event.target === voidMask) closeVoidModal();
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (voidMask && voidMask.classList.contains("is-open")) {
+          closeVoidModal();
+          return;
+        }
+        if (delMask.classList.contains("is-open")) closeDelModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var unloadingSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("卸货地址") > -1;
+      });
+      var unloadingTable = unloadingSection ? unloadingSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+
+      var mask = document.getElementById("editUnloadingAddressModal");
+      var closeBtn = document.getElementById("editUnloadingAddressModalClose");
+      var cancelBtn = document.getElementById("editUnloadingAddressModalCancel");
+      var okBtn = document.getElementById("editUnloadingAddressModalOk");
+
+      var ctl = {
+        pointName: document.getElementById("editUnloadingPointName"),
+        place: document.getElementById("editUnloadingPlace"),
+        address: document.getElementById("editUnloadingAddress"),
+        remark: document.getElementById("editUnloadingRemark"),
+        contact: document.getElementById("editUnloadingContact"),
+        phone: document.getElementById("editUnloadingPhone"),
+        arriveTime: document.getElementById("editUnloadingArriveTime"),
+        departTime: document.getElementById("editUnloadingDepartTime"),
+      };
+
+      if (!unloadingTable || !mask || !ctl.pointName) return;
+
+      var currentRow = null;
+
+      function openModal() {
+        mask.classList.add("is-open");
+        mask.setAttribute("aria-hidden", "false");
+      }
+
+      function closeModal() {
+        mask.classList.remove("is-open");
+        mask.setAttribute("aria-hidden", "true");
+        currentRow = null;
+      }
+
+      function getCellText(row, idx) {
+        var td = row && row.children ? row.children[idx] : null;
+        return td ? (td.textContent || "").trim() : "";
+      }
+
+      function toDatetimeLocalValue(text) {
+        var v = (text || "").trim();
+        if (!v) return "";
+        if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(v)) return v.replace(/\s+/, "T");
+        return v;
+      }
+
+      function toTableDatetimeText(value) {
+        var v = (value || "").trim();
+        if (!v) return "";
+        return v.replace("T", " ");
+      }
+
+      function ensureSelectOption(selectEl, text) {
+        if (!selectEl || !selectEl.options) return;
+        var v = (text || "").trim();
+        if (!v) return;
+        var exists = Array.prototype.slice.call(selectEl.options).some(function (opt) {
+          return (opt && String(opt.value || "").trim()) === v;
+        });
+        if (exists) return;
+        var opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      }
+
+      function fillFromRow(row) {
+        // 列序：0选框 1操作 2卸货顺序 3卸货点名称 4卸货地址 5所属卸货地 6规定到达时间 7备注 8联系人 9联系电话 10到场时间 11离场时间 12到场照片 13是否作废
+        ctl.pointName.value = getCellText(row, 3);
+        ctl.address.value = getCellText(row, 4);
+        var placeText = getCellText(row, 5);
+        ensureSelectOption(ctl.place, placeText);
+        ctl.place.value = placeText;
+        ctl.remark.value = getCellText(row, 7);
+        ctl.contact.value = getCellText(row, 8);
+        ctl.phone.value = getCellText(row, 9);
+        ctl.arriveTime.value = toDatetimeLocalValue(getCellText(row, 10));
+        ctl.departTime.value = toDatetimeLocalValue(getCellText(row, 11));
+      }
+
+      function applyToRow(row) {
+        if (!row || !row.children || row.children.length < 14) return;
+        row.children[3].textContent = (ctl.pointName.value || "").trim();
+        row.children[4].textContent = (ctl.address.value || "").trim();
+        row.children[5].textContent = (ctl.place.value || "").trim();
+        row.children[7].textContent = (ctl.remark.value || "").trim();
+        row.children[8].textContent = (ctl.contact.value || "").trim();
+        row.children[9].textContent = (ctl.phone.value || "").trim();
+        row.children[10].textContent = toTableDatetimeText(ctl.arriveTime.value);
+        row.children[11].textContent = toTableDatetimeText(ctl.departTime.value);
+      }
+
+      unloadingTable.addEventListener("click", function (event) {
+        var editLink = event.target.closest && event.target.closest("a.js-unloading-edit");
+        if (!editLink) return;
+        event.preventDefault();
+        var row = editLink.closest("tr");
+        if (!row) return;
+        currentRow = row;
+        fillFromRow(row);
+        openModal();
+      });
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          if (currentRow) applyToRow(currentRow);
+          closeModal();
+        });
+      }
+
+      mask.addEventListener("click", function (event) {
+        if (event.target === mask) closeModal();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!mask.classList.contains("is-open")) return;
+        closeModal();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var modalMask = document.getElementById("addressBookModal");
+      var closeBtn = document.getElementById("addressBookModalClose");
+      var cancelBtn = document.getElementById("addressBookModalCancel");
+      var okBtn = document.getElementById("addressBookModalOk");
+      var tbody = document.getElementById("abkTbody");
+      var checkAll = document.getElementById("abkCheckAll");
+      var searchBtn = document.getElementById("abkSearchBtn");
+      var inputName = document.getElementById("abkKeywordName");
+      var inputAddr = document.getElementById("abkKeywordAddr");
+      var inputContact = document.getElementById("abkKeywordContact");
+
+      if (!modalMask || !tbody) return;
+
+      var lastOpenFrom = "";
+
+      function setModalOpen(open) {
+        modalMask.classList.toggle("is-open", open);
+        modalMask.setAttribute("aria-hidden", open ? "false" : "true");
+        if (open) {
+          if (inputName) inputName.focus();
+        }
+      }
+
+      function clearSelection() {
+        Array.prototype.slice.call(tbody.querySelectorAll(".abk-row")).forEach(function (tr) {
+          tr.classList.remove("is-active");
+          var ck = tr.querySelector('input.abk-row-check[type="checkbox"]');
+          if (ck) ck.checked = false;
+        });
+        if (checkAll) checkAll.checked = false;
+      }
+
+      function getSelectedRow() {
+        var checked = tbody.querySelector('input.abk-row-check[type="checkbox"]:checked');
+        return checked ? checked.closest("tr") : null;
+      }
+
+      function applyFilter() {
+        var kwName = (inputName && inputName.value ? inputName.value : "").trim().toLowerCase();
+        var kwAddr = (inputAddr && inputAddr.value ? inputAddr.value : "").trim().toLowerCase();
+        var kwContact = (inputContact && inputContact.value ? inputContact.value : "").trim().toLowerCase();
+
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll(".abk-row"));
+        rows.forEach(function (tr) {
+          var name = String(tr.getAttribute("data-name") || tr.children[2].textContent || "").toLowerCase();
+          var contact = String(tr.getAttribute("data-contact") || tr.children[3].textContent || "").toLowerCase();
+          var addr = String(tr.getAttribute("data-address") || tr.children[5].textContent || "").toLowerCase();
+          var ok =
+            (!kwName || name.indexOf(kwName) > -1) &&
+            (!kwAddr || addr.indexOf(kwAddr) > -1) &&
+            (!kwContact || contact.indexOf(kwContact) > -1);
+          tr.style.display = ok ? "" : "none";
+        });
+      }
+
+      function bindOpenButtons() {
+        var pickupSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+          return (h2.textContent || "").replace(/\s+/g, "").indexOf("装货地址") > -1;
+        });
+        var unloadingSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+          return (h2.textContent || "").replace(/\s+/g, "").indexOf("卸货地址") > -1;
+        });
+
+        function findAddressBookBtn(sectionEl) {
+          if (!sectionEl) return null;
+          var ops = sectionEl.parentElement ? sectionEl.parentElement.querySelectorAll(".ops-section .ops-action") : null;
+          if (!ops || !ops.length) return null;
+          return Array.prototype.slice.call(ops).find(function (b) {
+            return (b.textContent || "").replace(/\s+/g, "") === "地址簿选择";
+          });
+        }
+
+        var pickupBtn = findAddressBookBtn(pickupSection);
+        var unloadingBtn = findAddressBookBtn(unloadingSection);
+
+        if (pickupBtn) {
+          pickupBtn.addEventListener("click", function () {
+            lastOpenFrom = "pickup";
+            applyFilter();
+            clearSelection();
+            setModalOpen(true);
+          });
+        }
+        if (unloadingBtn) {
+          unloadingBtn.addEventListener("click", function () {
+            lastOpenFrom = "unloading";
+            applyFilter();
+            clearSelection();
+            setModalOpen(true);
+          });
+        }
+      }
+
+      bindOpenButtons();
+
+      if (closeBtn) closeBtn.addEventListener("click", function () { setModalOpen(false); });
+      if (cancelBtn) cancelBtn.addEventListener("click", function () { setModalOpen(false); });
+
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          var row = getSelectedRow();
+          if (!row) {
+            window.alert("请选择一条地址簿数据");
+            return;
+          }
+          // 原型页：此处只做弹框选择交互，不落表；保留 lastOpenFrom 以便后续扩展为写回装/卸货地址表
+          setModalOpen(false);
+        });
+      }
+
+      if (searchBtn) searchBtn.addEventListener("click", applyFilter);
+      if (inputName) inputName.addEventListener("keydown", function (e) { if (e.key === "Enter") applyFilter(); });
+      if (inputAddr) inputAddr.addEventListener("keydown", function (e) { if (e.key === "Enter") applyFilter(); });
+      if (inputContact) inputContact.addEventListener("keydown", function (e) { if (e.key === "Enter") applyFilter(); });
+
+      tbody.addEventListener("click", function (event) {
+        var tr = event.target && event.target.closest ? event.target.closest("tr.abk-row") : null;
+        if (!tr) return;
+
+        // 单选逻辑：点任意位置都选中当前行
+        Array.prototype.slice.call(tbody.querySelectorAll("tr.abk-row")).forEach(function (row) {
+          if (row === tr) return;
+          row.classList.remove("is-active");
+          var ck0 = row.querySelector('input.abk-row-check[type="checkbox"]');
+          if (ck0) ck0.checked = false;
+        });
+
+        tr.classList.add("is-active");
+        var ck = tr.querySelector('input.abk-row-check[type="checkbox"]');
+        if (ck) ck.checked = true;
+        if (checkAll) checkAll.checked = false;
+      });
+
+      if (checkAll) {
+        checkAll.addEventListener("change", function () {
+          // 为了贴近截图保留“全选”外观，但交互仍按单选：勾选全选时默认选中第一条可见数据
+          if (!checkAll.checked) {
+            clearSelection();
+            return;
+          }
+          var firstVisible = Array.prototype.slice.call(tbody.querySelectorAll("tr.abk-row")).find(function (tr) {
+            return tr.style.display !== "none";
+          });
+          clearSelection();
+          if (firstVisible) {
+            firstVisible.classList.add("is-active");
+            var ck = firstVisible.querySelector('input.abk-row-check[type="checkbox"]');
+            if (ck) ck.checked = true;
+          }
+          checkAll.checked = false;
+        });
+      }
+
+      modalMask.addEventListener("click", function (event) {
+        if (event.target === modalMask) setModalOpen(false);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+        if (!modalMask.classList.contains("is-open")) return;
+        setModalOpen(false);
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      function refreshSortArrowsInTbody(tbody) {
+        if (!tbody) return;
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+        var n = rows.length;
+        rows.forEach(function (tr, i) {
+          var wrap = tr.querySelector(".sort-arrows");
+          if (!wrap) return;
+          var up = wrap.querySelector(".arrow-up");
+          var down = wrap.querySelector(".arrow-down");
+          if (!up || !down) return;
+          if (i === 0) up.classList.remove("is-active");
+          else up.classList.add("is-active");
+          if (i === n - 1) down.classList.remove("is-active");
+          else down.classList.add("is-active");
+        });
+      }
+
+      function bindAddressSortTable(table) {
+        if (!table) return;
+        var tbody = table.tBodies && table.tBodies[0] ? table.tBodies[0] : null;
+        if (!tbody) return;
+        refreshSortArrowsInTbody(tbody);
+
+        table.addEventListener("click", function (event) {
+          var t = event.target;
+          if (!t || !t.closest) return;
+          var up = t.closest(".arrow-up.is-active");
+          var down = t.closest(".arrow-down.is-active");
+          if (!up && !down) return;
+          event.preventDefault();
+          var row = t.closest("tr");
+          if (!row || row.parentElement !== tbody) return;
+          if (up) {
+            var prev = row.previousElementSibling;
+            if (prev) tbody.insertBefore(row, prev);
+          } else {
+            var next = row.nextElementSibling;
+            if (next) tbody.insertBefore(next, row);
+          }
+          refreshSortArrowsInTbody(tbody);
+        });
+
+        if (typeof MutationObserver !== "undefined") {
+          var obs = new MutationObserver(function () {
+            refreshSortArrowsInTbody(tbody);
+          });
+          obs.observe(tbody, { childList: true });
+        }
+      }
+
+      var pickupSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("装货地址") > -1;
+      });
+      var unloadingSection = Array.prototype.slice.call(document.querySelectorAll("h2.block-title")).find(function (h2) {
+        return (h2.textContent || "").replace(/\s+/g, "").indexOf("卸货地址") > -1;
+      });
+      var pickupTable = pickupSection ? pickupSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+      var unloadingTable = unloadingSection ? unloadingSection.parentElement.querySelector(".table-wrap--pickup table.data-table") : null;
+      bindAddressSortTable(pickupTable);
+      bindAddressSortTable(unloadingTable);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var btn = document.getElementById("attachmentUploadBtn");
+      var input = document.getElementById("attachmentUploadInput");
+      if (!btn || !input) return;
+
+      btn.addEventListener("click", function () {
+        input.click();
+      });
+
+      input.addEventListener("change", function () {
+        // 原型页：仅触发系统文件选择弹框；不做上传与列表落表
+        input.value = "";
+      });
+    })();
+  </script>
+</body>
+</html>

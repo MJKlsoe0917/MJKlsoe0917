@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>提卸货地列表 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --purple: #7d5bc9;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quote-query-simple {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+    }
+
+    .quote-query-simple .q-field {
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+    }
+
+    .q-field input[type="text"],
+    .q-field select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+      min-height: 35px;
+      padding: 0 16px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 4px 10px 4px 8px;
+      border: none;
+      border-radius: 4px;
+      border-left: 3px solid transparent;
+      outline: none;
+      background: transparent;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.15;
+      cursor: pointer;
+      appearance: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover:not(.is-selected) {
+      background: #f0f1f4;
+    }
+
+    .ops-action.is-selected {
+      background: #ede8f7;
+      border-left-color: var(--purple);
+      font-weight: 500;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      height: 100%;
+      overflow: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .data-table th:nth-child(1),
+    .data-table td:nth-child(1) {
+      width: 40px;
+      max-width: 44px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2) {
+      width: 96px;
+      max-width: 110px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+      width: 72px;
+      max-width: 80px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    /* 省份、城市、类型、提/卸货地、创建人、创建时间、修改人、修改时间：剩余宽度平均 */
+    .data-table th:nth-child(n + 4):nth-child(-n + 11),
+    .data-table td:nth-child(n + 4):nth-child(-n + 11) {
+      width: calc((100% - 40px - 96px - 72px) / 8);
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .op-link {
+      color: var(--purple);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    .op-actions {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    .op-actions .op-link:first-child::after {
+      content: "";
+      display: inline-block;
+      width: 1px;
+      height: 12px;
+      margin: 0 8px;
+      background: var(--line);
+      vertical-align: middle;
+    }
+
+    /* 添加提/卸货地弹框 */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.45);
+      box-sizing: border-box;
+    }
+
+    .modal-backdrop.is-open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 560px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 48px);
+    }
+
+    .modal-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #303848;
+    }
+
+    .modal-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      margin: -6px -8px -6px 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: #707886;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .modal-close:hover {
+      background: #f0f2f5;
+      color: #303848;
+    }
+
+    .modal-body {
+      padding: 18px 16px;
+      overflow: auto;
+    }
+
+    .add-place-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 520px) {
+      .add-place-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .add-place-field {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .add-place-field label {
+      flex: 0 0 auto;
+      width: 52px;
+      text-align: right;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 36px;
+    }
+
+    .add-place-field .req {
+      color: #e53935;
+      margin-right: 2px;
+    }
+
+    .add-place-field .field-control {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .add-place-field input[type="text"],
+    .add-place-field select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .add-place-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .modal-footer {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      background: #fafbfc;
+    }
+
+    .btn-modal-cancel {
+      min-width: 72px;
+      height: 40px;
+      padding: 0 20px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      background: #fff;
+      color: #303848;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-modal-cancel:hover {
+      border-color: #b0b8c4;
+      background: #f7f8fa;
+    }
+
+    .btn-modal-save {
+      min-width: 72px;
+      height: 40px;
+      padding: 0 20px;
+      border: 1px solid var(--purple);
+      border-radius: 4px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-modal-save:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    /* 删除确认：与城际要车详情「装卸单号 · 作废」确认弹框一致（#delete-confirm-modal 限定，不影响添加弹框） */
+    #delete-confirm-modal.modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 64px 20px 20px;
+      z-index: 2001;
+    }
+
+    #delete-confirm-modal.modal-mask.is-open {
+      display: flex;
+    }
+
+    #delete-confirm-modal .modal {
+      width: min(980px, 96vw);
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(220, 223, 230, 0.9);
+      overflow: hidden;
+    }
+
+    #delete-confirm-modal .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    #delete-confirm-modal .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303848;
+    }
+
+    #delete-confirm-modal .modal-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
+
+    #delete-confirm-modal .modal-close:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+      color: #374151;
+    }
+
+    #delete-confirm-modal .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      background: #fff;
+    }
+
+    #delete-confirm-modal .btn {
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid #cfd5df;
+      background: #fff;
+      color: #374151;
+      font-family: inherit;
+    }
+
+    #delete-confirm-modal .btn:hover {
+      background: #f8fafc;
+    }
+
+    #delete-confirm-modal .btn-primary {
+      border-color: #4f7cff;
+      background: #4f7cff;
+      color: #fff;
+    }
+
+    #delete-confirm-modal .btn-primary:hover {
+      background: #3f6ef2;
+      border-color: #3f6ef2;
+    }
+
+    #delete-confirm-modal .confirm-modal {
+      width: min(360px, 92vw);
+    }
+
+    #delete-confirm-modal .confirm-body {
+      padding: 18px 16px 8px;
+      font-size: 14px;
+      color: #4f5664;
+      line-height: 1.7;
+    }
+
+    #delete-confirm-modal .confirm-foot {
+      padding: 10px 16px 16px;
+      justify-content: flex-end;
+    }
+
+    #delete-confirm-modal .confirm-modal .modal-head {
+      border-bottom: none;
+    }
+
+    #delete-confirm-modal .confirm-modal .btn-primary {
+      border-color: var(--purple);
+      background: var(--purple);
+    }
+
+    #delete-confirm-modal .confirm-modal .btn-primary:hover {
+      background: #6f4fc0;
+      border-color: #6f4fc0;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "要车",
+      sidebarActiveL1: "城际运输资料",
+      sidebarActiveL2: "提/卸货地列表",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+      <div class="query-section">
+        <div class="quote-query-simple">
+          <div class="q-field">
+            <input type="text" placeholder="请输入提/卸货地" aria-label="提/卸货地" />
+          </div>
+          <div class="q-field">
+            <select aria-label="类型">
+              <option value="">全部类型</option>
+              <option value="pickup">提货</option>
+              <option value="delivery">卸货</option>
+            </select>
+          </div>
+          <div class="query-action-cell">
+            <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作" data-ops-group>
+        <button type="button" class="ops-action is-selected" data-action="add">
+          <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </span>
+          新增提卸货地
+        </button>
+      </div>
+
+      <div class="list-section">
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" aria-label="全选" /></th>
+                <th>操作</th>
+                <th>ID</th>
+                <th>省份</th>
+                <th>城市</th>
+                <th>类型</th>
+                <th>提/卸货地</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>修改人</th>
+                <th>修改时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-001</td>
+                <td>广东省</td>
+                <td>东莞市</td>
+                <td>提货</td>
+                <td class="col-wrap">东莞常平</td>
+                <td>张三</td>
+                <td>2026-01-10 09:00</td>
+                <td>张三</td>
+                <td>2026-03-01 14:20</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-002</td>
+                <td>广东省</td>
+                <td>广州市</td>
+                <td>卸货</td>
+                <td class="col-wrap">广州白云货站</td>
+                <td>李四</td>
+                <td>2026-01-12 11:30</td>
+                <td>王五</td>
+                <td>2026-02-18 10:05</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-003</td>
+                <td>广东省</td>
+                <td>深圳市</td>
+                <td>提货</td>
+                <td class="col-wrap">深圳坂田</td>
+                <td>赵六</td>
+                <td>2026-02-01 08:45</td>
+                <td>赵六</td>
+                <td>2026-02-01 08:45</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-004</td>
+                <td>香港特别行政区</td>
+                <td>葵青区</td>
+                <td>卸货</td>
+                <td class="col-wrap">香港青衣</td>
+                <td>孙七</td>
+                <td>2026-02-20 16:00</td>
+                <td>孙七</td>
+                <td>2026-03-10 09:12</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-005</td>
+                <td>广东省</td>
+                <td>佛山市</td>
+                <td>提货</td>
+                <td class="col-wrap">佛山南海</td>
+                <td>陈八</td>
+                <td>2026-03-05 13:20</td>
+                <td>钱一</td>
+                <td>2026-03-28 11:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-006</td>
+                <td>上海市</td>
+                <td>浦东新区</td>
+                <td>卸货</td>
+                <td class="col-wrap">上海浦东机场</td>
+                <td>钱一</td>
+                <td>2026-03-15 10:00</td>
+                <td>钱一</td>
+                <td>2026-03-15 10:00</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-007</td>
+                <td>广东省</td>
+                <td>中山市</td>
+                <td>卸货</td>
+                <td class="col-wrap">中山西区</td>
+                <td>郑十</td>
+                <td>2026-03-20 09:15</td>
+                <td>郑十</td>
+                <td>2026-03-25 16:40</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" aria-label="选择" /></td>
+                <td>
+                  <span class="op-actions">
+                    <a href="#" class="op-link" data-action="edit">修改</a>
+                    <a href="#" class="op-link" data-action="delete">删除</a>
+                  </span>
+                </td>
+                <td>TX-008</td>
+                <td>北京市</td>
+                <td>顺义区</td>
+                <td>卸货</td>
+                <td class="col-wrap">北京顺义机场</td>
+                <td>吴九</td>
+                <td>2026-03-22 14:00</td>
+                <td>吴九</td>
+                <td>2026-03-22 14:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div
+    id="add-place-modal"
+    class="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-place-modal-title"
+    aria-hidden="true"
+  >
+    <div class="modal-panel" role="document">
+      <div class="modal-header">
+        <h2 id="add-place-modal-title" class="modal-title">添加提/卸货地</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="add-place-form" id="add-place-form" onsubmit="return false;">
+          <div class="add-place-field">
+            <label for="add-place-type"><span class="req" aria-hidden="true">*</span>类型</label>
+            <div class="field-control">
+              <select id="add-place-type" name="type" aria-required="true">
+                <option value="pickup" selected>提货</option>
+                <option value="delivery">卸货</option>
+              </select>
+            </div>
+          </div>
+          <div class="add-place-field">
+            <label for="add-place-name"><span class="req" aria-hidden="true">*</span>名称</label>
+            <div class="field-control">
+              <input id="add-place-name" name="name" type="text" placeholder="" autocomplete="off" aria-required="true" />
+            </div>
+          </div>
+          <div class="add-place-field">
+            <label for="add-place-province"><span class="req" aria-hidden="true">*</span>省份</label>
+            <div class="field-control">
+              <select id="add-place-province" name="province" aria-required="true">
+                <option value="">请选择提货点分区</option>
+                <option value="gd">广东省</option>
+                <option value="hk">香港特别行政区</option>
+              </select>
+            </div>
+          </div>
+          <div class="add-place-field">
+            <label for="add-place-city"><span class="req" aria-hidden="true">*</span>城市</label>
+            <div class="field-control">
+              <select id="add-place-city" name="city" aria-required="true">
+                <option value="">请选择所属提货地</option>
+                <option value="dg">东莞市</option>
+                <option value="sz">深圳市</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" data-modal-close>取消</button>
+        <button type="button" class="btn-modal-save" id="add-place-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="delete-confirm-modal" aria-hidden="true">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-label="提示">
+      <div class="modal-head">
+        <div class="modal-title">提示</div>
+        <button type="button" class="modal-close" data-delete-modal-close aria-label="关闭">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.17 12 2.89 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="confirm-body" id="deleteConfirmModalMsg">你确认要删除当前提/卸货地吗？</div>
+      <div class="modal-foot confirm-foot">
+        <button type="button" class="btn" data-delete-modal-close>取消</button>
+        <button type="button" class="btn btn-primary" id="delete-confirm-ok">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var ops = document.querySelector(".ops-section");
+      if (!ops) return;
+      var actionButtons = ops.querySelectorAll(".ops-action");
+
+      function syncSelectedState() {
+        actionButtons.forEach(function (btn) {
+          btn.setAttribute("aria-pressed", btn.classList.contains("is-selected") ? "true" : "false");
+        });
+      }
+
+      syncSelectedState();
+
+      ops.addEventListener("click", function (e) {
+        var btn = e.target.closest(".ops-action[data-action]");
+        if (!btn) return;
+        actionButtons.forEach(function (item) {
+          item.classList.remove("is-selected");
+        });
+        btn.classList.add("is-selected");
+        syncSelectedState();
+        var act = btn.getAttribute("data-action");
+        if (act === "add") {
+          openAddPlaceModal();
+        }
+      });
+    })();
+
+    (function () {
+      var backdrop = document.getElementById("add-place-modal");
+      var modalTitleEl = document.getElementById("add-place-modal-title");
+      var form = document.getElementById("add-place-form");
+      var typeSel = document.getElementById("add-place-type");
+      var provinceSel = document.getElementById("add-place-province");
+      var citySel = document.getElementById("add-place-city");
+      var nameInput = document.getElementById("add-place-name");
+      var saveBtn = document.getElementById("add-place-save");
+
+      var TITLE_ADD = "添加提/卸货地";
+      var TITLE_EDIT = "修改提/卸货地";
+
+      if (!backdrop) return;
+
+      function isPickup() {
+        return typeSel && typeSel.value === "pickup";
+      }
+
+      function syncTypePlaceholders() {
+        if (!provinceSel || !citySel || !provinceSel.options[0] || !citySel.options[0]) return;
+        var pickup = isPickup();
+        provinceSel.options[0].text = pickup ? "请选择提货点分区" : "请选择卸货点分区";
+        citySel.options[0].text = pickup ? "请选择所属提货地" : "请选择所属卸货地";
+      }
+
+      function stripProtoOptions(sel) {
+        if (!sel) return;
+        for (var i = sel.options.length - 1; i >= 0; i--) {
+          if (sel.options[i].value.indexOf("proto_") === 0) {
+            sel.remove(i);
+          }
+        }
+      }
+
+      function setSelectByOptionText(sel, labelText) {
+        if (!sel || labelText == null) return;
+        var t = String(labelText).trim();
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].text.trim() === t) {
+            sel.selectedIndex = i;
+            return;
+          }
+        }
+        var opt = document.createElement("option");
+        opt.value = "proto_" + t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+        sel.value = opt.value;
+      }
+
+      function fillFormFromRow(tr) {
+        if (!tr || !typeSel || !nameInput || !provinceSel || !citySel) return;
+        var cells = tr.querySelectorAll("td");
+        if (cells.length < 7) return;
+        var typeText = cells[5].textContent.trim();
+        typeSel.value = typeText === "卸货" ? "delivery" : "pickup";
+        nameInput.value = cells[6].textContent.trim();
+        setSelectByOptionText(provinceSel, cells[3].textContent);
+        setSelectByOptionText(citySel, cells[4].textContent);
+      }
+
+      window.openAddPlaceModal = function () {
+        if (modalTitleEl) modalTitleEl.textContent = TITLE_ADD;
+        stripProtoOptions(provinceSel);
+        stripProtoOptions(citySel);
+        if (form) form.reset();
+        syncTypePlaceholders();
+        backdrop.classList.add("is-open");
+        backdrop.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        if (nameInput) {
+          nameInput.focus();
+        }
+      };
+
+      window.openEditPlaceModal = function (tr) {
+        if (modalTitleEl) modalTitleEl.textContent = TITLE_EDIT;
+        stripProtoOptions(provinceSel);
+        stripProtoOptions(citySel);
+        fillFormFromRow(tr);
+        syncTypePlaceholders();
+        backdrop.classList.add("is-open");
+        backdrop.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        if (nameInput) {
+          nameInput.focus();
+        }
+      };
+
+      function closeAddPlaceModal() {
+        backdrop.classList.remove("is-open");
+        backdrop.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      if (typeSel) {
+        typeSel.addEventListener("change", syncTypePlaceholders);
+      }
+
+      backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) {
+          closeAddPlaceModal();
+        }
+      });
+
+      backdrop.querySelectorAll("[data-modal-close]").forEach(function (el) {
+        el.addEventListener("click", closeAddPlaceModal);
+      });
+
+      if (saveBtn) {
+        saveBtn.addEventListener("click", function () {
+          window.alert("原型：已保存（实际将提交表单）");
+          closeAddPlaceModal();
+        });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var delModal = document.getElementById("delete-confirm-modal");
+        if (delModal && delModal.classList.contains("is-open")) {
+          if (typeof window.closeDeleteConfirmModal === "function") {
+            window.closeDeleteConfirmModal();
+          }
+          return;
+        }
+        if (backdrop.classList.contains("is-open")) {
+          closeAddPlaceModal();
+        }
+      });
+    })();
+
+    (function () {
+      var delBackdrop = document.getElementById("delete-confirm-modal");
+      var okBtn = document.getElementById("delete-confirm-ok");
+      var tableWrap = document.querySelector(".data-table-wrap");
+      if (!delBackdrop || !tableWrap) return;
+
+      var pendingRow = null;
+
+      function openDeleteConfirmModal(row) {
+        pendingRow = row || null;
+        delBackdrop.classList.add("is-open");
+        delBackdrop.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDeleteConfirmModal() {
+        delBackdrop.classList.remove("is-open");
+        delBackdrop.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        pendingRow = null;
+      }
+
+      window.closeDeleteConfirmModal = closeDeleteConfirmModal;
+
+      tableWrap.addEventListener("click", function (e) {
+        var editLink = e.target.closest("a[data-action=\"edit\"]");
+        if (editLink) {
+          e.preventDefault();
+          var trEdit = editLink.closest("tr");
+          if (trEdit && typeof window.openEditPlaceModal === "function") {
+            window.openEditPlaceModal(trEdit);
+          }
+          return;
+        }
+        var link = e.target.closest("a[data-action=\"delete\"]");
+        if (!link) return;
+        e.preventDefault();
+        var tr = link.closest("tr");
+        openDeleteConfirmModal(tr);
+      });
+
+      delBackdrop.addEventListener("click", function (e) {
+        if (e.target === delBackdrop) {
+          closeDeleteConfirmModal();
+        }
+      });
+
+      delBackdrop.querySelectorAll("[data-delete-modal-close]").forEach(function (el) {
+        el.addEventListener("click", closeDeleteConfirmModal);
+      });
+
+      if (okBtn) {
+        okBtn.addEventListener("click", function () {
+          window.alert("原型：已删除（实际将调用接口）");
+          if (pendingRow && pendingRow.parentNode) {
+            pendingRow.parentNode.removeChild(pendingRow);
+          }
+          closeDeleteConfirmModal();
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>出库计划 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --purple: #7d5bc9;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .query-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 12px;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 6px 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover {
+      background: #f4f7ff;
+      border-color: #c8cfe0;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      max-width: 180px;
+      min-width: 90px;
+      vertical-align: top;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "配舱",
+      sidebarActiveL1: "出库计划",
+      sidebarActiveL2: "出库计划列表",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+          <div class="query-section">
+        <div class="query-grid">
+          <div class="query-row">
+                  <div class="q-field">
+              <input type="text" placeholder="出库计划ID" aria-label="出库计划ID" />
+                  </div>
+                  <div class="q-field">
+              <div class="range-input" role="group" aria-label="预计出仓日期">
+                <select aria-label="日期类型">
+                  <option>预计出仓日期</option>
+                      </select>
+                <input type="text" placeholder="请选择日期范围" aria-label="预计出仓日期范围" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+              <input type="text" placeholder="起运港" aria-label="起运港" />
+                    </div>
+                  <div class="q-field">
+              <input type="text" placeholder="目的港" aria-label="目的港" />
+                    </div>
+                  </div>
+          <div class="query-row">
+                  <div class="q-field">
+              <select aria-label="状态">
+                <option value="">状态</option>
+                <option>待出仓</option>
+                <option>已出仓</option>
+                <option>已取消</option>
+              </select>
+                  </div>
+                  <div class="q-field">
+              <input type="text" placeholder="仓库" aria-label="仓库" />
+                    </div>
+            <div class="q-field"></div>
+                  <div class="query-action-cell">
+              <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作">
+        <button type="button" class="ops-action" data-action="export-load-plan">
+              <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+              </span>
+          装车计划导出
+            </button>
+          </div>
+
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选" /></th>
+                    <th>序号</th>
+                <th>出库计划ID</th>
+                <th>舱位号</th>
+                <th>状态</th>
+                <th>提单号</th>
+                <th>出库计划模板</th>
+                <th>胶带颜色</th>
+                <th>实际上架日期</th>
+                <th>要求出仓日期</th>
+                <th>实际出仓日期</th>
+                <th>航班日期</th>
+                <th>出库方数</th>
+                <th>出库量</th>
+                <th>出库泡比</th>
+                <th>起运港</th>
+                <th>目的港</th>
+                <th>空运代理</th>
+                <th>送货方式</th>
+                <th>城际代理</th>
+                <th>报关代理</th>
+                <th>清关代理</th>
+                <th>仓库</th>
+                <th>打板仓</th>
+                <th>最小出货重(KG)</th>
+                <th>是否赶机</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>1</td>
+                <td>CK-PLAN-20260331001</td>
+                <td>POS-HKG-8899</td>
+                <td>待出仓</td>
+                <td>999-12345678</td>
+                <td>模板-A（标箱）</td>
+                <td>黄</td>
+                <td>2026-03-28</td>
+                <td>2026-03-29</td>
+                    <td>—</td>
+                <td>2026-03-30</td>
+                <td>18.5</td>
+                <td>2850 KG</td>
+                <td>1:9</td>
+                <td>HKG</td>
+                <td>CDG</td>
+                <td>华南空运代理A</td>
+                <td>门到门</td>
+                <td>广宏达</td>
+                <td>报关行B</td>
+                <td>清关行C</td>
+                <td>HKG-B1</td>
+                <td>HKG-P1</td>
+                <td>300</td>
+                <td>是</td>
+                <td>张三</td>
+                <td>2026-03-27 10:20</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>2</td>
+                <td>CK-PLAN-20260331002</td>
+                <td>POS-PVG-7766</td>
+                <td>已出仓</td>
+                <td>176-99887766</td>
+                <td class="col-wrap">模板-B（电商）</td>
+                <td>红</td>
+                <td>2026-03-26</td>
+                <td>2026-03-27</td>
+                <td>2026-03-27</td>
+                <td>2026-03-28</td>
+                <td>42.0</td>
+                <td>6100 KG</td>
+                <td>1:8</td>
+                <td>PVG</td>
+                <td>LAX</td>
+                <td>华东空运代理D</td>
+                <td>港到港</td>
+                <td>联远</td>
+                <td>报关行E</td>
+                    <td>—</td>
+                <td>PVG-C2</td>
+                <td>PVG-P3</td>
+                <td>500</td>
+                <td>否</td>
+                <td>李四</td>
+                <td>2026-03-25 16:45</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      var btn = document.querySelector(".ops-action[data-action='export-load-plan']");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          window.alert("原型：装车计划导出");
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

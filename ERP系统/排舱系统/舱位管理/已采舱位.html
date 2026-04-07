@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>已采舱位 · 万邦速达</title>
+  <link rel="stylesheet" href="../../common/prototype-shell.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --yellow: #f2c338;
+      --bg: #f2f3f5;
+      --line: #dcdfe6;
+      --text: #2f3542;
+      --muted: #7f8796;
+      --purple: #7d5bc9;
+      --menu-hover: #f9f0e0;
+      --menu-active-bg: #fef6e6;
+      --sidebar-bg: #eceef2;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .query-section {
+      flex-shrink: 0;
+      background: #fff;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quote-query-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quote-query-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .q-field .q-ctl {
+      width: 100%;
+    }
+
+    .q-field select,
+    .q-field input[type="text"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .q-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      padding-right: 28px;
+    }
+
+    .range-input {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .range-input select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      padding: 0 26px 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #333;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .range-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 36px;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      border-left: none;
+      margin-left: -1px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: #fff;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .query-action-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-query {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--purple);
+      border: 1px solid var(--purple);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-query:hover {
+      background: #6f4eb8;
+      border-color: #6f4eb8;
+    }
+
+    .ops-section {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 12px;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ops-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 6px 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background: #fff;
+      color: var(--purple);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ops-action:hover {
+      background: #f4f7ff;
+      border-color: #c8cfe0;
+    }
+
+    .ops-action .ops-ico svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .list-section {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #fff;
+      padding: 0 16px 12px;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: auto;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      box-shadow: 0 1px 0 var(--line);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f4f7ff;
+    }
+
+    .data-table .col-wrap {
+      white-space: normal;
+      max-width: 200px;
+      min-width: 100px;
+      vertical-align: top;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.__PROTOTYPE_SHELL__ = {
+      topbarActive: "排舱",
+      sidebarActiveL1: "舱位管理",
+      sidebarActiveL2: "已采舱位",
+      sidebarFromProductRoot: "../../",
+    };
+  </script>
+  <div id="prototype-shell-topbar"></div>
+  <div class="app-layout">
+    <div id="prototype-shell-sidebar"></div>
+    <main class="main-area">
+          <div class="query-section">
+              <div class="quote-query-fields">
+                <div class="quote-query-row">
+                  <div class="q-field">
+              <div class="q-ctl">
+                <select aria-label="舱位状态">
+                  <option value="">舱位状态</option>
+                  <option>待出仓</option>
+                  <option>已出仓</option>
+                  <option>已取消</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                <input type="text" placeholder="航司" aria-label="航司" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                <input type="text" placeholder="航班号" aria-label="航班号" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                <input type="text" placeholder="起运港" aria-label="起运港" />
+                    </div>
+                  </div>
+                </div>
+                <div class="quote-query-row">
+                  <div class="q-field">
+                    <div class="q-ctl">
+                <input type="text" placeholder="目的港" aria-label="目的港" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+              <div class="q-ctl range-input" role="group" aria-label="创建时间">
+                <select aria-label="时间类型">
+                  <option>创建时间</option>
+                </select>
+                <input type="text" placeholder="请选择时间范围" aria-label="创建时间范围" />
+                    </div>
+                  </div>
+                  <div class="q-field">
+                    <div class="q-ctl">
+                <input type="text" placeholder="提单号" aria-label="提单号" />
+                    </div>
+                  </div>
+                  <div class="query-action-cell">
+              <button type="button" class="btn-query"><span aria-hidden="true">🔍</span>查询</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      <div class="ops-section" role="toolbar" aria-label="功能操作">
+        <button type="button" class="ops-action" data-action="cancel">
+              <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+              </span>
+          取消
+            </button>
+        <button type="button" class="ops-action" data-action="interline">
+              <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.1-4-4-6 6.01z"/></svg>
+              </span>
+          标识联运
+            </button>
+        <button type="button" class="ops-action" data-action="export-capacity">
+              <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+              </span>
+          导出舱位与需求
+            </button>
+        <button type="button" class="ops-action" data-action="export-fee">
+              <span class="ops-ico" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+              </span>
+          导出费用
+        </button>
+        <button type="button" class="ops-action" data-action="import-fee">
+              <span class="ops-ico" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              </span>
+          导入费用
+            </button>
+          </div>
+
+          <div class="list-section">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选" /></th>
+                    <th>序号</th>
+                <th>舱位状态</th>
+                <th>出仓日期</th>
+                <th>航班日期</th>
+                <th>告警</th>
+                <th>航司</th>
+                <th>航班号</th>
+                <th>是否直飞</th>
+                <th>起运港</th>
+                <th>中转港</th>
+                <th>目的港</th>
+                <th>舱位来源</th>
+                <th>卡转目的地</th>
+                <th>联运标识</th>
+                <th>ETA</th>
+                <th>ATA</th>
+                <th>ETD</th>
+                <th>ATD</th>
+                <th>供应商</th>
+                <th>提单号</th>
+                <th>装板类型</th>
+                <th>交货模式</th>
+                <th>采购方式</th>
+                <th>委托书</th>
+                <th>平台舱位安排</th>
+                <th>订舱方数</th>
+                <th>建议配舱方数</th>
+                <th>基重</th>
+                <th>空运平均单价</th>
+                <th>空运计费重(KG)</th>
+                <th>空运费</th>
+                <th>空运杂费</th>
+                <th>空运总额</th>
+                <th>预估城际费</th>
+                <th>预估打板费</th>
+                <th>预估平均单价</th>
+                <th>预估总额</th>
+                    <th>创建人</th>
+                <th>负责商务</th>
+                    <th>创建时间</th>
+                <th>取消原因</th>
+                <th>取消备注</th>
+                <th>采购价高原因</th>
+                <th>代理是否收费</th>
+                <th>实际代理</th>
+                <th>费用维护截止时间</th>
+                <th>计费信息</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>1</td>
+                <td>已出仓</td>
+                <td>2026-03-28</td>
+                <td>2026-03-29</td>
+                    <td>—</td>
+                <td>CX</td>
+                <td>CX987</td>
+                <td>是</td>
+                <td>HKG</td>
+                    <td>—</td>
+                <td>CDG</td>
+                <td>协议价</td>
+                    <td>—</td>
+                <td>否</td>
+                    <td>2026-03-29 06:00</td>
+                <td>2026-03-29 06:12</td>
+                <td>2026-03-29 02:00</td>
+                <td>2026-03-29 01:55</td>
+                <td>华南航空代理A</td>
+                <td>HAWB001</td>
+                <td>PMC</td>
+                <td>门到门</td>
+                <td>月结</td>
+                <td>WT202603001</td>
+                <td>平台已锁</td>
+                    <td>12</td>
+                <td>11.5</td>
+                <td>1000</td>
+                <td>CNY 32.5/KG</td>
+                <td>2850</td>
+                <td>CNY 92625</td>
+                <td>CNY 1200</td>
+                <td>CNY 93825</td>
+                <td>CNY 2100</td>
+                <td>CNY 800</td>
+                <td>CNY 34.2/KG</td>
+                <td>CNY 97500</td>
+                <td>张三</td>
+                <td>李商务</td>
+                <td>2026-03-25 14:20</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                <td>否</td>
+                    <td>—</td>
+                <td>2026-04-05 18:00</td>
+                <td class="col-wrap">按计费重，杂费含燃油战险</td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="选择" /></td>
+                    <td>2</td>
+                <td>待出仓</td>
+                    <td>—</td>
+                <td>2026-03-31</td>
+                <td>舱位紧张</td>
+                <td>CA</td>
+                <td>CA1122</td>
+                <td>否</td>
+                <td>PVG</td>
+                <td>PEK</td>
+                <td>FRA</td>
+                <td>招标</td>
+                <td>AMS</td>
+                <td>是</td>
+                <td>2026-03-31 22:30</td>
+                    <td>—</td>
+                <td>2026-03-31 14:00</td>
+                    <td>—</td>
+                <td>华东供应商B</td>
+                <td>HAWB002</td>
+                <td>AKE</td>
+                <td>港到港</td>
+                <td>单票</td>
+                <td>WT202603018</td>
+                <td>待安排</td>
+                    <td>8</td>
+                <td>8</td>
+                <td>800</td>
+                <td>USD 4.2/KG</td>
+                <td>3200</td>
+                <td>USD 13440</td>
+                <td>USD 600</td>
+                <td>USD 14040</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                <td>王五</td>
+                <td>赵商务</td>
+                <td>2026-03-26 09:10</td>
+                    <td>—</td>
+                    <td>—</td>
+                <td>旺季加价</td>
+                <td>是</td>
+                <td>代理C</td>
+                <td>2026-04-01 12:00</td>
+                <td class="col-wrap">MIN 300KG；单价含战险</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <input type="file" id="import-fee-input" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden aria-hidden="true" />
+
+  <script src="../../common/prototype-shell.js"></script>
+  <script>
+    (function () {
+      document.querySelector(".ops-section").addEventListener("click", function (e) {
+        var btn = e.target.closest(".ops-action[data-action]");
+        if (!btn) return;
+        var act = btn.getAttribute("data-action");
+        if (act === "import-fee") {
+          var inp = document.getElementById("import-fee-input");
+          if (inp) inp.click();
+            return;
+          }
+        if (act === "cancel") {
+          var n = document.querySelectorAll(".data-table tbody input[type='checkbox']:checked").length;
+          if (!n) {
+            window.alert("请先勾选要取消的舱位行。");
+            return;
+          }
+          window.alert("原型：取消（已选 " + n + " 条）");
+            return;
+          }
+        if (act === "interline") {
+          window.alert("原型：标识联运");
+            return;
+          }
+        if (act === "export-capacity") {
+          window.alert("原型：导出舱位与需求");
+            return;
+          }
+        if (act === "export-fee") {
+          window.alert("原型：导出费用");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
