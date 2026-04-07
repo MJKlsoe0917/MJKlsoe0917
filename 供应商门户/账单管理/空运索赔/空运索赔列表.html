@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>空运索赔 · WANB 供应商系统</title>
+  <link rel="stylesheet" href="../../common/supplier-shell.css" />
+  <style>
+    /* 本页业务区样式 */
+    .status-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 24px;
+      padding: 16px 0 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .status-tab {
+      padding: 8px 0;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      overflow: visible;
+    }
+
+    .status-tab:hover {
+      color: var(--text);
+    }
+
+    .status-tab.is-active {
+      color: var(--supplier-red);
+      font-weight: 500;
+    }
+
+    .status-tab.is-active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -13px;
+      height: 2px;
+      background: var(--supplier-red);
+    }
+
+    .status-tab.has-badge {
+      padding-right: 6px;
+    }
+
+    .status-tab-badge {
+      position: absolute;
+      top: 2px;
+      left: 100%;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #ff4d4f;
+      color: #fff;
+      font-size: 12px;
+      line-height: 20px;
+      font-weight: 600;
+      text-align: center;
+      box-sizing: border-box;
+      transform: translate(-8px, -55%);
+      box-shadow: 0 2px 6px rgba(255, 77, 79, 0.25);
+      display: none;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .filter-panel {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    /* 四列：左提单号 | 中间条件纵向堆叠 | 起运港 | 目的港 */
+    .filter-layout {
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) minmax(260px, 1.35fr) minmax(160px, 1fr) minmax(160px, 1fr);
+      gap: 12px 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .filter-layout {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .filter-bulk {
+        grid-column: 1 / -1;
+      }
+
+      .filter-mid-stack {
+        grid-column: 1 / -1;
+      }
+
+      .filter-origin {
+        grid-column: 1;
+      }
+
+      .filter-dest {
+        grid-column: 2;
+      }
+    }
+
+    .filter-bulk {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: start;
+      min-height: 0;
+    }
+
+    .filter-mid-stack {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-self: start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* 全部 tab：索赔状态 + 索赔类型 + 查询 同行 */
+    .filter-inline-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .filter-inline-row .filter-select {
+      flex: 1;
+      min-width: 100px;
+      max-width: 220px;
+    }
+
+    .filter-inline-row .btn-query {
+      flex-shrink: 0;
+    }
+
+    .bulk-field {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      min-height: 104px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .bulk-field .bulk-select {
+      width: 100%;
+      height: 36px;
+      margin: 0;
+      padding: 0 28px 0 10px;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .bulk-field textarea {
+      flex: 0 1 auto;
+      width: 100%;
+      min-height: 60px;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      color: #4f5664;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .bulk-field textarea::placeholder {
+      color: #9aa1ad;
+    }
+
+    .time-range-combo {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      width: 100%;
+    }
+
+    .time-range-combo select {
+      flex-shrink: 0;
+      width: auto;
+      min-width: 96px;
+      height: 36px;
+      padding: 0 26px 0 10px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 8px center;
+      appearance: none;
+      -webkit-appearance: none;
+      color: #333;
+      align-self: center;
+    }
+
+    /* 文本框 + 内置清除 × */
+    .time-range-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      background: #fff;
+      box-sizing: border-box;
+      height: 36px;
+    }
+
+    .time-range-combo .time-range-input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      padding: 0 34px 0 10px;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      font-size: 13px;
+      font-family: inherit;
+      color: #4f5664;
+      background: transparent;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .time-range-input-wrap .time-clear-btn {
+      position: absolute;
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #999;
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .time-range-input-wrap .time-clear-btn:hover {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .filter-select {
+      width: 100%;
+      height: 36px;
+      padding: 0 28px 0 10px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      appearance: none;
+      -webkit-appearance: none;
+      color: #4f5664;
+    }
+
+    .filter-query-cell {
+      margin-top: 2px;
+    }
+
+    .filter-origin {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .filter-dest {
+      grid-column: 4;
+      grid-row: 1;
+    }
+
+    .btn-query {
+      min-width: 72px;
+      height: 32px;
+      padding: 0 18px;
+      background: var(--supplier-menu-orange);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .btn-query:hover {
+      background: var(--supplier-menu-orange-hover);
+    }
+
+    .table-wrap {
+      flex: 1;
+      min-height: 200px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: auto;
+      position: relative;
+    }
+
+    .data-table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th:last-child,
+    .data-table td:last-child {
+      border-right: none;
+    }
+
+    .data-table thead th {
+      background: #f5f7fa;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    .empty-row td {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 48px 16px;
+      white-space: normal;
+    }
+
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 0;
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pagination-ctrl select {
+      height: 28px;
+      padding: 0 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .page-btns {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-btns button {
+      min-width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .page-btns button:hover:not(:disabled) {
+      border-color: var(--supplier-red);
+      color: var(--supplier-red);
+    }
+
+    .page-btns button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .jump-page {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .jump-page input {
+      width: 44px;
+      height: 26px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .op-link {
+      color: var(--supplier-red);
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    #claim-data-table td.cell-actions {
+      white-space: nowrap;
+    }
+
+    #claim-data-table td.cell-actions .op-sep {
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    /* 索赔标准列：加宽并允许换行，避免与「索赔原因」列重叠（表格局部 white-space: nowrap） */
+    #claim-data-table th.col-claim-standard,
+    #claim-data-table td.col-claim-standard {
+      min-width: 520px;
+      max-width: 640px;
+      width: 520px;
+      white-space: normal;
+      word-break: break-word;
+      vertical-align: top;
+      line-height: 1.45;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 1000;
+    }
+
+    .modal-mask.is-open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    .modal-dialog.modal-dialog--delete {
+      box-sizing: border-box;
+      width: min(300px, calc(100vw - 48px));
+      height: 170px;
+      max-height: 170px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-head,
+    .modal-body,
+    .modal-foot {
+      padding: 16px 20px;
+    }
+
+    .modal-head,
+    .modal-body {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-head,
+    .modal-dialog.modal-dialog--delete .modal-body,
+    .modal-dialog.modal-dialog--delete .modal-foot {
+      padding: 6px 12px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-head {
+      padding-top: 8px;
+      padding-bottom: 6px;
+      flex-shrink: 0;
+      border-bottom: none;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #303848;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-title {
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #606978;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-close {
+      width: 34px;
+      height: 34px;
+      font-size: 24px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 0;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      border-bottom: none;
+    }
+
+    .modal-confirm-text {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #303848;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-confirm-text {
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-foot {
+      flex-shrink: 0;
+      padding-top: 14px;
+      padding-bottom: 14px;
+      gap: 8px;
+    }
+
+    .modal-btn {
+      min-width: 76px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .modal-dialog.modal-dialog--delete .modal-btn {
+      min-width: 68px;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .modal-btn--default {
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      color: #303848;
+    }
+
+    .modal-btn--primary {
+      border: 1px solid var(--supplier-menu-orange);
+      background: var(--supplier-menu-orange);
+      color: #fff;
+    }
+
+    .modal-btn--primary:hover {
+      border-color: var(--supplier-menu-orange-hover);
+      background: var(--supplier-menu-orange-hover);
+    }
+  </style>
+</head>
+<body class="supplier-portal-body">
+  <script>
+    window.__SUPPLIER_SHELL__ = {
+      portalRoot: "../../",
+      pageTitle: "空运索赔 · WANB 供应商系统",
+      tabLabel: "空运索赔",
+      activeNav: "空运索赔",
+      /** 待处理 + 申诉驳回条数，与下列表示例一致；无待办时改为 0 即可隐藏角标 */
+      airClaimNavBadgeCount: 3,
+    };
+  </script>
+  <div id="supplier-shell-topbar"></div>
+  <div class="body-row">
+    <div id="supplier-shell-sidebar"></div>
+    <main class="main">
+      <div class="main-inner">
+        <div class="status-tabs" role="tablist" id="claim-status-tabs">
+          <button type="button" class="status-tab is-active" role="tab" aria-selected="true" data-claim-tab="all">全部</button>
+          <button type="button" class="status-tab" role="tab" data-claim-tab="pending">
+            待处理
+            <span class="status-tab-badge" data-claim-badge-for="pending" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="status-tab" role="tab" data-claim-tab="appeal">
+            申诉中
+            <span class="status-tab-badge" data-claim-badge-for="appeal" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="status-tab" role="tab" data-claim-tab="rejected">
+            申诉驳回
+            <span class="status-tab-badge" data-claim-badge-for="rejected" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="status-tab" role="tab" data-claim-tab="confirmed">已确认</button>
+        </div>
+
+        <div class="filter-panel">
+          <div id="claim-filter-root"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="claim-data-table" aria-live="polite">
+            <thead id="claim-table-head"></thead>
+            <tbody id="claim-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar">
+          <span>共 0 条数据</span>
+          <div class="pagination-ctrl">
+            <select aria-label="每页条数">
+              <option>20条/页</option>
+              <option>50条/页</option>
+              <option>100条/页</option>
+            </select>
+            <div class="page-btns">
+              <button type="button" disabled aria-label="上一页">‹</button>
+              <button type="button" disabled>1</button>
+              <button type="button" disabled aria-label="下一页">›</button>
+            </div>
+            <div class="jump-page">
+              跳至 <input type="text" value="1" inputmode="numeric" aria-label="页码" /> 页
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="recallAppealModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog--delete" role="dialog" aria-modal="true" aria-labelledby="recallAppealModalTitle">
+      <div class="modal-head">
+        <div class="modal-title" id="recallAppealModalTitle">提示</div>
+        <button type="button" class="modal-close" aria-label="关闭" data-close-recall-appeal-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-confirm-text">您确认要撤回当前申诉吗?</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="modal-btn modal-btn--default" data-close-recall-appeal-modal>取消</button>
+        <button type="button" class="modal-btn modal-btn--primary" id="recallAppealConfirmBtn">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../common/supplier-shell.js"></script>
+  <script>
+    (function () {
+      var CLAIM_TYPE_OPTIONS = ["时效延误", "丢货", "CCA索赔", "其它索赔"];
+      var PORT_OPTIONS = ["PVG", "HKG", "PEK", "LAX", "CDG", "FRA"];
+
+      /** 各 Tab 查询字段（待确认=待处理 pending）；全部 tab 在脚本内单独布局 */
+      var FILTER_FIELDS_BY_TAB = {
+        all: ["hawb", "ports"],
+        pending: ["hawb", "claim_type", "ports"],
+        appeal: ["hawb", "claim_type", "ports"],
+        rejected: ["hawb", "claim_type", "ports"],
+        confirmed: ["hawb", "time_dual", "claim_type", "ports"],
+      };
+
+      function buildHawbBulk() {
+        var bf = document.createElement("div");
+        bf.className = "bulk-field";
+        var sel = document.createElement("select");
+        sel.className = "bulk-select";
+        sel.setAttribute("aria-label", "批量条件类型");
+        var o = document.createElement("option");
+        o.textContent = "提单号";
+        sel.appendChild(o);
+        var ta = document.createElement("textarea");
+        ta.id = "filter-bulk-input";
+        ta.placeholder = "每行一个提单号";
+        ta.rows = 3;
+        ta.setAttribute("spellcheck", "false");
+        ta.setAttribute("aria-label", "批量提单号");
+        bf.appendChild(sel);
+        bf.appendChild(ta);
+        return bf;
+      }
+
+      function buildTimeCombo(idPrefix, labelText) {
+        var wrap = document.createElement("div");
+        wrap.className = "time-range-combo";
+        wrap.setAttribute("role", "group");
+        var sel = document.createElement("select");
+        sel.setAttribute("aria-label", labelText);
+        var opt = document.createElement("option");
+        opt.textContent = labelText;
+        sel.appendChild(opt);
+        var inp = document.createElement("input");
+        inp.type = "text";
+        inp.className = "time-range-input";
+        inp.id = idPrefix + "-range";
+        inp.value = "2026-03-25 00:00 ~ 2026-04-08 23:59";
+        inp.placeholder = "请选择时间范围";
+        inp.setAttribute("aria-label", labelText + "范围");
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "time-clear-btn";
+        btn.title = "清除";
+        btn.setAttribute("aria-label", "清除" + labelText);
+        btn.textContent = "×";
+        btn.addEventListener("click", function () {
+          inp.value = "";
+        });
+        var innerWrap = document.createElement("div");
+        innerWrap.className = "time-range-input-wrap";
+        innerWrap.appendChild(inp);
+        innerWrap.appendChild(btn);
+        wrap.appendChild(sel);
+        wrap.appendChild(innerWrap);
+        return wrap;
+      }
+
+      /** 全部 tab：一个下拉切换「索赔发起时间 / 索赔确认时间」，共用时间范围 */
+      function buildTimeComboDual() {
+        var wrap = document.createElement("div");
+        wrap.className = "time-range-combo";
+        wrap.setAttribute("role", "group");
+        wrap.setAttribute("aria-label", "时间筛选");
+        var sel = document.createElement("select");
+        sel.id = "filter-time-dimension";
+        sel.setAttribute("aria-label", "时间类型");
+        var o1 = document.createElement("option");
+        o1.value = "create";
+        o1.textContent = "索赔发起时间";
+        var o2 = document.createElement("option");
+        o2.value = "confirm";
+        o2.textContent = "索赔确认时间";
+        sel.appendChild(o1);
+        sel.appendChild(o2);
+        var inp = document.createElement("input");
+        inp.type = "text";
+        inp.className = "time-range-input";
+        inp.id = "filter-time-range-unified";
+        inp.value = "2026-03-25 00:00 ~ 2026-04-08 23:59";
+        inp.placeholder = "请选择时间范围";
+        inp.setAttribute("aria-label", "时间范围");
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "time-clear-btn";
+        btn.title = "清除";
+        btn.setAttribute("aria-label", "清除时间");
+        btn.textContent = "×";
+        btn.addEventListener("click", function () {
+          inp.value = "";
+        });
+        var innerWrapDual = document.createElement("div");
+        innerWrapDual.className = "time-range-input-wrap";
+        innerWrapDual.appendChild(inp);
+        innerWrapDual.appendChild(btn);
+        wrap.appendChild(sel);
+        wrap.appendChild(innerWrapDual);
+        return wrap;
+      }
+
+      function buildStatusSelect(placeholderLabel) {
+        var sel = document.createElement("select");
+        sel.className = "filter-select";
+        sel.id = "filter-status";
+        sel.setAttribute("aria-label", placeholderLabel || "索赔状态");
+        var ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = placeholderLabel || "索赔状态";
+        sel.appendChild(ph);
+        ["待处理", "申诉中", "申诉驳回", "已确认"].forEach(function (t) {
+          var o = document.createElement("option");
+          o.value = t;
+          o.textContent = t;
+          sel.appendChild(o);
+        });
+        return sel;
+      }
+
+      function buildClaimTypeSelect() {
+        var sel = document.createElement("select");
+        sel.className = "filter-select";
+        sel.id = "filter-claim-type";
+        sel.setAttribute("aria-label", "索赔类型");
+        var ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = "索赔类型";
+        sel.appendChild(ph);
+        CLAIM_TYPE_OPTIONS.forEach(function (t) {
+          var o = document.createElement("option");
+          o.value = t;
+          o.textContent = t;
+          sel.appendChild(o);
+        });
+        return sel;
+      }
+
+      function buildPortBlock(id, placeholder, className) {
+        var wrap = document.createElement("div");
+        wrap.className = className;
+        var sel = document.createElement("select");
+        sel.className = "filter-select";
+        sel.id = id;
+        sel.setAttribute("aria-label", placeholder.replace("请选择", ""));
+        var ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = placeholder;
+        sel.appendChild(ph);
+        PORT_OPTIONS.forEach(function (p) {
+          var o = document.createElement("option");
+          o.value = p;
+          o.textContent = p;
+          sel.appendChild(o);
+        });
+        wrap.appendChild(sel);
+        return wrap;
+      }
+
+      function renderClaimFilter(tabKey) {
+        var root = document.getElementById("claim-filter-root");
+        if (!root) return;
+        var fields = FILTER_FIELDS_BY_TAB[tabKey] || FILTER_FIELDS_BY_TAB.all;
+        root.innerHTML = "";
+        var layout = document.createElement("div");
+        layout.className = "filter-layout";
+
+        var bulkWrap = document.createElement("div");
+        bulkWrap.className = "filter-bulk";
+        bulkWrap.appendChild(buildHawbBulk());
+        layout.appendChild(bulkWrap);
+
+        var mid = document.createElement("div");
+        mid.className = "filter-mid-stack";
+
+        if (tabKey === "all") {
+          mid.appendChild(buildTimeComboDual());
+          var inline = document.createElement("div");
+          inline.className = "filter-inline-row";
+          inline.appendChild(buildStatusSelect("索赔状态"));
+          inline.appendChild(buildClaimTypeSelect());
+          var qbtnAll = document.createElement("button");
+          qbtnAll.type = "button";
+          qbtnAll.className = "btn-query";
+          qbtnAll.textContent = "查询";
+          qbtnAll.addEventListener("click", function () {
+            window.alert("原型：按条件查询空运索赔（全部）");
+          });
+          inline.appendChild(qbtnAll);
+          mid.appendChild(inline);
+        } else {
+          fields.forEach(function (fk) {
+            if (fk === "hawb" || fk === "ports") return;
+            if (fk === "time_create") {
+              mid.appendChild(buildTimeCombo("filter-create", "索赔发起时间"));
+            } else if (fk === "time_confirm") {
+              mid.appendChild(buildTimeCombo("filter-confirm", "索赔确认时间"));
+            } else if (fk === "time_dual") {
+              mid.appendChild(buildTimeComboDual());
+            } else if (fk === "status") {
+              mid.appendChild(buildStatusSelect("索赔状态"));
+            } else if (fk === "claim_type") {
+              mid.appendChild(buildClaimTypeSelect());
+            }
+          });
+          var qcell = document.createElement("div");
+          qcell.className = "filter-query-cell";
+          var qbtn = document.createElement("button");
+          qbtn.type = "button";
+          qbtn.className = "btn-query";
+          qbtn.textContent = "查询";
+          qbtn.addEventListener("click", function () {
+            window.alert("原型：按条件查询空运索赔（" + tabKey + "）");
+          });
+          qcell.appendChild(qbtn);
+          mid.appendChild(qcell);
+        }
+        layout.appendChild(mid);
+
+        if (fields.indexOf("ports") >= 0) {
+          layout.appendChild(buildPortBlock("filter-origin", "请选择起运港", "filter-origin"));
+          layout.appendChild(buildPortBlock("filter-dest", "请选择目的港", "filter-dest"));
+        }
+
+        root.appendChild(layout);
+      }
+
+      var CLAIM_TAB_COLUMNS = {
+        all: [
+          "序号",
+          "提单号",
+          "状态",
+          "直飞/转飞",
+          "起运港",
+          "目的港",
+          "航司",
+          "航班号",
+          "ETD",
+          "ATD",
+          "ETA",
+          "ATA",
+          "索赔类型",
+          "索赔标准",
+          "索赔原因",
+          "索赔金额",
+          "实赔金额",
+          "汇率",
+          "申诉时间",
+          "赔付金额",
+          "申诉原因",
+          "申诉结果",
+          "处理备注",
+          "索赔发起时间",
+          "索赔确认时间",
+        ],
+        pending: [
+          "序号",
+          "操作",
+          "提单号",
+          "直飞/转飞",
+          "起运港",
+          "目的港",
+          "航司",
+          "航班号",
+          "ETD",
+          "ATD",
+          "ETA",
+          "ATA",
+          "索赔类型",
+          "索赔标准",
+          "索赔原因",
+          "索赔金额",
+          "实赔金额",
+          "汇率",
+          "索赔发起时间",
+        ],
+        appeal: [
+          "序号",
+          "操作",
+          "提单号",
+          "直飞/转飞",
+          "起运港",
+          "目的港",
+          "航司",
+          "航班号",
+          "ETD",
+          "ATD",
+          "ETA",
+          "ATA",
+          "索赔类型",
+          "索赔原因",
+          "索赔金额",
+          "汇率",
+          "发起申诉时间",
+          "减免天数",
+          "赔付金额",
+          "申诉原因",
+          "索赔发起时间",
+        ],
+        rejected: [
+          "序号",
+          "操作",
+          "提单号",
+          "直飞/转飞",
+          "起运港",
+          "目的港",
+          "航司",
+          "航班号",
+          "ETD",
+          "ATD",
+          "ETA",
+          "ATA",
+          "索赔类型",
+          "索赔原因",
+          "索赔金额",
+          "汇率",
+          "发起申诉时间",
+          "减免天数",
+          "赔付金额",
+          "申诉原因",
+          "驳回原因",
+          "索赔发起时间",
+        ],
+        confirmed: [
+          "序号",
+          "提单号",
+          "直飞/转飞",
+          "起运港",
+          "目的港",
+          "航司",
+          "航班号",
+          "ETD",
+          "ATD",
+          "ETA",
+          "ATA",
+          "索赔类型",
+          "索赔原因",
+          "索赔金额",
+          "实赔金额",
+          "汇率",
+          "索赔发起时间",
+          "索赔确认时间",
+        ],
+      };
+
+      /** 与 CLAIM_TAB_COLUMNS 各 tab 列顺序一一对应 */
+      var CLAIM_ROW_KEYS = {
+        all: [
+          "seq",
+          "hawb",
+          "status",
+          "direct",
+          "origin",
+          "dest",
+          "airline",
+          "flight",
+          "etd",
+          "atd",
+          "eta",
+          "ata2",
+          "claimType",
+          "standard",
+          "claimReason",
+          "claimAmount",
+          "actualAmount",
+          "fxRate",
+          "appealTime",
+          "payAmount",
+          "appealReason",
+          "appealResult",
+          "remark",
+          "createTime",
+          "confirmTime",
+        ],
+        pending: [
+          "seq",
+          "actions",
+          "hawb",
+          "direct",
+          "origin",
+          "dest",
+          "airline",
+          "flight",
+          "etd",
+          "atd",
+          "eta",
+          "ata2",
+          "claimType",
+          "standard",
+          "claimReason",
+          "claimAmount",
+          "actualAmount",
+          "fxRate",
+          "createTime",
+        ],
+        appeal: [
+          "seq",
+          "actions",
+          "hawb",
+          "direct",
+          "origin",
+          "dest",
+          "airline",
+          "flight",
+          "etd",
+          "atd",
+          "eta",
+          "ata2",
+          "claimType",
+          "claimReason",
+          "claimAmount",
+          "fxRate",
+          "appealSubmitTime",
+          "appealDays",
+          "payAmount",
+          "appealReason",
+          "createTime",
+        ],
+        rejected: [
+          "seq",
+          "actions",
+          "hawb",
+          "direct",
+          "origin",
+          "dest",
+          "airline",
+          "flight",
+          "etd",
+          "atd",
+          "eta",
+          "ata2",
+          "claimType",
+          "claimReason",
+          "claimAmount",
+          "fxRate",
+          "appealSubmitTime",
+          "appealDays",
+          "payAmount",
+          "appealReason",
+          "rejectReason",
+          "createTime",
+        ],
+        confirmed: [
+          "seq",
+          "hawb",
+          "direct",
+          "origin",
+          "dest",
+          "airline",
+          "flight",
+          "etd",
+          "atd",
+          "eta",
+          "ata2",
+          "claimType",
+          "claimReason",
+          "claimAmount",
+          "actualAmount",
+          "fxRate",
+          "createTime",
+          "confirmTime",
+        ],
+      };
+
+      /**
+       * 16 条示例：四种索赔类型各 4 条，对应待处理 / 申诉中 / 申诉驳回 / 已确认。
+       * claimStandardTier：时效延误 216_240 | 240_360；丢货 no_declared | declared（与 claimStandardDisplay 对应）。
+       */
+      var CLAIM_SAMPLE_ROWS = [
+        /* —— 时效延误 × 4 状态 —— */
+        {
+          status: "待处理",
+          hawb: "784-20260401001",
+          direct: "直飞",
+          origin: "PVG",
+          dest: "LAX",
+          airline: "CK",
+          flight: "CK087",
+          etd: "2026-04-01 10:20",
+          atd: "2026-04-02 06:40",
+          eta: "2026-04-02 08:00",
+          ata2: "2026-04-02 07:55",
+          claimType: "时效延误",
+          claimStandardTier: "216_240",
+          claimReason: "落地超24小时未提货",
+          claimAmount: "2,500.00",
+          actualAmount: "—",
+          fxRate: "7.25",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-05 09:15",
+          confirmTime: "—",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉中",
+          hawb: "784-20260401002",
+          direct: "转飞",
+          origin: "PEK",
+          dest: "FRA",
+          airline: "LH",
+          flight: "LH721",
+          etd: "2026-04-02 01:10",
+          atd: "2026-04-02 14:25",
+          eta: "2026-04-03 07:30",
+          ata2: "2026-04-03 07:05",
+          claimType: "时效延误",
+          claimStandardTier: "240_360",
+          claimReason: "干线晚到导致整体延误",
+          claimAmount: "3,200.00",
+          actualAmount: "2,400.00",
+          fxRate: "7.28",
+          appealTime: "2026-04-12 09:30",
+          payAmount: "2,500.00",
+          appealReason: "认为延误起算点与合约约定不一致",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-06 10:00",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-12 10:00",
+          appealDays: "3",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉驳回",
+          hawb: "784-20260401003",
+          direct: "直飞",
+          origin: "CAN",
+          dest: "NRT",
+          airline: "NH",
+          flight: "NH934",
+          etd: "2026-04-04 08:00",
+          atd: "2026-04-04 11:20",
+          eta: "2026-04-04 15:00",
+          ata2: "2026-04-04 14:45",
+          claimType: "时效延误",
+          claimStandardTier: "216_240",
+          claimReason: "目的港卡车衔接超时",
+          claimAmount: "1,900.00",
+          actualAmount: "1,500.00",
+          fxRate: "7.26",
+          appealTime: "2026-04-14 14:00",
+          payAmount: "1,400.00",
+          appealReason: "请求按最低档扣罚比例重算",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-08 11:20",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-14 15:00",
+          appealDays: "2",
+          rejectReason: "延误时长已按系统轨迹核定，申诉依据不足",
+        },
+        {
+          status: "已确认",
+          hawb: "784-20260401004",
+          direct: "直飞",
+          origin: "PVG",
+          dest: "NRT",
+          airline: "NH",
+          flight: "NH920",
+          etd: "2026-04-06 09:30",
+          atd: "2026-04-06 13:05",
+          eta: "2026-04-06 14:00",
+          ata2: "2026-04-06 13:50",
+          claimType: "时效延误",
+          claimStandardTier: "240_360",
+          claimReason: "航班晚到导致衔接卡车延误",
+          claimAmount: "1,800.00",
+          actualAmount: "1,450.00",
+          fxRate: "7.27",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "已与航司结案",
+          createTime: "2026-04-07 08:05",
+          confirmTime: "2026-04-15 14:00",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        /* —— 丢货 × 4 状态 —— */
+        {
+          status: "待处理",
+          hawb: "999-20260402001",
+          direct: "转飞",
+          origin: "PEK",
+          dest: "FRA",
+          airline: "LH",
+          flight: "LH721",
+          etd: "2026-04-03 01:10",
+          atd: "2026-04-03 14:25",
+          eta: "2026-04-04 07:30",
+          ata2: "2026-04-04 07:05",
+          claimType: "丢货",
+          claimStandardTier: "no_declared",
+          claimReason: "目的港仓库未找到该票货物",
+          claimAmount: "18,600.00",
+          actualAmount: "—",
+          fxRate: "7.28",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-06 11:40",
+          confirmTime: "—",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉中",
+          hawb: "999-20260402002",
+          direct: "直飞",
+          origin: "HKG",
+          dest: "LHR",
+          airline: "CX",
+          flight: "CX255",
+          etd: "2026-04-05 23:30",
+          atd: "2026-04-06 01:05",
+          eta: "2026-04-06 18:00",
+          ata2: "2026-04-06 17:40",
+          claimType: "丢货",
+          claimStandardTier: "declared",
+          claimReason: "中转港扫描后无后续轨迹",
+          claimAmount: "22,000.00",
+          actualAmount: "16,500.00",
+          fxRate: "7.30",
+          appealTime: "2026-04-16 11:00",
+          payAmount: "17,000.00",
+          appealReason: "声明价值与装箱单不一致，申请按高值复核",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-09 09:00",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-16 11:30",
+          appealDays: "7",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉驳回",
+          hawb: "999-20260402003",
+          direct: "转飞",
+          origin: "PVG",
+          dest: "ORD",
+          airline: "UA",
+          flight: "UA858",
+          etd: "2026-04-07 12:00",
+          atd: "2026-04-07 20:10",
+          eta: "2026-04-08 10:00",
+          ata2: "2026-04-08 09:35",
+          claimType: "丢货",
+          claimStandardTier: "no_declared",
+          claimReason: "分拨中心少件",
+          claimAmount: "9,800.00",
+          actualAmount: "7,200.00",
+          fxRate: "7.25",
+          appealTime: "2026-04-18 16:20",
+          payAmount: "6,800.00",
+          appealReason: "主张按实际采购价赔付",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-10 14:30",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-18 17:00",
+          appealDays: "4",
+          rejectReason: "未声明价值按 SDR 规则执行，货值凭证未加盖公章",
+        },
+        {
+          status: "已确认",
+          hawb: "999-20260402004",
+          direct: "转飞",
+          origin: "CAN",
+          dest: "AMS",
+          airline: "CZ",
+          flight: "CZ307",
+          etd: "2026-04-08 00:40",
+          atd: "2026-04-08 12:15",
+          eta: "2026-04-09 06:00",
+          ata2: "2026-04-09 05:40",
+          claimType: "丢货",
+          claimStandardTier: "declared",
+          claimReason: "中转库短少 1 件",
+          claimAmount: "12,000.00",
+          actualAmount: "9,600.00",
+          fxRate: "7.25",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "分批赔付完成",
+          createTime: "2026-04-11 10:18",
+          confirmTime: "2026-04-20 17:30",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        /* —— CCA索赔 × 4 状态 —— */
+        {
+          status: "待处理",
+          hawb: "784-20260403001",
+          direct: "直飞",
+          origin: "PVG",
+          dest: "CDG",
+          airline: "AF",
+          flight: "AF111",
+          etd: "2026-04-09 22:00",
+          atd: "2026-04-10 16:30",
+          eta: "2026-04-10 20:00",
+          ata2: "2026-04-10 19:45",
+          claimType: "CCA索赔",
+          claimReason: "CCA 改单费争议",
+          claimAmount: "1,200.00",
+          actualAmount: "—",
+          fxRate: "7.26",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-12 08:45",
+          confirmTime: "—",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉中",
+          hawb: "784-20260403002",
+          direct: "直飞",
+          origin: "HKG",
+          dest: "CDG",
+          airline: "AF",
+          flight: "AF188",
+          etd: "2026-04-10 23:45",
+          atd: "2026-04-11 18:20",
+          eta: "2026-04-11 20:00",
+          ata2: "2026-04-11 19:40",
+          claimType: "CCA索赔",
+          claimReason: "CCA 费用争议",
+          claimAmount: "4,200.00",
+          actualAmount: "3,100.00",
+          fxRate: "7.26",
+          appealTime: "2026-04-20 10:00",
+          payAmount: "3,200.00",
+          appealReason: "请求按实报与航司复核结果减免",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-13 16:22",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-20 11:00",
+          appealDays: "5",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉驳回",
+          hawb: "784-20260403003",
+          direct: "转飞",
+          origin: "PEK",
+          dest: "LAX",
+          airline: "CA",
+          flight: "CA983",
+          etd: "2026-04-11 13:00",
+          atd: "2026-04-11 22:15",
+          eta: "2026-04-12 08:00",
+          ata2: "2026-04-12 07:40",
+          claimType: "CCA索赔",
+          claimReason: "燃油与战险附加复核",
+          claimAmount: "2,800.00",
+          actualAmount: "2,100.00",
+          fxRate: "7.24",
+          appealTime: "2026-04-21 15:00",
+          payAmount: "2,000.00",
+          appealReason: "认为 CCA 分项与合约报价不一致",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-14 10:10",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-21 15:40",
+          appealDays: "3",
+          rejectReason: "航司账单与系统快照一致，无新增有效凭证",
+        },
+        {
+          status: "已确认",
+          hawb: "784-20260403004",
+          direct: "直飞",
+          origin: "PVG",
+          dest: "FRA",
+          airline: "LH",
+          flight: "LH729",
+          etd: "2026-04-12 23:50",
+          atd: "2026-04-13 12:05",
+          eta: "2026-04-13 18:30",
+          ata2: "2026-04-13 18:10",
+          claimType: "CCA索赔",
+          claimReason: "CCA 杂费结算",
+          claimAmount: "3,500.00",
+          actualAmount: "3,200.00",
+          fxRate: "7.27",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "按对账周期入账",
+          createTime: "2026-04-15 09:00",
+          confirmTime: "2026-04-22 11:00",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        /* —— 其它索赔 × 4 状态 —— */
+        {
+          status: "待处理",
+          hawb: "784-20260404001",
+          direct: "转飞",
+          origin: "CAN",
+          dest: "SYD",
+          airline: "CZ",
+          flight: "CZ325",
+          etd: "2026-04-13 09:20",
+          atd: "2026-04-13 18:00",
+          eta: "2026-04-14 08:30",
+          ata2: "2026-04-14 08:05",
+          claimType: "其它索赔",
+          claimReason: "仓储保管费争议",
+          claimAmount: "640.00",
+          actualAmount: "—",
+          fxRate: "7.25",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-16 13:20",
+          confirmTime: "—",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉中",
+          hawb: "784-20260404002",
+          direct: "直飞",
+          origin: "PVG",
+          dest: "JFK",
+          airline: "DL",
+          flight: "DL588",
+          etd: "2026-04-14 13:05",
+          atd: "2026-04-15 08:10",
+          eta: "2026-04-15 22:00",
+          ata2: "2026-04-15 21:35",
+          claimType: "其它索赔",
+          claimReason: "附加操作费争议",
+          claimAmount: "860.00",
+          actualAmount: "600.00",
+          fxRate: "7.24",
+          appealTime: "2026-04-23 09:00",
+          payAmount: "500.00",
+          appealReason: "认为计费重量与合约不符",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-17 09:50",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-23 09:40",
+          appealDays: "2",
+          rejectReason: "—",
+        },
+        {
+          status: "申诉驳回",
+          hawb: "784-20260404003",
+          direct: "直飞",
+          origin: "HKG",
+          dest: "SIN",
+          airline: "SQ",
+          flight: "SQ891",
+          etd: "2026-04-15 14:20",
+          atd: "2026-04-15 17:05",
+          eta: "2026-04-15 21:00",
+          ata2: "2026-04-15 20:45",
+          claimType: "其它索赔",
+          claimReason: "特货操作加价",
+          claimAmount: "1,100.00",
+          actualAmount: "800.00",
+          fxRate: "7.29",
+          appealTime: "2026-04-24 14:30",
+          payAmount: "750.00",
+          appealReason: "主张按普货费率结算",
+          appealResult: "—",
+          remark: "—",
+          createTime: "2026-04-18 11:15",
+          confirmTime: "—",
+          appealSubmitTime: "2026-04-24 15:00",
+          appealDays: "1",
+          rejectReason: "订舱备注已标明特货，不适用普货费率",
+        },
+        {
+          status: "已确认",
+          hawb: "784-20260404004",
+          direct: "转飞",
+          origin: "PVG",
+          dest: "DXB",
+          airline: "EK",
+          flight: "EK303",
+          etd: "2026-04-16 23:30",
+          atd: "2026-04-17 05:20",
+          eta: "2026-04-17 12:00",
+          ata2: "2026-04-17 11:40",
+          claimType: "其它索赔",
+          claimReason: "地面服务费结算",
+          claimAmount: "520.00",
+          actualAmount: "480.00",
+          fxRate: "7.26",
+          appealTime: "—",
+          payAmount: "—",
+          appealReason: "—",
+          appealResult: "—",
+          remark: "费用已核销",
+          createTime: "2026-04-19 08:30",
+          confirmTime: "2026-04-25 16:00",
+          appealSubmitTime: "—",
+          appealDays: "—",
+          rejectReason: "—",
+        },
+      ];
+
+      function claimRowsForTab(tabKey) {
+        return CLAIM_SAMPLE_ROWS.filter(function (r) {
+          if (tabKey === "all") return true;
+          if (tabKey === "pending") return r.status === "待处理";
+          if (tabKey === "appeal") return r.status === "申诉中";
+          if (tabKey === "rejected") return r.status === "申诉驳回";
+          if (tabKey === "confirmed") return r.status === "已确认";
+          return true;
+        });
+      }
+
+      /** 按索赔类型 + 行内 claimStandardTier 展示单行索赔标准（CCA/其它为空） */
+      function claimStandardDisplay(row) {
+        var t = row.claimType;
+        if (t === "时效延误") {
+          if (row.claimStandardTier === "240_360") {
+            return "240H<延误时效<=360H扣除12%运费";
+          }
+          return "216H<延误时效<=240H扣除11%运费";
+        }
+        if (t === "丢货") {
+          if (row.claimStandardTier === "declared") {
+            return "已声明价值：声明价值与实际货值二者取低，外加丢失货物运费";
+          }
+          return "未声明价值：按26 SDR/公斤赔偿，赔付限额与实际货值二者取低，外加丢失货物运费";
+        }
+        if (t === "CCA索赔" || t === "其它索赔") {
+          return "";
+        }
+        return "";
+      }
+
+      /** 索赔金额 / 实赔金额 / 赔付金额：按起运港展示币种 + 金额 */
+      var CLAIM_AMOUNT_KEYS = { claimAmount: true, actualAmount: true, payAmount: true };
+
+      function formatClaimAmountCell(row, key, rawText) {
+        if (!CLAIM_AMOUNT_KEYS[key] || rawText === "—") return rawText;
+        var cur = row.origin === "HKG" ? "HKD" : "CNY";
+        return cur + " " + rawText;
+      }
+
+      function appendClaimActionLink(container, label, hawb) {
+        var a = document.createElement("a");
+        a.className = "op-link";
+        a.href = "#";
+        a.textContent = label;
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          window.alert("原型：" + label + (hawb ? "（提单 " + hawb + "）" : ""));
+        });
+        container.appendChild(a);
+      }
+
+      var activeRecallAppealHawb = "";
+
+      function openRecallAppealModal(hawb) {
+        var modal = document.getElementById("recallAppealModal");
+        if (!modal) return;
+        activeRecallAppealHawb = hawb || "";
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+      }
+
+      function appendRecallAppealLink(container, hawb) {
+        var a = document.createElement("a");
+        a.className = "op-link";
+        a.href = "#";
+        a.textContent = "撤回申诉";
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          openRecallAppealModal(hawb);
+        });
+        container.appendChild(a);
+      }
+
+      /** 发起申诉页 URL：按索赔类型跳转丢货 / 时效延误 / CCA及其它 */
+      function appealPageHrefForRow(row, tabKey) {
+        var name;
+        if (row.claimType === "丢货") name = "发起申诉_丢货.html";
+        else if (row.claimType === "时效延误") name = "发起申诉_时效延误.html";
+        else if (row.claimType === "CCA索赔" || row.claimType === "其它索赔") {
+          name = "发起申诉_CCA索赔和其它索赔.html";
+        } else {
+          return null;
+        }
+        var q =
+          "hawb=" +
+          encodeURIComponent(row.hawb || "") +
+          "&from=" +
+          encodeURIComponent(tabKey);
+        if (tabKey === "all") {
+          q += "&status=" + encodeURIComponent(row.status || "");
+        }
+        return "发起申诉/" + name + "?" + q;
+      }
+
+      function appendLaunchAppealLink(container, row, tabKey) {
+        var a = document.createElement("a");
+        a.className = "op-link";
+        a.textContent = "发起申诉";
+        var href = appealPageHrefForRow(row, tabKey);
+        if (!href || !row.hawb) {
+          a.href = "#";
+          a.addEventListener("click", function (e) {
+            e.preventDefault();
+            window.alert("原型：发起申诉（缺少提单或索赔类型）");
+          });
+        } else {
+          a.href = href;
+        }
+        container.appendChild(a);
+      }
+
+      function appendClaimActionSep(container) {
+        var s = document.createElement("span");
+        s.className = "op-sep";
+        s.textContent = " | ";
+        container.appendChild(s);
+      }
+
+      function renderClaimTable(tabKey) {
+        var cols = CLAIM_TAB_COLUMNS[tabKey] || CLAIM_TAB_COLUMNS.all;
+        var keys = CLAIM_ROW_KEYS[tabKey] || CLAIM_ROW_KEYS.all;
+        var head = document.getElementById("claim-table-head");
+        var body = document.getElementById("claim-table-body");
+        if (!head || !body) return;
+
+        var trh = document.createElement("tr");
+        cols.forEach(function (text, colIdx) {
+          var th = document.createElement("th");
+          th.textContent = text;
+          if (keys[colIdx] === "standard") th.classList.add("col-claim-standard");
+          trh.appendChild(th);
+        });
+        head.innerHTML = "";
+        head.appendChild(trh);
+
+        body.innerHTML = "";
+        var list = claimRowsForTab(tabKey);
+        if (list.length === 0) {
+          var tr0 = document.createElement("tr");
+          tr0.className = "empty-row";
+          var td0 = document.createElement("td");
+          td0.colSpan = cols.length;
+          td0.textContent = "数据为空";
+          tr0.appendChild(td0);
+          body.appendChild(tr0);
+          return;
+        }
+
+        list.forEach(function (row, i) {
+          var tr = document.createElement("tr");
+          keys.forEach(function (k) {
+            var td = document.createElement("td");
+            if (k === "actions") {
+              td.className = "cell-actions";
+              if (tabKey === "pending" || tabKey === "rejected") {
+                appendClaimActionLink(td, "同意索赔", row.hawb);
+                appendClaimActionSep(td);
+                appendLaunchAppealLink(td, row, tabKey);
+              } else if (tabKey === "appeal") {
+                appendRecallAppealLink(td, row.hawb);
+              }
+              tr.appendChild(td);
+              return;
+            }
+            if (k === "standard") td.classList.add("col-claim-standard");
+            var v = k === "seq" ? String(i + 1) : row[k];
+            var text = v != null && v !== "" ? String(v) : "—";
+            if (k === "standard") {
+              text = claimStandardDisplay(row);
+            }
+            if (k === "fxRate" && row.claimType !== "丢货") {
+              text = "—";
+            }
+            if (k === "actualAmount" && row.status !== "已确认") {
+              text = "—";
+            }
+            text = formatClaimAmountCell(row, k, text);
+            if (k === "hawb" && row.hawb) {
+              var detailHref = null;
+              var detailKind = "";
+              if (row.claimType === "时效延误") {
+                detailHref =
+                  "详情/详情_时效延误.html?hawb=" +
+                  encodeURIComponent(row.hawb) +
+                  "&from=" +
+                  encodeURIComponent(tabKey);
+                if (tabKey === "all") {
+                  detailHref += "&status=" + encodeURIComponent(row.status);
+                }
+                detailKind = "时效延误";
+              } else if (row.claimType === "丢货") {
+                detailHref =
+                  "详情/详情_丢货.html?hawb=" +
+                  encodeURIComponent(row.hawb) +
+                  "&from=" +
+                  encodeURIComponent(tabKey);
+                if (tabKey === "all") {
+                  detailHref += "&status=" + encodeURIComponent(row.status);
+                }
+                detailKind = "丢货";
+              } else if (row.claimType === "CCA索赔" || row.claimType === "其它索赔") {
+                detailHref =
+                  "详情/详情_CCA索赔和其它索赔.html?hawb=" +
+                  encodeURIComponent(row.hawb) +
+                  "&from=" +
+                  encodeURIComponent(tabKey);
+                if (tabKey === "all") {
+                  detailHref += "&status=" + encodeURIComponent(row.status);
+                }
+                detailKind = row.claimType;
+              }
+              if (detailHref) {
+                var a = document.createElement("a");
+                a.className = "op-link";
+                a.href = detailHref;
+                a.textContent = text;
+                a.setAttribute("aria-label", "查看提单 " + row.hawb + " " + detailKind + "详情");
+                td.appendChild(a);
+              } else {
+                td.textContent = text;
+              }
+            } else {
+              td.textContent = text;
+            }
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+      }
+
+      function updateClaimTabBadges() {
+        var statusToTabKey = {
+          "待处理": "pending",
+          "申诉中": "appeal",
+          "申诉驳回": "rejected",
+        };
+        var tabLabelMap = {
+          pending: "待处理",
+          appeal: "申诉中",
+          rejected: "申诉驳回",
+        };
+        var counts = {
+          pending: 0,
+          appeal: 0,
+          rejected: 0,
+        };
+
+        CLAIM_SAMPLE_ROWS.forEach(function (row) {
+          var key = statusToTabKey[row.status];
+          if (key) counts[key] += 1;
+        });
+
+        document.querySelectorAll("[data-claim-badge-for]").forEach(function (badge) {
+          var key = badge.getAttribute("data-claim-badge-for");
+          var count = counts[key] || 0;
+          var parentTab = badge.closest(".status-tab");
+          if (!parentTab) return;
+
+          if (count > 0) {
+            badge.textContent = count > 99 ? "99+" : String(count);
+            badge.style.display = "inline-block";
+            parentTab.classList.add("has-badge");
+            parentTab.setAttribute("aria-label", tabLabelMap[key] + "，待处理数据 " + count + " 条");
+          } else {
+            badge.textContent = "";
+            badge.style.display = "none";
+            parentTab.classList.remove("has-badge");
+            parentTab.removeAttribute("aria-label");
+          }
+        });
+      }
+
+      document.querySelectorAll("#claim-status-tabs .status-tab").forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          document.querySelectorAll("#claim-status-tabs .status-tab").forEach(function (t) {
+            t.classList.remove("is-active");
+            t.setAttribute("aria-selected", "false");
+          });
+          tab.classList.add("is-active");
+          tab.setAttribute("aria-selected", "true");
+          var key = tab.getAttribute("data-claim-tab") || "all";
+          renderClaimTable(key);
+          renderClaimFilter(key);
+        });
+      });
+
+      (function () {
+        var modal = document.getElementById("recallAppealModal");
+        if (!modal) return;
+
+        var closeBtns = modal.querySelectorAll("[data-close-recall-appeal-modal]");
+        var confirmBtn = document.getElementById("recallAppealConfirmBtn");
+
+        function setModalOpen(open) {
+          modal.classList.toggle("is-open", open);
+          modal.setAttribute("aria-hidden", open ? "false" : "true");
+          if (!open) activeRecallAppealHawb = "";
+        }
+
+        closeBtns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            setModalOpen(false);
+          });
+        });
+
+        if (confirmBtn) {
+          confirmBtn.addEventListener("click", function () {
+            var hawb = activeRecallAppealHawb;
+            setModalOpen(false);
+            window.alert("原型：撤回申诉" + (hawb ? "（提单 " + hawb + "）" : ""));
+          });
+        }
+
+        modal.addEventListener("click", function (event) {
+          if (event.target === modal) {
+            setModalOpen(false);
+          }
+        });
+      })();
+
+      updateClaimTabBadges();
+      renderClaimTable("all");
+      renderClaimFilter("all");
+    })();
+  </script>
+</body>
+</html>

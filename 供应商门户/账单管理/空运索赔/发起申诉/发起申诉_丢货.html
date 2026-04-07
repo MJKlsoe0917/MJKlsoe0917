@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>丢货索赔·发起申诉· WANB 供应商系统</title>
+  <link rel="stylesheet" href="../../../common/supplier-shell.css" />
+  <style>
+    /* 取消宽度上限 + 抵消 .main-inner 右侧 padding，主区域横向铺满 */
+    .claim-detail-page {
+      max-width: none;
+      width: 100%;
+      margin-right: -16px;
+      box-sizing: border-box;
+    }
+
+    /* 详情页标题栏：左标题 + 右文字操作 */
+    .detail-page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      margin: 0 0 16px 0;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-page-head__title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 400;
+      color: #303848;
+      letter-spacing: 0.2px;
+    }
+
+    .detail-page-head__actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .detail-page-head__action {
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--supplier-menu-orange);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .detail-page-head__action:hover {
+      color: var(--supplier-menu-orange-hover);
+      text-decoration: underline;
+    }
+
+    .detail-block {
+      margin-bottom: 20px;
+    }
+
+    .block-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #303848;
+      line-height: 1.3;
+      margin: 0 0 10px 0;
+      padding: 6px 10px;
+      background: #f0f2f5;
+      border-radius: 4px;
+    }
+
+    .block-title::before {
+      content: "";
+      width: 4px;
+      height: 10px;
+      background: #e64a19;
+      border-radius: 2px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .form-grid--3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      column-gap: 10px;
+      min-height: 32px;
+      align-items: center;
+    }
+
+    .field--files {
+      align-items: start;
+    }
+
+    .field--files .field-label {
+      padding-top: 8px;
+    }
+
+    .field--label-top {
+      align-items: start;
+    }
+
+    .field--label-top .field-label {
+      padding-top: 8px;
+    }
+
+    .field--span-2 {
+      grid-column: span 2;
+    }
+
+    .field--span-3 {
+      grid-column: span 3;
+    }
+
+    .field--span-4 {
+      grid-column: 1 / -1;
+    }
+
+    .field--empty {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .field-label {
+      text-align: right;
+      color: #4f5664;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .field-label.required::before {
+      content: "*";
+      color: #d63b3b;
+      margin-right: 2px;
+    }
+
+    .readonly-input--one-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .field-control {
+      min-width: 0;
+    }
+
+    .readonly-input,
+    .readonly-select {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #f5f6f8;
+      box-sizing: border-box;
+    }
+
+    .readonly-select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 28px;
+      background: #f5f6f8
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23707886' d='M6 8L1 3h10z'/%3E%3C/svg%3E")
+        no-repeat right 10px center;
+      pointer-events: none;
+    }
+
+    .input-unit {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      width: 100%;
+    }
+
+    .input-unit .readonly-input {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+
+    .input-unit span {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cfd5df;
+      border-radius: 0 4px 4px 0;
+      background: #eef0f3;
+      color: #4f5664;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #303848;
+    }
+
+    .file-row a {
+      color: #7d5bc9;
+      text-decoration: none;
+    }
+
+    .file-row a:hover {
+      text-decoration: underline;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 1px solid #dcdfe6;
+      background: #fff;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid #dcdfe6;
+      padding: 8px 8px;
+      font-size: 13px;
+      color: #4f5664;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .data-table th {
+      background: #f0f2f5;
+      color: #303848;
+      font-weight: 600;
+    }
+
+    .op-link {
+      color: #7d5bc9;
+      text-decoration: none;
+    }
+
+    .op-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 航班信息：四列，每列内字段纵向排列 */
+    .flight-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      align-items: start;
+    }
+
+    .flight-info-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    /* 索赔信息：四列，首行第3–4列合并为索赔备注 */
+    .claim-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .claim-info-grid .field--span-cols-2 {
+      grid-column: 3 / 5;
+    }
+
+    @media (max-width: 960px) {
+      .form-grid,
+      .form-grid--3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field--span-2,
+      .field--span-3 {
+        grid-column: auto;
+      }
+
+      .flight-info-grid,
+      .claim-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: 16px;
+      }
+
+      .claim-info-grid .field--span-cols-2 {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .flight-info-grid,
+      .claim-info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .claim-info-grid .field--span-cols-2 {
+        grid-column: auto;
+      }
+    }
+
+    .detail-page-head__sep {
+      color: #cfd5df;
+      font-size: 14px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .detail-block[data-detail-conditional="1"][hidden] {
+      display: none !important;
+    }
+
+    /* 发起申诉：可编辑输入 + 单位组合 */
+    .form-input {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .input-unit .form-input {
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+    }
+
+    /* 申诉信息首行：赔付金额（较窄）| 申诉原因（占满剩余宽度）；次行证明文件通栏 */
+    .appeal-form-grid {
+      display: grid;
+      grid-template-columns: minmax(200px, 320px) minmax(0, 1fr);
+      column-gap: 24px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .appeal-form-grid .field--span-row {
+      grid-column: 1 / -1;
+    }
+
+    .btn-upload-file {
+      height: 32px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #303848;
+      background: #fff;
+      border: 1px solid #cfd5df;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-upload-file:hover {
+      border-color: #a8b0bd;
+      background: #fafbfc;
+    }
+
+    @media (max-width: 960px) {
+      .appeal-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="supplier-portal-body">
+  <script>
+    window.__SUPPLIER_SHELL__ = {
+      portalRoot: "../../../",
+      pageTitle: "丢货索赔·发起申诉· WANB 供应商系统",
+      tabLabel: "空运索赔",
+      activeNav: "空运索赔",
+    };
+  </script>
+  <div id="supplier-shell-topbar"></div>
+  <div class="body-row">
+    <div id="supplier-shell-sidebar"></div>
+    <main class="main">
+      <div class="main-inner claim-detail-page">
+        <header class="detail-page-head">
+          <h1 class="detail-page-head__title">丢货索赔·发起申诉</h1>
+          <div class="detail-page-head__actions">
+            <button type="button" class="detail-page-head__action" id="appeal-btn-cancel">取消</button>
+            <button type="button" class="detail-page-head__action" id="appeal-btn-confirm">确认</button>
+          </div>
+        </header>
+
+        <section class="detail-block" id="detail-section-flight">
+          <h2 class="block-title">航班信息</h2>
+          <div class="flight-info-grid">
+            <div class="flight-info-col">
+              <div class="field">
+                <div class="field-label required">提单号</div>
+                <div class="field-control">
+                  <input id="field-hawb" class="readonly-input" type="text" value="784-40070155" readonly aria-readonly="true" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required">航司代码</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="QR" readonly />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">航班号</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="QR001" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="flight-info-col">
+              <div class="field">
+                <div class="field-label required">直飞/转飞</div>
+                <div class="field-control">
+                  <select class="readonly-select" disabled aria-disabled="true">
+                    <option selected>直飞</option>
+                    <option>转飞</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required">起运港</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="HKG" readonly />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label required">目的港</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="LHR" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="flight-info-col">
+              <div class="field">
+                <div class="field-label">ETD</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="2025-05-27 07:40" readonly />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">ETA</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="2025-05-28 01:20" readonly />
+                </div>
+              </div>
+            </div>
+            <div class="flight-info-col">
+              <div class="field">
+                <div class="field-label">ATD</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="2025-05-27 22:29" readonly />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-label">ATA</div>
+                <div class="field-control">
+                  <input class="readonly-input" type="text" value="2025-05-31 14:32" readonly />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block" id="detail-section-claim">
+          <h2 class="block-title">索赔信息</h2>
+          <div class="claim-info-grid">
+            <!-- 第1行：列1 索赔类型 | 列2 索赔标准 | 列3–4 索赔备注 -->
+            <div class="field">
+              <div class="field-label">索赔类型</div>
+              <div class="field-control">
+                <input class="readonly-input" type="text" value="丢货" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔标准</div>
+              <div class="field-control">
+                <input class="readonly-input readonly-input--one-line" type="text" value="未声明价值：按26 SDR/公斤赔偿…" readonly />
+              </div>
+            </div>
+            <div class="field field--label-top field--span-cols-2">
+              <div class="field-label">索赔备注</div>
+              <div class="field-control">
+                <input class="readonly-input" type="text" value="货物丢失" readonly />
+              </div>
+            </div>
+            <!-- 第2行：列1 丢货箱数 | 列2 丢货货值 | 列3 赔付金额 | 列4 汇率 -->
+            <div class="field">
+              <div class="field-label">丢货箱数</div>
+              <div class="field-control">
+                <input class="readonly-input" type="text" value="10" readonly />
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">丢货货值</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="8000.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">赔付金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="1208.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">汇率</div>
+              <div class="field-control">
+                <input class="readonly-input" type="text" value="7.2345" readonly />
+              </div>
+            </div>
+            <!-- 第3行：列1 丢货重量 | 列2 丢货运费 | 列3 实赔金额 | 列4 索赔状态 -->
+            <div class="field">
+              <div class="field-label">丢货重量</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="120" readonly />
+                  <span>KG</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">丢货运费</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="3500.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">实赔金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="readonly-input" type="text" value="500.00" readonly />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">索赔状态</div>
+              <div class="field-control">
+                <input id="field-claim-status" class="readonly-input" type="text" value="已确认" readonly />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="detail-block">
+          <h2 class="block-title">索赔函</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:56px;">序号</th>
+                <th style="width:92px;">操作</th>
+                <th style="width:160px;">文件类型</th>
+                <th>附件名称</th>
+                <th style="width:168px;">上传时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a></td>
+                <td>索赔函</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>02</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a></td>
+                <td>货物价值证明文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+              <tr>
+                <td>03</td>
+                <td><a class="op-link" href="javascript:void(0)">下载</a></td>
+                <td>其他文件</td>
+                <td>XXXX费用明细件.pdf</td>
+                <td>2025-06-01 18:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="detail-block" id="detail-section-appeal">
+          <h2 class="block-title">申诉信息</h2>
+          <div class="appeal-form-grid">
+            <div class="field">
+              <div class="field-label required">赔付金额</div>
+              <div class="field-control">
+                <div class="input-unit">
+                  <input class="form-input" type="text" inputmode="decimal" placeholder="" aria-label="赔付金额" />
+                  <span>CNY</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label required">申诉原因</div>
+              <div class="field-control">
+                <input class="form-input" type="text" placeholder="" aria-label="申诉原因" />
+              </div>
+            </div>
+
+            <div class="field field--files field--span-row">
+              <div class="field-label required">证明文件</div>
+              <div class="field-control">
+                <button type="button" class="btn-upload-file">上传文件</button>
+                <div class="file-list">
+                  <div class="file-row">
+                    <span>XXXX申诉证明文件.pdf</span>
+                    <a href="#">下载</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../../common/supplier-shell.js"></script>
+  <script>
+    (function () {
+      var KNOWN_STATUS = ["待处理", "申诉中", "申诉驳回", "已确认"];
+
+      var params = new URLSearchParams(window.location.search);
+      var hawb = params.get("hawb");
+      var from = params.get("from");
+      var statusParam = params.get("status");
+
+      function resolveClaimStatus() {
+        if (!from) return null;
+        if (from === "pending") return "待处理";
+        if (from === "appeal") return "申诉中";
+        if (from === "rejected") return "申诉驳回";
+        if (from === "confirmed") return "已确认";
+        if (from === "all") {
+          if (statusParam && KNOWN_STATUS.indexOf(statusParam) >= 0) return statusParam;
+          return null;
+        }
+        return null;
+      }
+
+      var claimStatus = resolveClaimStatus();
+
+      if (hawb) {
+        var el = document.getElementById("field-hawb");
+        if (el) el.value = hawb;
+      }
+
+      var statusInput = document.getElementById("field-claim-status");
+      if (claimStatus && statusInput) {
+        statusInput.value = claimStatus;
+      }
+
+      function wireHeadAction(btn, label) {
+        if (!btn) return;
+        btn.addEventListener("click", function () {
+          var h = hawb ? "（提单 " + hawb + "）" : "";
+          window.alert("原型：" + label + h);
+        });
+      }
+      wireHeadAction(document.getElementById("appeal-btn-cancel"), "取消");
+      wireHeadAction(document.getElementById("appeal-btn-confirm"), "确认");
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>线下洽谈舱位列表 · WANB 供应商系统</title>
+  <link rel="stylesheet" href="../common/supplier-shell.css" />
+  <style>
+    .supplier-page-placeholder {
+      padding: 48px 20px;
+      color: #666;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="supplier-portal-body">
+  <script>
+    window.__SUPPLIER_SHELL__ = {
+      portalRoot: "../",
+      pageTitle: "线下洽谈舱位列表 · WANB 供应商系统",
+      tabLabel: "线下洽谈舱位列表",
+      activeNav: "线下洽谈舱位列表",
+      headerTabs: [
+        { label: "首页", href: "首页.html" },
+        { label: "线下洽谈舱位录入", href: "线下洽谈舱位/线下洽谈舱位录入.html" },
+        { label: "线下洽谈舱位列表", href: "线下洽谈舱位/线下洽谈舱位列表.html", active: true },
+      ],
+    };
+  </script>
+  <div id="supplier-shell-topbar"></div>
+  <div class="body-row">
+    <div id="supplier-shell-sidebar"></div>
+    <main class="main">
+      <div class="main-inner">
+        <p class="supplier-page-placeholder">线下洽谈舱位列表（原型占位，可参考空运索赔页扩展）</p>
+      </div>
+    </main>
+  </div>
+  <script src="../common/supplier-shell.js"></script>
+</body>
+</html>
